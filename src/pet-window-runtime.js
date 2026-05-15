@@ -252,7 +252,7 @@ function createPetWindowRuntime(options = {}) {
   }
 
   function getHitRectScreen(bounds) {
-    return petGeometryMain.getHitRectScreen(bounds);
+    return clipHitRectToMiniSeam(petGeometryMain.getHitRectScreen(bounds));
   }
 
   function getUpdateBubbleAnchorRect(bounds) {
@@ -368,7 +368,7 @@ function createPetWindowRuntime(options = {}) {
     // window mid-drag can break pointer capture on Windows.
     if (dragLocked) return;
     const bounds = getPetWindowBounds();
-    const hit = clipHitRectToMiniSeam(getHitRectScreen(bounds));
+    const hit = getHitRectScreen(bounds);
     if (!hit) return;
     const x = Math.round(hit.left);
     const y = Math.round(hit.top);
@@ -386,7 +386,7 @@ function createPetWindowRuntime(options = {}) {
   }
 
   function getInitialHitWindowBounds(renderBounds = getPetWindowBounds()) {
-    const hit = clipHitRectToMiniSeam(getHitRectScreen(renderBounds));
+    const hit = getHitRectScreen(renderBounds);
     if (!hit) return null;
     return {
       x: Math.round(hit.left),
@@ -728,6 +728,10 @@ function createPetWindowRuntime(options = {}) {
 
   function handleDisplayAdded() {
     reapplyMacVisibility();
+    const win = getRenderWindow();
+    if (isLiveWindow(win) && !getMiniTransitioning() && getMiniMode()) {
+      handleMiniDisplayChange();
+    }
     repositionAnchoredSurfaces();
   }
 

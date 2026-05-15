@@ -292,6 +292,18 @@ describe("pet-window-runtime", () => {
     );
   });
 
+  it("returns the seam-clipped hit rect to hover and bubble callers", () => {
+    const harness = createRuntime({
+      miniMode: true,
+      miniContainedSeam: { boundary: 100, edge: "right" },
+    });
+
+    assert.deepStrictEqual(
+      harness.runtime.getHitRectScreen({ x: 40, y: 0, width: 120, height: 120 }),
+      { left: 40, top: 0, right: 100, bottom: 120 }
+    );
+  });
+
   it("reasserts Windows topmost when drag movement lands near a work-area edge", () => {
     let cursor = { x: 100, y: 100 };
     const harness = createRuntime({
@@ -340,6 +352,19 @@ describe("pet-window-runtime", () => {
       ["handleMiniDisplayChange"],
       ["reapplyMacVisibility"],
       ["exitMiniMode"],
+    ]);
+  });
+
+  it("refreshes mini seam state when a display is added", () => {
+    const harness = createRuntime({ miniMode: true });
+
+    harness.runtime.handleDisplayAdded();
+
+    assert.deepStrictEqual(harness.renderWin.calls, []);
+    assert.deepStrictEqual(harness.calls, [
+      ["reapplyMacVisibility"],
+      ["handleMiniDisplayChange"],
+      ["repositionAnchoredSurfaces"],
     ]);
   });
 
