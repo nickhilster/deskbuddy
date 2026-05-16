@@ -114,6 +114,10 @@ function buildToolInputFingerprint(toolInput) {
     .digest("hex");
 }
 
+function shouldReportForegroundWtHwnd(event) {
+  return event === "SessionStart" || event === "UserPromptSubmit";
+}
+
 const EVENT_TO_STATE = {
   SessionStart: "idle",
   SessionEnd: "sleeping",
@@ -180,7 +184,7 @@ function buildStateBody(event, payload, resolve) {
   if (process.env.CLAWD_REMOTE) {
     body.host = readHostPrefix();
   } else {
-    const { stablePid, agentPid, agentCommandLine, detectedEditor, pidChain } = resolve();
+    const { stablePid, agentPid, agentCommandLine, detectedEditor, pidChain, foregroundWtHwnd } = resolve();
     body.source_pid = stablePid;
     if (detectedEditor) body.editor = detectedEditor;
     if (agentPid) {
@@ -191,6 +195,9 @@ function buildStateBody(event, payload, resolve) {
       }
     }
     if (pidChain.length) body.pid_chain = pidChain;
+    if (shouldReportForegroundWtHwnd(event) && foregroundWtHwnd) {
+      body.wt_hwnd = String(foregroundWtHwnd);
+    }
   }
 
   return body;

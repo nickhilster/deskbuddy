@@ -366,6 +366,8 @@ const settingsWindowRuntime = createSettingsWindowRuntime({
   isWin,
   nativeTheme,
   path,
+  getPetWindowBounds: () => getPetWindowBounds(),
+  getNearestWorkArea: (cx, cy) => getNearestWorkArea(cx, cy),
   onBeforeCreate: () => bumpAnimationOverridePreviewPosterGeneration(),
   onBeforeClosed: () => {
     bumpAnimationOverridePreviewPosterGeneration();
@@ -825,6 +827,7 @@ function getPendingPermissionFocusEntry(sessionId) {
   if (!entry) return null;
   const focusEntry = { id, agentId: entry.agentId };
   if (entry.sourcePid) focusEntry.sourcePid = entry.sourcePid;
+  if (entry.wtHwnd) focusEntry.wtHwnd = entry.wtHwnd;
   if (entry.cwd) focusEntry.cwd = entry.cwd;
   if (entry.agentPid) focusEntry.agentPid = entry.agentPid;
   if (entry.pidChain) focusEntry.pidChain = entry.pidChain;
@@ -1030,6 +1033,7 @@ function focusTerminalSession(session, sessionId, requestSource) {
   if (!session || !session.sourcePid) return false;
   focusTerminalWindow({
     sourcePid: session.sourcePid,
+    wtHwnd: session.wtHwnd,
     cwd: session.cwd,
     editor: session.editor,
     pidChain: session.pidChain,

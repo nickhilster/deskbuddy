@@ -178,6 +178,24 @@ describe("buildStateBody", () => {
     assert.ok(!("pid_chain" in body));
   });
 
+  it("includes foreground WT HWND only on foreground-safe events", () => {
+    const resolveWithWtHwnd = () => ({
+      stablePid: 1,
+      agentPid: null,
+      detectedEditor: null,
+      pidChain: [],
+      foregroundWtHwnd: "123456",
+    });
+
+    const startBody = buildStateBody("SessionStart", { session_id: "s" }, resolveWithWtHwnd);
+    const promptBody = buildStateBody("UserPromptSubmit", { session_id: "s" }, resolveWithWtHwnd);
+    const stopBody = buildStateBody("Stop", { session_id: "s" }, resolveWithWtHwnd);
+
+    assert.strictEqual(startBody.wt_hwnd, "123456");
+    assert.strictEqual(promptBody.wt_hwnd, "123456");
+    assert.ok(!("wt_hwnd" in stopBody));
+  });
+
   describe("agentPid and headless detection", () => {
     const makeResolve = (agentPid, agentCommandLine = "") =>
       () => ({ stablePid: 1, agentPid, agentCommandLine, detectedEditor: null, pidChain: [] });
