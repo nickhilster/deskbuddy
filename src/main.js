@@ -214,6 +214,7 @@ const _settingsController = createSettingsController({
         : new Set(),
     writeTelegramApprovalToken: (token) => writeTelegramApprovalToken(token),
     getTelegramApprovalStatus: () => getTelegramApprovalStatus(),
+    getTelegramApprovalTokenInfo: () => getTelegramApprovalTokenInfo(),
     sendTelegramApprovalTest: () => sendTelegramApprovalTest(),
     // Theme runtime is wired after theme-loader.init(); keep these closures
     // lazy so settings actions never capture a pre-init runtime reference.
@@ -1236,6 +1237,22 @@ function getTelegramApprovalTokenStatus() {
     fs,
     filePath: paths.tokenEnvFilePath,
   });
+}
+
+function getTelegramApprovalTokenInfo() {
+  const paths = getTelegramApprovalPaths();
+  const status = telegramApprovalSettings.tokenStatus({
+    fs,
+    filePath: paths.tokenEnvFilePath,
+  });
+  if (!status.tokenStored) return { configured: false, masked: "" };
+  return {
+    configured: true,
+    masked: telegramApprovalSettings.readMaskedBotToken({
+      fs,
+      filePath: paths.tokenEnvFilePath,
+    }),
+  };
 }
 
 function buildTelegramApprovalSignature(config, paths, tokenStatus) {

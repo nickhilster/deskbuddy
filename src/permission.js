@@ -712,10 +712,14 @@ function buildRemoteApprovalPayload(permEntry) {
     basenameForDisplay((session && session.cwd) || permEntry.cwd || ""),
     80
   );
+  // Label is "Folder" (not "Session") on purpose: the pinned cc-connect-clawd
+  // sidecar redacts any "<sensitive_key>: <value>" pair it recognises, and
+  // "session" is in its keyword set — even though the value here is just the
+  // cwd basename, not a session id. "Folder" is plain and avoids the redact.
   const detail = [
     `Agent: ${agentId}`,
     `Tool: ${toolName}`,
-    sessionFolder ? `Session: ${sessionFolder}` : null,
+    sessionFolder ? `Folder: ${sessionFolder}` : null,
     `Summary: ${summary}`,
   ].filter(Boolean).join("\n");
   return {

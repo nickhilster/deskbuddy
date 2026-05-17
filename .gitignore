@@ -25,6 +25,7 @@ docs/**
 !docs/guides/setup-guide.zh-CN.md
 !docs/guides/state-mapping.md
 !docs/guides/state-mapping.zh-CN.md
+!docs/guides/telegram-approval.md
 !docs/guides/codex-wsl-clarification.md
 !docs/guides/codex-wsl-clarification.zh-CN.md
 !docs/guides/codex-wsl-clarification.ko-KR.md

@@ -28,6 +28,13 @@
 
 **Hermes Agent** — install Hermes from [hermes-agent.org](https://hermes-agent.org/) or [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent). Clawd shows Hermes in Settings by default, but startup auto-sync is no-op until Hermes is installed. Once Hermes exists (`%LOCALAPPDATA%\hermes` on Windows or `~/.hermes` on macOS/Linux), Clawd copies its plugin into Hermes' managed plugin directory and enables it through `hermes plugins enable clawd-on-desk`. You can force a manual sync with `npm run install:hermes-plugin`, or remove Clawd's Hermes plugin with `npm run uninstall:hermes-plugin`.
 
+## Telegram Approval
+
+Clawd can optionally mirror supported permission bubbles to a dedicated Telegram
+bot, so you can Allow or Deny from Telegram while the local desktop bubble
+remains available. See [telegram-approval.md](telegram-approval.md) for setup,
+token ownership, supported agents, and fallback behavior.
+
 ## Remote SSH (Claude Code, Codex CLI & Copilot CLI)
 
 <img src="../assets/screenshot-remote-ssh.png" width="560" alt="Remote SSH — permission bubble from Raspberry Pi">

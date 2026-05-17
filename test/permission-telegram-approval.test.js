@@ -123,7 +123,7 @@ describe("permission telegram remote approval", () => {
     assert.match(requests[0].payload.title, /claude-code requests Bash/);
     assert.match(requests[0].payload.detail, /Agent: claude-code/);
     assert.match(requests[0].payload.detail, /Tool: Bash/);
-    assert.match(requests[0].payload.detail, /Session: project-alpha/);
+    assert.match(requests[0].payload.detail, /Folder: project-alpha/);
     assert.match(requests[0].payload.detail, /Summary: Run project tests/);
     assert.equal(requests[0].payload.detail.includes("npm test"), false);
     assert.equal(requests[0].payload.detail.includes("sk-1234567890123456"), false);

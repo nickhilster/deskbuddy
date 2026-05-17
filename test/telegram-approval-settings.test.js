@@ -152,6 +152,46 @@ test("tokenStatus checks file presence without reading the token file", () => {
   ]);
 });
 
+test("maskTelegramBotToken keeps first/last 4 of the secret half and drops bot id", () => {
+  // Standard Telegram bot token format: <bot_id>:<secret>. The bot id is
+  // dropped from the preview — the user does not need to see it in Settings
+  // and hiding it keeps the preview short and uniform.
+  assert.equal(
+    settings.maskTelegramBotToken("123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"),
+    "ABCD……fghi"
+  );
+  // Bot id missing — same shape, just first/last 4 of whatever was given.
+  assert.equal(
+    settings.maskTelegramBotToken("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"),
+    "ABCD……fghi"
+  );
+  // Too short to mask without overlap — fully masked, no leak.
+  assert.equal(settings.maskTelegramBotToken("12345:short"), "••••");
+  assert.equal(settings.maskTelegramBotToken(""), "");
+  assert.equal(settings.maskTelegramBotToken(null), "");
+});
+
+test("readMaskedBotToken returns only the masked preview, not the raw token", () => {
+  const dir = tempDir();
+  const filePath = path.join(dir, "telegram-approval.env");
+  const token = "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi_jklmnop";
+  fs.writeFileSync(filePath, `CLAWD_TG_BOT_TOKEN=${token}\n`, "utf8");
+  const masked = settings.readMaskedBotToken({ fs, filePath });
+  assert.equal(masked, "ABCD……mnop");
+  // Sanity: the raw token (with bot id) must not appear in the masked preview.
+  assert.equal(masked.includes(token), false);
+  // And the bot id must not appear either.
+  assert.equal(masked.includes("123456"), false);
+});
+
+test("readMaskedBotToken returns empty string when no token is stored", () => {
+  assert.equal(settings.readMaskedBotToken({ fs, filePath: "/nonexistent/telegram-approval.env" }), "");
+  const dir = tempDir();
+  const empty = path.join(dir, "telegram-approval.env");
+  fs.writeFileSync(empty, "", "utf8");
+  assert.equal(settings.readMaskedBotToken({ fs, filePath: empty }), "");
+});
+
 test("tokenStatus ignores process.env.CLAWD_TG_BOT_TOKEN — file is the only signal", () => {
   // Old behaviour: env-exported token would flip tokenConfigured=true without
   // any file on disk. New behaviour: the env value is ignored so the bot token

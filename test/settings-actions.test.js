@@ -453,6 +453,21 @@ describe("telegram approval commands", () => {
     });
     assert.deepStrictEqual(testResult, { status: "ok", decision: "allow" });
   });
+
+  it("telegramApproval.tokenInfo returns the masked preview without the raw token", async () => {
+    const result = await commandRegistry["telegramApproval.tokenInfo"](null, {
+      getTelegramApprovalTokenInfo: () => ({ configured: true, masked: "1234……wXyZ" }),
+    });
+    assert.deepStrictEqual(result, { status: "ok", configured: true, masked: "1234……wXyZ" });
+
+    const empty = await commandRegistry["telegramApproval.tokenInfo"](null, {
+      getTelegramApprovalTokenInfo: () => ({ configured: false, masked: "" }),
+    });
+    assert.deepStrictEqual(empty, { status: "ok", configured: false, masked: "" });
+
+    const missing = await commandRegistry["telegramApproval.tokenInfo"](null, {});
+    assert.equal(missing.status, "error");
+  });
 });
 
 describe("bubble policy commands", () => {

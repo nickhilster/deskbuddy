@@ -922,6 +922,9 @@ function loadTelegramApprovalTabForTest({
       if (name === "telegramApproval.status") {
         return Promise.resolve({ status: "ok", state: { status: "stopped", tokenStored: false } });
       }
+      if (name === "telegramApproval.tokenInfo") {
+        return Promise.resolve({ status: "ok", configured: false, masked: "" });
+      }
       return Promise.resolve({ status: "ok" });
     },
     ...settingsAPI,
@@ -964,6 +967,23 @@ function loadTelegramApprovalTabForTest({
         el.classList.toggle("on", !!checked);
         el.classList.toggle("pending", !!options.pending);
         el.setAttribute("aria-checked", checked ? "true" : "false");
+      },
+      // Mirror the real buildCollapsibleGroup just enough that children and
+      // headerContent both end up in the DOM tree; collapsed/expand behaviour
+      // is exercised by the real component's own tests.
+      buildCollapsibleGroup: ({ id, headerContent, children = [], className = "" } = {}) => {
+        const group = document.createElement("div");
+        group.className = `collapsible-group${className ? ` ${className}` : ""}`;
+        if (id) group.dataset.groupId = id;
+        const header = document.createElement("div");
+        header.className = "collapsible-group-header";
+        if (headerContent) header.appendChild(headerContent);
+        group.appendChild(header);
+        const body = document.createElement("div");
+        body.className = "collapsible-group-body";
+        for (const child of children) body.appendChild(child);
+        group.appendChild(body);
+        return group;
       },
     },
     ops: {
@@ -1199,9 +1219,30 @@ describe("settings renderer browser environment", () => {
           targetSessionKey: "telegram:123456789",
         },
       },
+      settingsAPI: {
+        command: (name) => {
+          if (name === "telegramApproval.status") {
+            return Promise.resolve({
+              status: "ok",
+              state: { status: "stopped", configured: true, tokenStored: true },
+            });
+          }
+          if (name === "telegramApproval.tokenInfo") {
+            return Promise.resolve({ status: "ok", configured: true, masked: "1234……wXyZ" });
+          }
+          return Promise.resolve({ status: "ok" });
+        },
+      },
     });
+    // Wait for tokenInfo + status to land so the switch is enabled.
+    await Promise.resolve();
+    await Promise.resolve();
+    harness.render();
+
+    // Token is configured → token row is collapsed (no input). Only the
+    // recipient input is rendered, at index 0.
     const inputs = harness.content.querySelectorAll("input");
-    const allowedInput = inputs[1];
+    const allowedInput = inputs[0];
     allowedInput.value = "987654321";
     allowedInput.dispatchEvent({ type: "input" });
 
@@ -1229,7 +1270,7 @@ describe("settings renderer browser environment", () => {
     };
     harness.render();
 
-    assert.equal(harness.content.querySelectorAll("input")[1].value, "987654321");
+    assert.equal(harness.content.querySelectorAll("input")[0].value, "987654321");
   });
 
   it("disables Telegram approval test until runtime status is ready", async () => {
@@ -1257,6 +1298,9 @@ describe("settings renderer browser environment", () => {
               },
             });
           }
+          if (name === "telegramApproval.tokenInfo") {
+            return Promise.resolve({ status: "ok", configured: true, masked: "1234……wXyZ" });
+          }
           return Promise.resolve({ status: "ok" });
         },
       },
@@ -1265,7 +1309,9 @@ describe("settings renderer browser environment", () => {
     await Promise.resolve();
     await Promise.resolve();
     harness.render();
-    const testButton = harness.content.querySelectorAll("button")[0];
+    // Test button is the last actionable button: [replace-token, save-recipient, send-test]
+    const buttons = harness.content.querySelectorAll("button");
+    const testButton = buttons[buttons.length - 1];
     assert.equal(testButton.disabled, true);
     assert.match(testButton.title, /target session key/);
 
@@ -1292,12 +1338,18 @@ describe("settings renderer browser environment", () => {
             assert.ok(next, "unexpected Telegram status request");
             return next.promise;
           }
+          if (name === "telegramApproval.tokenInfo") {
+            return Promise.resolve({ status: "ok", configured: true, masked: "1234……wXyZ" });
+          }
           return Promise.resolve({ status: "ok" });
         },
       },
     });
 
-    harness.content.querySelectorAll("button")[2].dispatchEvent({ type: "click" });
+    // The send-test button is the last button on the tab; click it to force
+    // a status refresh that overlaps the in-flight initial status request.
+    const buttons = harness.content.querySelectorAll("button");
+    buttons[buttons.length - 1].dispatchEvent({ type: "click" });
     await Promise.resolve();
     await Promise.resolve();
     const beforeStatusResolve = harness.renderRequests.length;

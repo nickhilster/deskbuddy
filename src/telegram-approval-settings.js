@@ -209,6 +209,38 @@ function writeBridgeConfigFile({ fs, path: pathModule = path, filePath, config }
   }
 }
 
+// Compute a short masked preview of a bot token for UI display only — never
+// returns the raw token. Format: "AAEk……DyLc" (first 4 + last 4 of the part
+// after the bot id colon). The bot id itself is intentionally dropped — it is
+// public-ish (visible to anyone who can DM the bot) but the user does not
+// need to see it in Settings, and hiding it keeps the preview short and uniform.
+// Tokens too short to safely show 4+4 without overlap are fully masked.
+function maskTelegramBotToken(token) {
+  const value = typeof token === "string" ? token.trim() : "";
+  if (!value) return "";
+  const colonIdx = value.indexOf(":");
+  const secret = colonIdx > 0 ? value.slice(colonIdx + 1) : value;
+  if (secret.length < 10) return "••••";
+  return `${secret.slice(0, 4)}……${secret.slice(-4)}`;
+}
+
+// Read the bot token from the env file and return ONLY a masked preview.
+// The raw token never leaves main; the masked form is safe-ish to show in UI
+// (industry pattern, similar to GitHub PAT display). Returns "" if no token is
+// stored or the file is unreadable.
+function readMaskedBotToken({ fs, filePath } = {}) {
+  if (!fs || !filePath || typeof fs.readFileSync !== "function") return "";
+  let text = "";
+  try {
+    text = String(fs.readFileSync(filePath, { encoding: "utf8" }) || "");
+  } catch {
+    return "";
+  }
+  const match = text.match(/^\s*CLAWD_TG_BOT_TOKEN\s*=\s*(.+?)\s*$/m);
+  if (!match) return "";
+  return maskTelegramBotToken(match[1]);
+}
+
 // Token state is derived solely from the userData env-file on disk. Earlier
 // versions also accepted the bot-token env var as a "configured" signal, but
 // that path pulled the token value into Clawd's main process and violated the
@@ -285,6 +317,8 @@ module.exports = {
   writeTokenEnvFile,
   writeBridgeConfigFile,
   tokenStatus,
+  maskTelegramBotToken,
+  readMaskedBotToken,
   redactionSecretsForTelegramApproval,
   readiness,
 };

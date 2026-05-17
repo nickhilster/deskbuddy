@@ -795,6 +795,18 @@ function telegramApprovalStatus(_payload, deps = {}) {
   return { status: "ok", state: status || { status: "stopped" } };
 }
 
+function telegramApprovalTokenInfo(_payload, deps = {}) {
+  if (!deps || typeof deps.getTelegramApprovalTokenInfo !== "function") {
+    return { status: "error", message: "telegramApproval.tokenInfo requires getTelegramApprovalTokenInfo dep" };
+  }
+  const info = deps.getTelegramApprovalTokenInfo() || { configured: false, masked: "" };
+  return {
+    status: "ok",
+    configured: info.configured === true,
+    masked: typeof info.masked === "string" ? info.masked : "",
+  };
+}
+
 async function telegramApprovalSendTest(_payload, deps = {}) {
   if (!deps || typeof deps.sendTelegramApprovalTest !== "function") {
     return { status: "error", message: "telegramApproval.test requires sendTelegramApprovalTest dep" };
@@ -859,6 +871,7 @@ const commandRegistry = {
   "remoteSsh.markRemoteNode": remoteSshMarkRemoteNode,
   "telegramApproval.setToken": telegramApprovalSetToken,
   "telegramApproval.status": telegramApprovalStatus,
+  "telegramApproval.tokenInfo": telegramApprovalTokenInfo,
   "telegramApproval.test": telegramApprovalSendTest,
 };
 
