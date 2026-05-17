@@ -29,15 +29,15 @@ test("release source is pinned to the public Clawd fork tag", () => {
   assert.deepEqual(DEFAULT_RELEASE, {
     owner: "rullerzhou-afk",
     repo: "cc-connect-clawd",
-    tag: "clawd-sidecar-v0.1.0",
+    tag: "clawd-sidecar-v0.1.1",
   });
   assert.equal(
     checksumFor("cc-connect-clawd-windows-x64.zip"),
-    "70c7283f94dc55b974ca50a1ce2c564f0bf94092946f254d22bbe5e5f07fd4a7"
+    "afb79e68f1cc12f33c74500c2596ec3eeb6b92d9ccf86afbe741d0cf41b12c1e"
   );
   assert.equal(
     releaseAssetUrl("cc-connect-clawd-windows-x64.zip"),
-    "https://github.com/rullerzhou-afk/cc-connect-clawd/releases/download/clawd-sidecar-v0.1.0/cc-connect-clawd-windows-x64.zip"
+    "https://github.com/rullerzhou-afk/cc-connect-clawd/releases/download/clawd-sidecar-v0.1.1/cc-connect-clawd-windows-x64.zip"
   );
 });
 

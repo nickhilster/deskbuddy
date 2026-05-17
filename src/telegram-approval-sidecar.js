@@ -364,6 +364,10 @@ class TelegramApprovalSidecar extends EventEmitter {
         resolve();
       };
       child.once("exit", finish);
+      // On Windows, Node maps SIGTERM to TerminateProcess for child processes,
+      // so the Go sidecar may not run its graceful signal handler there. The
+      // grace window mainly covers POSIX and console-driven Windows exits; a
+      // hard kill is still safe because pending approvals are in-memory.
       this._killChild(child, "SIGTERM");
       this.stopTimer = this.setTimer(() => {
         this._killChild(child, "SIGKILL");

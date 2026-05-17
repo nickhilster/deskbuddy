@@ -188,9 +188,9 @@ function writeBridgeConfigFile({ fs, path: pathModule = path, filePath, config }
   if (!filePath || typeof filePath !== "string") {
     return { status: "error", message: "Telegram sidecar config path is required" };
   }
-  const validated = validateTelegramApproval({ ...normalizeTelegramApproval(config), enabled: true });
-  if (validated.status !== "ok") return validated;
   const normalized = normalizeTelegramApproval(config);
+  const validated = validateTelegramApproval({ ...normalized, enabled: true });
+  if (validated.status !== "ok") return validated;
   if (!normalized.allowedTgUserId) {
     return { status: "error", message: "tgApproval.allowedTgUserId is required" };
   }
@@ -199,7 +199,7 @@ function writeBridgeConfigFile({ fs, path: pathModule = path, filePath, config }
   }
   try {
     fs.mkdirSync(pathModule.dirname(filePath), { recursive: true });
-    fs.writeFileSync(filePath, buildBridgeConfigToml(config), { encoding: "utf8", mode: 0o600 });
+    fs.writeFileSync(filePath, buildBridgeConfigToml(normalized), { encoding: "utf8", mode: 0o600 });
     if (process.platform !== "win32" && typeof fs.chmodSync === "function") {
       try { fs.chmodSync(filePath, 0o600); } catch {}
     }

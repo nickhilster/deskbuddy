@@ -12,7 +12,7 @@ const FETCH_COMMAND = "node scripts/fetch-sidecar-binaries.js";
 const DEFAULT_RELEASE = Object.freeze({
   owner: "rullerzhou-afk",
   repo: "cc-connect-clawd",
-  tag: "clawd-sidecar-v0.1.0",
+  tag: "clawd-sidecar-v0.1.1",
 });
 
 const TARGETS = Object.freeze([
@@ -24,16 +24,16 @@ const TARGETS = Object.freeze([
 ]);
 
 const PINNED_CHECKSUMS = Object.freeze({
-  "windows-x64/cc-connect-clawd.exe": "a6c6303d0f4321d33d450e72d8d5bc02bcf7dcb8a4b3b7e4bcd6e5ae16f45d8c",
-  "cc-connect-clawd-windows-x64.zip": "70c7283f94dc55b974ca50a1ce2c564f0bf94092946f254d22bbe5e5f07fd4a7",
-  "windows-arm64/cc-connect-clawd.exe": "f9366d967a58756f4351e37cbed5c54c8b34080fe82a1d50b878b6d0b43b5ce6",
-  "cc-connect-clawd-windows-arm64.zip": "1433cb84364892b9e276c28e7b5775d0e126bc66f60b70f4549d02b275d8f368",
-  "darwin-x64/cc-connect-clawd": "2e2fd34b7cb9cf9311c8ce80cd1782b2ddd52b148615e8922de765013cdf9cc2",
-  "cc-connect-clawd-darwin-x64.tar.gz": "f1300292143f3f98d959303b62d5627a195c726c018a0eecf2ee2bd2616f7c0a",
-  "darwin-arm64/cc-connect-clawd": "f81133bbf1eabe995f7095359d959478a2923576adc68c5be1f18e398f0d4b69",
-  "cc-connect-clawd-darwin-arm64.tar.gz": "3cd949b0aff2fbf87c1a437a541be38cb1be028b104d4a037519b3873582d468",
-  "linux-x64/cc-connect-clawd": "81af234300c0e401368000027e19f4a81859a9377ed0e40e6c3909eca2631c57",
-  "cc-connect-clawd-linux-x64.tar.gz": "fba4ab2c0ae68230cdd03727795b1b1ac3ff9270bd4c742c42fb80c3e00a7efa",
+  "windows-x64/cc-connect-clawd.exe": "60586745cf9e6c5883f46ef18745511e873ba87782d61ff045b26c5319795ab3",
+  "cc-connect-clawd-windows-x64.zip": "afb79e68f1cc12f33c74500c2596ec3eeb6b92d9ccf86afbe741d0cf41b12c1e",
+  "windows-arm64/cc-connect-clawd.exe": "dd4b364c5b239f2835148a295bf06e7057e74f852fd6ae7489081a109b67bdb1",
+  "cc-connect-clawd-windows-arm64.zip": "1d01482fbd5fc6da4eaea11ce0045db43fb3300c4d970c975abd5658c4adf260",
+  "darwin-x64/cc-connect-clawd": "4ba36a96a18440cb877f7ea41e721f441142724478e139e750f360e7ee324d23",
+  "cc-connect-clawd-darwin-x64.tar.gz": "1c80fbdf06ea5c9d570652e923a4bcd16e6b6e0eab263f3b368cb70e2ed97119",
+  "darwin-arm64/cc-connect-clawd": "e54c741e9c6f1b092c73fbf9a794891c9360936b3bb1b91207e5705ed069c0be",
+  "cc-connect-clawd-darwin-arm64.tar.gz": "70b34a42a0ab7eca7d1a487be0f0813c9499e940baf022a84048831524231638",
+  "linux-x64/cc-connect-clawd": "c56a64c69b685a4f9a6751a8556ec7a127929e141de03b6193e813cb8a8aa974",
+  "cc-connect-clawd-linux-x64.tar.gz": "9ff7fcd70e61b4198bf6b8a7a4be8930248139e57d1b0a15f75ea193ef7e1e51",
 });
 
 function archiveName(target) {
