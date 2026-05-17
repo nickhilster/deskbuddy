@@ -10,10 +10,12 @@ const zlib = require("node:zlib");
 const {
   FETCH_COMMAND,
   DEFAULT_RELEASE,
+  PINNED_CHECKSUMS,
   archiveName,
   binaryChecksumName,
   releaseAssetUrl,
   targetBinaryPath,
+  checksumFor,
   selectTargets,
   buildReleaseManifest,
   parseChecksums,
@@ -30,8 +32,12 @@ test("release source is pinned to the public Clawd fork tag", () => {
     tag: "clawd-sidecar-v0.1.1",
   });
   assert.equal(
-    releaseAssetUrl("checksums.txt"),
-    "https://github.com/rullerzhou-afk/cc-connect-clawd/releases/download/clawd-sidecar-v0.1.1/checksums.txt"
+    checksumFor("cc-connect-clawd-windows-x64.zip"),
+    "afb79e68f1cc12f33c74500c2596ec3eeb6b92d9ccf86afbe741d0cf41b12c1e"
+  );
+  assert.equal(
+    releaseAssetUrl("cc-connect-clawd-windows-x64.zip"),
+    "https://github.com/rullerzhou-afk/cc-connect-clawd/releases/download/clawd-sidecar-v0.1.1/cc-connect-clawd-windows-x64.zip"
   );
 });
 
@@ -43,14 +49,24 @@ test("package exposes the sidecar fetch command", () => {
 test("manifest maps archives and install paths to Clawd sidecar layout", () => {
   const rootDir = "D:\\repo";
   const manifest = buildReleaseManifest({ rootDir, target: "windows-x64,linux-x64" });
-  assert.equal(manifest.checksums.name, "checksums.txt");
   assert.deepEqual(manifest.targets.map((target) => target.dir), ["windows-x64", "linux-x64"]);
   assert.equal(manifest.targets[0].archive, "cc-connect-clawd-windows-x64.zip");
+  assert.equal(manifest.targets[0].archiveSha256, PINNED_CHECKSUMS["cc-connect-clawd-windows-x64.zip"]);
   assert.equal(manifest.targets[0].binaryChecksumName, "windows-x64/cc-connect-clawd.exe");
+  assert.equal(manifest.targets[0].binarySha256, PINNED_CHECKSUMS["windows-x64/cc-connect-clawd.exe"]);
   assert.equal(
     manifest.targets[0].binaryPath,
     path.join(rootDir, "bin", "cc-connect-clawd", "windows-x64", "cc-connect-clawd.exe")
   );
+});
+
+test("pinned checksums cover every release target", () => {
+  const manifest = buildReleaseManifest();
+  assert.equal(manifest.targets.length, 5);
+  for (const target of manifest.targets) {
+    assert.match(target.archiveSha256, /^[a-f0-9]{64}$/);
+    assert.match(target.binarySha256, /^[a-f0-9]{64}$/);
+  }
 });
 
 test("selectTargets dedupes and rejects Go arch directory names", () => {
@@ -89,8 +105,8 @@ test("fetchSidecarBinaries downloads, verifies, extracts, and installs selected 
     `${sha256(binary)}  ${binaryChecksumName(target)}`,
     "",
   ].join("\n");
+  const pinnedChecksums = Object.fromEntries(parseChecksums(checksums));
   const downloads = new Map([
-    [releaseAssetUrl("checksums.txt", release), Buffer.from(checksums)],
     [releaseAssetUrl(archiveName(target), release), archive],
   ]);
 
@@ -98,6 +114,7 @@ test("fetchSidecarBinaries downloads, verifies, extracts, and installs selected 
     rootDir,
     release,
     target: "windows-x64",
+    checksums: pinnedChecksums,
     download: async (url) => {
       if (!downloads.has(url)) throw new Error(`unexpected download: ${url}`);
       return downloads.get(url);
@@ -120,14 +137,15 @@ test("fetchSidecarBinaries fails closed on checksum mismatch", async () => {
     `${sha256(binary)}  ${binaryChecksumName(target)}`,
     "",
   ].join("\n");
+  const pinnedChecksums = Object.fromEntries(parseChecksums(checksums));
 
   await assert.rejects(
     fetchSidecarBinaries({
       rootDir,
       release,
       target: "windows-x64",
+      checksums: pinnedChecksums,
       download: async (url) => {
-        if (url.endsWith("checksums.txt")) return Buffer.from(checksums);
         return archive;
       },
     }),

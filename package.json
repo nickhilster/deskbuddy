@@ -4,7 +4,7 @@
   "description": "A desktop pet that reacts to your Claude Code sessions in real-time.",
   "main": "src/main.js",
   "scripts": {
-    "start": "node launch.js",
+    "start": "node scripts/ensure-sidecar-binaries.js && node launch.js",
     "build": "electron-builder --win",
     "build:win:x64": "electron-builder --win nsis:x64",
     "build:win:arm64": "electron-builder --win nsis:arm64",

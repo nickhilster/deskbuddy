@@ -15,6 +15,7 @@ const {
   sidecarExecutableName,
   sidecarPlatformArchDir,
   sidecarResourceRelativePath,
+  devSidecarFetchHint,
   defaultConfigPath,
   defaultTokenEnvFilePath,
   redactText,
@@ -22,6 +23,7 @@ const {
   SIDECAR_ENV_TOKEN_FILE,
   SIDECAR_PATH_ENV,
 } = require("../src/telegram-approval-sidecar");
+const { TARGETS: SIDECAR_FETCH_TARGETS } = require("../scripts/fetch-sidecar-binaries");
 
 class FakeStream extends EventEmitter {
   setEncoding(value) {
@@ -347,6 +349,14 @@ test("sidecar binary names are stable across packaged platforms", () => {
   );
 });
 
+test("source fetch hints cover every pinned fetch target", () => {
+  const platformMap = { windows: "win32", darwin: "darwin", linux: "linux" };
+  for (const target of SIDECAR_FETCH_TARGETS) {
+    const hint = devSidecarFetchHint({ platform: platformMap[target.platform], arch: target.arch });
+    assert.match(hint, new RegExp(`npm run fetch:sidecars -- --target ${target.dir}`));
+  }
+});
+
 test("sidecar manager reports a clear missing binary error for resolved paths", async () => {
   const sidecar = new TelegramApprovalSidecar({
     env: {},
@@ -377,6 +387,25 @@ test("sidecar manager reports a clear missing binary error for source-mode fallb
   assert.equal(sidecar.getStatus().status, "failed");
   assert.equal(sidecar.getStatus().binaryPathSource, "dev");
   assert.match(sidecar.getStatus().message, /linux-x64/);
+  assert.match(sidecar.getStatus().message, /npm run fetch:sidecars -- --target linux-x64/);
+});
+
+test("sidecar manager does not suggest an unsupported source fetch target", async () => {
+  const sidecar = new TelegramApprovalSidecar({
+    env: {},
+    baseEnv: {},
+    platform: "linux",
+    arch: "arm64",
+    isPackaged: false,
+    fs: { existsSync: () => false },
+  });
+
+  await assert.rejects(sidecar.start(), /sidecar binary not found/);
+  assert.equal(sidecar.getStatus().status, "failed");
+  assert.equal(sidecar.getStatus().binaryPathSource, "dev");
+  assert.match(sidecar.getStatus().message, /No pinned Telegram approval sidecar is available for linux-arm64/);
+  assert.match(sidecar.getStatus().message, /CLAWD_CC_CONNECT_CLAWD_PATH/);
+  assert.doesNotMatch(sidecar.getStatus().message, /npm run fetch:sidecars -- --target linux-arm64/);
 });
 
 test("sidecar manager fails closed when binary availability cannot be checked", async () => {

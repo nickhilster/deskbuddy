@@ -23,6 +23,19 @@ const TARGETS = Object.freeze([
   Object.freeze({ platform: "linux", arch: "x64", dir: "linux-x64", exe: "cc-connect-clawd", archiveExt: ".tar.gz" }),
 ]);
 
+const PINNED_CHECKSUMS = Object.freeze({
+  "windows-x64/cc-connect-clawd.exe": "60586745cf9e6c5883f46ef18745511e873ba87782d61ff045b26c5319795ab3",
+  "cc-connect-clawd-windows-x64.zip": "afb79e68f1cc12f33c74500c2596ec3eeb6b92d9ccf86afbe741d0cf41b12c1e",
+  "windows-arm64/cc-connect-clawd.exe": "dd4b364c5b239f2835148a295bf06e7057e74f852fd6ae7489081a109b67bdb1",
+  "cc-connect-clawd-windows-arm64.zip": "1d01482fbd5fc6da4eaea11ce0045db43fb3300c4d970c975abd5658c4adf260",
+  "darwin-x64/cc-connect-clawd": "4ba36a96a18440cb877f7ea41e721f441142724478e139e750f360e7ee324d23",
+  "cc-connect-clawd-darwin-x64.tar.gz": "1c80fbdf06ea5c9d570652e923a4bcd16e6b6e0eab263f3b368cb70e2ed97119",
+  "darwin-arm64/cc-connect-clawd": "e54c741e9c6f1b092c73fbf9a794891c9360936b3bb1b91207e5705ed069c0be",
+  "cc-connect-clawd-darwin-arm64.tar.gz": "70b34a42a0ab7eca7d1a487be0f0813c9499e940baf022a84048831524231638",
+  "linux-x64/cc-connect-clawd": "c56a64c69b685a4f9a6751a8556ec7a127929e141de03b6193e813cb8a8aa974",
+  "cc-connect-clawd-linux-x64.tar.gz": "9ff7fcd70e61b4198bf6b8a7a4be8930248139e57d1b0a15f75ea193ef7e1e51",
+});
+
 function archiveName(target) {
   return `cc-connect-clawd-${target.dir}${target.archiveExt}`;
 }
@@ -37,6 +50,12 @@ function releaseAssetUrl(assetName, release = DEFAULT_RELEASE) {
 
 function targetBinaryPath(rootDir, target) {
   return path.join(rootDir, SIDECAR_ROOT, target.dir, target.exe);
+}
+
+function checksumFor(name, checksums = PINNED_CHECKSUMS) {
+  const expected = checksums && checksums[name];
+  if (!expected) throw new Error(`Missing pinned checksum for ${name}`);
+  return String(expected).toLowerCase();
 }
 
 function selectTargets(raw) {
@@ -61,23 +80,23 @@ function selectTargets(raw) {
 function buildReleaseManifest(options = {}) {
   const rootDir = options.rootDir || path.join(__dirname, "..");
   const release = options.release || DEFAULT_RELEASE;
+  const checksums = options.checksums || PINNED_CHECKSUMS;
   const targets = selectTargets(options.target || "all").map((target) => {
     const archive = archiveName(target);
+    const binaryChecksum = binaryChecksumName(target);
     return {
       ...target,
       archive,
       archiveUrl: releaseAssetUrl(archive, release),
       archiveChecksumName: archive,
-      binaryChecksumName: binaryChecksumName(target),
+      archiveSha256: checksumFor(archive, checksums),
+      binaryChecksumName: binaryChecksum,
+      binarySha256: checksumFor(binaryChecksum, checksums),
       binaryPath: targetBinaryPath(rootDir, target),
     };
   });
   return {
     release,
-    checksums: {
-      name: "checksums.txt",
-      url: releaseAssetUrl("checksums.txt", release),
-    },
     targets,
   };
 }
@@ -241,31 +260,34 @@ function installBinary(fsModule, filePath, buffer) {
 
 async function fetchSidecarBinaries(options = {}) {
   const fsModule = options.fs || fs;
-  const download = options.download || downloadBuffer;
+  const download = options.download || ((url) => downloadBuffer(url, 0, options.requestTimeoutMs));
   const rootDir = options.rootDir || path.join(__dirname, "..");
   const release = {
     ...DEFAULT_RELEASE,
     ...(options.release || {}),
     tag: options.tag || (options.release && options.release.tag) || DEFAULT_RELEASE.tag,
   };
-  const manifest = buildReleaseManifest({ rootDir, release, target: options.target || "all" });
+  const manifest = buildReleaseManifest({
+    rootDir,
+    release,
+    target: options.target || "all",
+    checksums: options.checksums || PINNED_CHECKSUMS,
+  });
   if (options.dryRun) return { ok: true, manifest, installed: [] };
 
-  const checksumsBuffer = await download(manifest.checksums.url);
-  const checksums = parseChecksums(checksumsBuffer.toString("utf8"));
   const installed = [];
   for (const target of manifest.targets) {
     const archiveBuffer = await download(target.archiveUrl);
-    verifyChecksum(archiveBuffer, checksums.get(target.archiveChecksumName), target.archiveChecksumName);
+    verifyChecksum(archiveBuffer, target.archiveSha256, target.archiveChecksumName);
     const binaryBuffer = extractSidecarBinary(archiveBuffer, target);
-    verifyChecksum(binaryBuffer, checksums.get(target.binaryChecksumName), target.binaryChecksumName);
+    verifyChecksum(binaryBuffer, target.binarySha256, target.binaryChecksumName);
     installBinary(fsModule, target.binaryPath, binaryBuffer);
     installed.push({ target: target.dir, path: target.binaryPath });
   }
   return { ok: true, manifest, installed };
 }
 
-function downloadBuffer(url, redirects = 0) {
+function downloadBuffer(url, redirects = 0, timeoutMs = 120000) {
   if (redirects > 5) return Promise.reject(new Error(`Too many redirects while downloading ${url}`));
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
@@ -278,7 +300,7 @@ function downloadBuffer(url, redirects = 0) {
       if (status >= 300 && status < 400 && res.headers.location) {
         res.resume();
         const next = new URL(res.headers.location, url).toString();
-        downloadBuffer(next, redirects + 1).then(resolve, reject);
+        downloadBuffer(next, redirects + 1, timeoutMs).then(resolve, reject);
         return;
       }
       if (status !== 200) {
@@ -291,7 +313,7 @@ function downloadBuffer(url, redirects = 0) {
       res.on("end", () => resolve(Buffer.concat(chunks)));
     });
     req.on("error", reject);
-    req.setTimeout(120000, () => {
+    req.setTimeout(timeoutMs || 120000, () => {
       req.destroy(new Error(`Download timed out for ${url}`));
     });
   });
@@ -348,10 +370,12 @@ module.exports = {
   FETCH_COMMAND,
   DEFAULT_RELEASE,
   TARGETS,
+  PINNED_CHECKSUMS,
   archiveName,
   binaryChecksumName,
   releaseAssetUrl,
   targetBinaryPath,
+  checksumFor,
   selectTargets,
   buildReleaseManifest,
   parseChecksums,
@@ -361,6 +385,7 @@ module.exports = {
   extractTarGzEntry,
   extractSidecarBinary,
   installBinary,
+  downloadBuffer,
   fetchSidecarBinaries,
   parseArgs,
 };
