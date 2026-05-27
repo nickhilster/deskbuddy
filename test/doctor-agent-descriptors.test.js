@@ -79,6 +79,7 @@ describe("doctor agent descriptors", () => {
     assert.strictEqual(getAgentDescriptor("qwen-code").parentDir, qwen.DEFAULT_PARENT_DIR);
     assert.strictEqual(getAgentDescriptor("qwen-code").configPath, qwen.DEFAULT_CONFIG_PATH);
     assert.strictEqual(getAgentDescriptor("qwen-code").marker, qwen.MARKER);
+    assert.deepStrictEqual(getAgentDescriptor("qwen-code").hookEvents, qwen.QWEN_CODE_HOOK_EVENTS);
 
     assert.strictEqual(getAgentDescriptor("opencode").parentDir, opencode.DEFAULT_PARENT_DIR);
     assert.strictEqual(getAgentDescriptor("opencode").configPath, opencode.DEFAULT_CONFIG_PATH);

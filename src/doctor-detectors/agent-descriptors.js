@@ -143,6 +143,7 @@ const AGENT_DESCRIPTORS = Object.freeze([
     autoInstall: true,
     marker: qwen.MARKER,
     nested: true,
+    hookEvents: qwen.QWEN_CODE_HOOK_EVENTS,
   }),
   Object.freeze({
     agentId: "opencode",

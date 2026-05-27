@@ -22,6 +22,8 @@
 
 **Kimi Code CLI (Kimi-CLI)** — hooks live in `~/.kimi/config.toml` (`[[hooks]]` entries). Clawd auto-registers them on launch when Kimi is installed, or you can run `npm run install:kimi-hooks` manually. Kimi is hook-only in Clawd: state updates and permission notifications come from hook events, not log polling. To make a permission-classification choice persist across restarts, set `CLAWD_KIMI_PERMISSION_MODE=explicit` (default) or `CLAWD_KIMI_PERMISSION_MODE=suspect` before running the installer — the value gets written into the `command` field for every Kimi hook so subsequent Clawd auto-syncs preserve it. Heads up: the auto-sync also rewrites the `command` field in-place if it diverges from the expected line, so manual edits to that field will be silently restored on the next launch.
 
+**Qwen Code** — hooks live in `~/.qwen/settings.json`. Clawd auto-registers them on launch when Qwen is installed, or you can run `npm run install:qwen-hooks` manually. Qwen Code support is hook-only: state updates and blocking `PermissionRequest` approvals come from Qwen hook events. If `disableAllHooks: true` is present in Qwen settings, Clawd can register entries but Qwen will not fire them until the flag is removed.
+
 **opencode** — uses a plugin entry in `~/.config/opencode/opencode.json`. Clawd auto-registers it on launch when opencode is installed, or you can run `node hooks/opencode-install.js` manually.
 
 **Pi** — uses a global extension directory at `~/.pi/agent/extensions/clawd-on-desk`. Clawd auto-registers it on launch when Pi is installed, or you can run `npm run install:pi-extension` manually. Interactive Pi sessions report lifecycle and tool activity to Clawd, but Pi is state-only: Clawd does not show permission bubbles, does not call Pi terminal confirmation, and preserves Pi's default YOLO execution behavior.
@@ -29,6 +31,8 @@
 **OpenClaw** — uses a plugin path under `~/.openclaw/openclaw.json`. Clawd auto-registers it only when an OpenClaw config already exists, or you can run `npm run install:openclaw-plugin` manually to let OpenClaw's CLI handle first-time setup. Phase 1 is state-only and targets local `openclaw tui --local` sessions.
 
 **Hermes Agent** — install Hermes from [hermes-agent.org](https://hermes-agent.org/) or [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent). Clawd shows Hermes in Settings by default, but startup auto-sync is no-op until Hermes is installed. Once Hermes exists (`%LOCALAPPDATA%\hermes` on Windows or `~/.hermes` on macOS/Linux), Clawd copies its plugin into Hermes' managed plugin directory and enables it through `hermes plugins enable clawd-on-desk`. You can force a manual sync with `npm run install:hermes-plugin`, or remove Clawd's Hermes plugin with `npm run uninstall:hermes-plugin`.
+
+**Hardware Buddy** — optional local approval companion support. It is disabled by default; enable it from Settings when you have a supported BLE/fake backend available. By default it sends state-only session snapshots, and permission replies stay behind the separate Hardware Buddy permission toggle.
 
 ## Telegram Approval
 
@@ -145,6 +149,9 @@ node hooks/kiro-install.js
 
 # Kimi Code CLI (Kimi-CLI)
 node hooks/kimi-install.js
+
+# Qwen Code
+node hooks/qwen-code-install.js
 
 # Cursor Agent
 node hooks/cursor-install.js

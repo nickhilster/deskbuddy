@@ -11,6 +11,7 @@ const {
 } = require("../src/doctor-detectors/agent-integrations");
 const { GEMINI_HOOK_EVENTS } = require("../hooks/gemini-install");
 const { ANTIGRAVITY_HOOK_EVENTS, __test: antigravityInstallTest } = require("../hooks/antigravity-install");
+const { QWEN_CODE_HOOK_EVENTS, buildQwenCodeHookCommand } = require("../hooks/qwen-code-install");
 
 const tempDirs = [];
 
@@ -97,6 +98,32 @@ function antigravityHooksConfig(commandForEvent = (event) => `"/node" "/app/hook
 
 function writeAntigravityHooks(descriptor, hooks = antigravityHooksConfig()) {
   writeJson(descriptor.configPath, hooks);
+}
+
+function qwenDescriptor() {
+  const root = makeTempDir();
+  const parentDir = path.join(root, ".qwen");
+  return baseDescriptor({
+    agentId: "qwen-code",
+    agentName: "Qwen Code",
+    marker: "qwen-code-hook.js",
+    parentDir,
+    configPath: path.join(parentDir, "settings.json"),
+    configMode: "file",
+    nested: true,
+    hookEvents: QWEN_CODE_HOOK_EVENTS,
+  });
+}
+
+function qwenHooksConfig(commandForEvent = (event) => `"/node" "/app/hooks/qwen-code-hook.js" ${event}`) {
+  const hooks = {};
+  for (const event of QWEN_CODE_HOOK_EVENTS) {
+    hooks[event] = [{
+      matcher: "*",
+      hooks: [{ name: "clawd", type: "command", command: commandForEvent(event) }],
+    }];
+  }
+  return { hooks };
 }
 
 function codexDescriptor() {
@@ -494,6 +521,108 @@ describe("checkAgentIntegrations", () => {
     assert.strictEqual(detail.hookCommandIssue, "scriptPath-missing");
     assert.strictEqual(detail.brokenAntigravityHookEvent, "PreInvocation");
     assert.deepStrictEqual(detail.fixAction, { type: "agent-integration", agentId: "antigravity-cli" });
+  });
+
+  it("validates Qwen Code hooks for every required event", () => {
+    const descriptor = qwenDescriptor();
+    writeJson(descriptor.configPath, qwenHooksConfig());
+
+    const seen = [];
+    const detail = runOne(descriptor, {
+      validateCommand: (command) => {
+        seen.push(command);
+        return {
+          ok: true,
+          nodeBin: "/node",
+          scriptPath: "/app/hooks/qwen-code-hook.js",
+        };
+      },
+    });
+
+    assert.strictEqual(seen.length, QWEN_CODE_HOOK_EVENTS.length);
+    assert.strictEqual(detail.status, "ok");
+    assert.strictEqual(detail.commandCount, QWEN_CODE_HOOK_EVENTS.length);
+    assert.strictEqual(detail.scriptPath, "/app/hooks/qwen-code-hook.js");
+    assert.deepStrictEqual(detail.supplementary, {
+      key: "qwen_hooks",
+      value: "enabled",
+      detail: "settings.json allows Clawd Qwen hooks",
+    });
+  });
+
+  it("validates Windows Qwen Code EncodedCommand hooks for every required event", () => {
+    const descriptor = qwenDescriptor();
+    const nodeBin = "C:\\Program Files\\nodejs\\node.exe";
+    const scriptPath = "D:/app/hooks/qwen-code-hook.js";
+    writeJson(descriptor.configPath, qwenHooksConfig((event) =>
+      buildQwenCodeHookCommand(
+        nodeBin,
+        scriptPath,
+        event,
+        {
+          platform: "win32",
+          powerShellBin: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+        }
+      )
+    ));
+
+    const seen = [];
+    const detail = runOne(descriptor, {
+      validateCommand: (command) => {
+        seen.push(command);
+        assert.strictEqual(command.includes("qwen-code-hook.js"), false);
+        return {
+          ok: true,
+          nodeBin,
+          scriptPath,
+        };
+      },
+    });
+
+    assert.strictEqual(seen.length, QWEN_CODE_HOOK_EVENTS.length);
+    assert.strictEqual(detail.status, "ok");
+    assert.strictEqual(detail.commandCount, QWEN_CODE_HOOK_EVENTS.length);
+    assert.strictEqual(detail.scriptPath, scriptPath);
+  });
+
+  it("warns when Qwen Code is missing any required hook event", () => {
+    const descriptor = qwenDescriptor();
+    writeJson(descriptor.configPath, {
+      hooks: {
+        PreToolUse: [{
+          matcher: "*",
+          hooks: [{ name: "clawd", type: "command", command: '"/node" "/app/hooks/qwen-code-hook.js" PreToolUse' }],
+        }],
+      },
+    });
+
+    const detail = runOne(descriptor);
+
+    assert.strictEqual(detail.status, "not-connected");
+    assert.strictEqual(detail.level, "warning");
+    assert.ok(detail.missingQwenHookEvents.includes("SessionStart"));
+    assert.ok(detail.missingQwenHookEvents.includes("PermissionRequest"));
+    assert.deepStrictEqual(detail.fixAction, { type: "agent-integration", agentId: "qwen-code" });
+  });
+
+  it("does not offer automatic repair when Qwen hooks are disabled globally", () => {
+    const descriptor = qwenDescriptor();
+    writeJson(descriptor.configPath, {
+      ...qwenHooksConfig(),
+      disableAllHooks: true,
+    });
+
+    const detail = runOne(descriptor);
+
+    assert.strictEqual(detail.status, "not-connected");
+    assert.strictEqual(detail.level, "warning");
+    assert.strictEqual(detail.detail, "Qwen Code hooks are disabled in settings.json; Clawd preserves this user setting and will not receive hook events");
+    assert.deepStrictEqual(detail.supplementary, {
+      key: "qwen_hooks",
+      value: "disabled-global",
+      detail: "disableAllHooks is true",
+    });
+    assert.strictEqual(detail.fixAction, undefined);
   });
 
   it("does not offer automatic repair when Antigravity Clawd hooks are disabled", () => {

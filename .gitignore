@@ -55,6 +55,7 @@ docs/**
 
 # Temp files from testing
 .tmp_*
+.tmp-*
 *.tmp
 
 # Root-level scratch files (tmp-*.md / tmp-*.json / tmp-*.sh etc.)
