@@ -81,6 +81,33 @@ function withAgentBubbleNote(detail, prefs, agentId) {
   return detail;
 }
 
+function getClaudeHookGuardStatus(options) {
+  const server = options && options.server;
+  if (!server || typeof server.getClaudeHookGuardStatus !== "function") return null;
+  try {
+    return server.getClaudeHookGuardStatus();
+  } catch {
+    return null;
+  }
+}
+
+function withClaudeHookGuardNotice(detail, descriptor, options) {
+  if (descriptor.agentId !== "claude-code") return detail;
+  if (!detail || detail.status !== "not-connected") return detail;
+  const guard = getClaudeHookGuardStatus(options);
+  if (!guard || guard.type !== "suspicious-shrink") return detail;
+  return {
+    ...detail,
+    detail: "Clawd paused automatic Claude hook repair after settings.json shrank during an external rewrite. Use Fix or restart Clawd to reinstall Clawd hooks.",
+    claudeHookGuard: {
+      type: guard.type,
+      at: guard.at || null,
+      before: guard.before || null,
+      after: guard.after || null,
+    },
+  };
+}
+
 function withAgentFixAction(detail, descriptor) {
   if (!descriptor.autoInstall || !REPAIRABLE_AGENT_STATUSES.has(detail.status)) return detail;
   if (
@@ -1477,6 +1504,7 @@ function checkAgent(descriptor, options) {
     });
   }
 
+  detail = withClaudeHookGuardNotice(detail, descriptor, options);
   return withAgentFixAction(withAgentBubbleNote(detail, prefs, descriptor.agentId), descriptor);
 }
 
@@ -1504,6 +1532,7 @@ function checkAgentIntegrations(options = {}) {
     fs: options.fs || fs,
     platform: options.platform || process.platform,
     prefs: options.prefs || {},
+    server: options.server || null,
     validateCommand: options.validateCommand || validateHookCommand,
   };
   const descriptors = options.descriptors || getAgentDescriptors();

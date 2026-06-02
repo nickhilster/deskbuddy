@@ -31,3 +31,4 @@
 | **macOS/Linux 安装包自动更新** | DMG/AppImage/deb 安装包无法自动更新——使用 `git clone` + `npm start` 可通过 `git pull` 自动更新，或从 GitHub Releases 手动下载。 |
 | **Electron 主进程无自动化测试** | 单元测试覆盖了 agent 配置和日志轮询，但状态机、窗口管理、托盘等 Electron 逻辑暂无自动化测试。 |
 | **Claude Code：桌宠未运行时工具被自动拒绝** | 桌宠 HTTP 服务未运行时，Clawd 注册的 `PermissionRequest` hook 因 `ECONNREFUSED` 失败，Claude Code 当前会把这种失败当作"用户拒绝"，影响 `Edit`、`Write`、`Bash` 等所有需要权限的工具。这违反 CC 自己的 hooks 文档（声明 HTTP hook 失败应 non-blocking） —— 见 [anthropics/claude-code#46193](https://github.com/anthropics/claude-code/issues/46193)。绕过：保持桌宠运行（推荐），或临时把 `~/.claude/settings.json` 里的 `PermissionRequest` key 重命名以禁用该 hook。 |
+| **Claude Code + CC Switch：受保护的自动修复暂停** | Clawd 通常会在其他工具重写 `~/.claude/settings.json` 后自动补回 Claude hooks。但如果文件突然缩水到看起来不安全，Clawd 会暂停自动修复，避免把外部工具的半成品配置固化；Doctor 会把 Claude Code 标为需要 Fix。可通过 **Settings -> Doctor -> Fix**、重启 Clawd，或重新打开「自动管理 Claude hooks」修复。CC Switch 的 Shared Config Snippet 可在同一台机器上携带 Clawd hooks，但这些 hooks 含本机路径和端口，不建议当作跨设备通用片段同步。 |

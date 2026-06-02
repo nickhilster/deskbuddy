@@ -48,12 +48,24 @@ function runOne(descriptor, options = {}) {
     fs,
     prefs: options.prefs || {},
     descriptors: [descriptor],
+    server: options.server || null,
     validateCommand: options.validateCommand || (() => ({
       ok: true,
       nodeBin: "/node",
       scriptPath: "/app/hooks/test-hook.js",
     })),
   }).details[0];
+}
+
+function suspiciousShrinkGuardServer() {
+  return {
+    getClaudeHookGuardStatus: () => ({
+      type: "suspicious-shrink",
+      at: 1234,
+      before: { keyCount: 5, hookCount: 12, thirdPartyHookCount: 2 },
+      after: { keyCount: 1, hookCount: 0, thirdPartyHookCount: 0 },
+    }),
+  };
 }
 
 function geminiHooksConfig(commandForEvent = (event) => `"/node" "/app/hooks/gemini-hook.js" ${event}`) {
@@ -219,6 +231,83 @@ describe("checkAgentIntegrations", () => {
     assert.strictEqual(detail.level, "warning");
     assert.strictEqual(detail.configFileExists, false);
     assert.deepStrictEqual(detail.fixAction, { type: "agent-integration", agentId: "test-agent" });
+  });
+
+  it("explains Claude hook loss when the suspicious-shrink guard recently fired", () => {
+    const descriptor = baseDescriptor({
+      agentId: "claude-code",
+      agentName: "Claude Code",
+      marker: "clawd-hook.js",
+      nested: true,
+    });
+    writeJson(descriptor.configPath, { hooks: {} });
+
+    const detail = runOne(descriptor, {
+      server: suspiciousShrinkGuardServer(),
+    });
+
+    assert.strictEqual(detail.status, "not-connected");
+    assert.match(detail.detail, /paused automatic Claude hook repair/);
+    assert.strictEqual(detail.claudeHookGuard.type, "suspicious-shrink");
+    assert.deepStrictEqual(detail.fixAction, { type: "agent-integration", agentId: "claude-code" });
+  });
+
+  it("does not show the Claude guard notice for other agents", () => {
+    const descriptor = baseDescriptor();
+    writeJson(descriptor.configPath, { hooks: {} });
+
+    const detail = runOne(descriptor, {
+      server: suspiciousShrinkGuardServer(),
+    });
+
+    assert.strictEqual(detail.status, "not-connected");
+    assert.match(detail.detail, /has no test-hook\.js command/);
+    assert.doesNotMatch(detail.detail, /paused automatic Claude hook repair/);
+    assert.strictEqual(detail.claudeHookGuard, undefined);
+  });
+
+  it("does not show the Claude guard notice when Claude hooks are connected", () => {
+    const descriptor = baseDescriptor({
+      agentId: "claude-code",
+      agentName: "Claude Code",
+      marker: "clawd-hook.js",
+      nested: true,
+    });
+    writeJson(descriptor.configPath, {
+      hooks: {
+        Stop: [{
+          matcher: "",
+          hooks: [{ command: '"/node" "/app/hooks/clawd-hook.js" Stop' }],
+        }],
+      },
+    });
+
+    const detail = runOne(descriptor, {
+      server: suspiciousShrinkGuardServer(),
+    });
+
+    assert.strictEqual(detail.status, "ok");
+    assert.doesNotMatch(detail.detail, /paused automatic Claude hook repair/);
+    assert.strictEqual(detail.claudeHookGuard, undefined);
+  });
+
+  it("keeps the original Claude hook loss detail when no guard status is available", () => {
+    const descriptor = baseDescriptor({
+      agentId: "claude-code",
+      agentName: "Claude Code",
+      marker: "clawd-hook.js",
+      nested: true,
+    });
+    writeJson(descriptor.configPath, { hooks: {} });
+
+    const detail = runOne(descriptor, {
+      server: {},
+    });
+
+    assert.strictEqual(detail.status, "not-connected");
+    assert.match(detail.detail, /has no clawd-hook\.js command/);
+    assert.doesNotMatch(detail.detail, /paused automatic Claude hook repair/);
+    assert.strictEqual(detail.claudeHookGuard, undefined);
   });
 
   it("returns config-corrupt when JSON parsing fails", () => {
