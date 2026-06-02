@@ -1,81 +1,79 @@
 # Clawd Mobile Protocol v1
 
+## Scope
+
+Mobile v1 is an opt-in, read-only LAN preview for watching Clawd session state
+from a phone or another browser on the same network.
+
+M1 does not expose remote approval, elicitation, writes, terminal control, raw
+tool inputs, prompts, full cwd paths, or transcript/output sync. Permission
+approval remains on the desktop surfaces and other existing remote channels.
+
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Clawd Desktop                      │
-│                                                      │
-│  ┌──────────┐   ┌──────────────┐   ┌──────────────┐ │
-│  │  State    │──▶│ LAN WS Bridge│──▶│  HTTP Server  │ │
-│  │  Engine   │   │  (0.0.0.0)   │   │  (PWA files)  │ │
-│  └──────────┘   └──────┬───────┘   └──────────────┘ │
-│       │                │                              │
-│  ┌──────────┐   ┌──────┴───────┐                     │
-│  │Permission│──▶│  WebSocket   │                     │
-│  │ System   │   │  /ws?token=  │                     │
-│  └──────────┘   └──────────────┘                     │
-└────────────────────────┬────────────────────────────┘
-                         │ LAN (Wi-Fi / Ethernet)
-                         │ ws://<host>:23334/ws?token=<hex>
-                         │
-┌────────────────────────┴────────────────────────────┐
-│                  PWA (Mobile Browser)                 │
-│                                                      │
-│  ┌──────────┐   ┌──────────┐   ┌──────────────────┐ │
-│  │ Service  │   │  Session  │   │    Approval      │ │
-│  │ Worker   │   │  Renderer │   │    Manager       │ │
-│  └──────────┘   └──────────┘   └──────────────────┘ │
-└──────────────────────────────────────────────────────┘
+```text
+Clawd Desktop
+  State engine
+      |
+      v
+  LAN WebSocket bridge (0.0.0.0:<port>)
+      |-- HTTP static server for /mobile/*
+      `-- WebSocket /ws?token=<hex>
+              |
+              v
+        PWA session renderer
 ```
 
 ## Security Model
 
-- **Token**: 32-char hex, generated once, persisted at `~/.clawd/mobile-token.json`
-- **Transport**: plaintext WebSocket over LAN only (no TLS, no Internet exposure)
-- **Binding**: `0.0.0.0:<port>` — reachable by any device on the same LAN
-- **Auth**: token validated on WebSocket upgrade; invalid token → close code 1008
-- **Rate limit**: 60 messages per 60s per client
-- **Max clients**: 10 concurrent connections
+- **Token**: 32-char hex, generated once and stored at
+  `~/.clawd/mobile-token.json`.
+- **Transport**: plaintext WebSocket over LAN only. Do not expose it to the
+  Internet or untrusted networks.
+- **Binding**: `0.0.0.0:<port>`, so same-LAN devices can reach it.
+- **Auth**: token is required on WebSocket upgrade; invalid tokens close with
+  code 1008.
+- **Rate limit**: 60 inbound client messages per 60s per client. M1 ignores
+  valid client messages after rate limiting because the protocol is read-only.
+- **Max clients**: 10 concurrent WebSocket clients.
 
 ## Connection Flow
 
-```
-Mobile                          Desktop
-  │                                │
-  │  1. Scan QR / manual input     │
-  │     (host:port:token)          │
-  │                                │
-  │  2. WS connect                 │
-  │     /ws?token=<hex>            │
-  │  ─────────────────────────▶    │
-  │                                │  3. Validate token
-  │                                │     Reject → 1008
-  │  ◀─────────────────────────    │
-  │  4. snapshot (full state)      │
-  │                                │
-  │  ◀─────────────────────────    │  5. state (incremental)
-  │                                │
-  │  ◀────── ping ────────────     │  6. Heartbeat (30s)
-  │  ──────── pong ───────────▶    │
-  │                                │
+```text
+Mobile                                      Desktop
+  |                                           |
+  | 1. Open /mobile/?host=&port=&token=      |
+  |                                           |
+  | 2. WS connect /ws?token=<hex>            |
+  |------------------------------------------>|
+  |                                           | 3. Validate token
+  |                                           |    reject -> close 1008
+  |<------------------------------------------|
+  | 4. snapshot                              |
+  |<------------------------------------------|
+  | 5. state / session_deleted updates       |
+  |<------------------------------------------|
+  | 6. ping                                  |
+  |------------------------------------------>|
+  | pong                                     |
 ```
 
-## Protocol
+## Message Envelope
 
-All messages are JSON. Every message from the server includes:
+All server messages are JSON and include:
 
-| Field       | Type   | Description                    |
-|-------------|--------|--------------------------------|
-| `version`   | string | Always `"v1"`                  |
-| `type`      | string | Message type                   |
-| `timestamp` | number | Unix ms                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `version` | string | Always `"v1"` |
+| `type` | string | Message type |
+| `timestamp` | number | Unix ms |
 
-### Server → Client
+## Server To Client
 
-#### `snapshot`
+### `snapshot`
 
-Sent on initial connection. Contains full session state.
+Sent on initial connection. Contains the currently cached read-only session
+preview entries.
 
 ```json
 {
@@ -83,25 +81,35 @@ Sent on initial connection. Contains full session state.
   "type": "snapshot",
   "timestamp": 1717200000000,
   "sessions": {
-    "<sessionId>": {
+    "abc123": {
       "sessionId": "abc123",
+      "title": "Fix auth bug",
+      "basename": "project",
       "state": "working",
-      "agentId": "claude-code",
-      "cwd": "/home/user/project",
-      "sessionTitle": "Fix auth bug",
-      "updatedAt": 1717200000000,
       "recentEvents": [
         { "event": "PreToolUse", "at": 1717199990000, "state": "working" }
-      ],
-      "isReal": true
+      ]
     }
   }
 }
 ```
 
-#### `state`
+Preview entry fields:
 
-Incremental session state update.
+| Field | Type | Description |
+| --- | --- | --- |
+| `sessionId` | string | Session identifier |
+| `title` | string or null | Sanitized session title or agent id fallback |
+| `basename` | string or null | Basename of cwd only, never the full path |
+| `state` | string | Clawd display state |
+| `recentEvents` | array | Recent event names with timestamps and states only |
+
+`recentEvents[]` entries contain only `{ event, at, state }`. They do not
+include tool input, prompts, cwd, transcript contents, or assistant output.
+
+### `state`
+
+Incremental session preview update.
 
 ```json
 {
@@ -111,17 +119,19 @@ Incremental session state update.
   "sessionId": "abc123",
   "data": {
     "sessionId": "abc123",
+    "title": "Fix auth bug",
+    "basename": "project",
     "state": "thinking",
-    "agentId": "claude-code",
-    "cwd": "/home/user/project",
-    "updatedAt": 1717200001000,
-    "recentEvents": [],
-    "isReal": true
+    "recentEvents": [
+      { "event": "UserPromptSubmit", "at": 1717200000500, "state": "thinking" }
+    ]
   }
 }
 ```
 
-#### `session_deleted`
+### `session_deleted`
+
+Sent when a session disappears from the desktop session cache.
 
 ```json
 {
@@ -132,110 +142,51 @@ Incremental session state update.
 }
 ```
 
+## Client To Server
+
+M1 defines no write messages. The server accepts WebSocket frames only to apply
+the inbound rate limit and then ignores them.
+
+## Settings Connection Info
+
+The desktop Settings panel reads connection info through Electron IPC. If the
+LAN bridge object exists but has not finished listening yet, the IPC response is:
+
+```json
+{
+  "status": "starting",
+  "message": "LAN bridge is starting"
+}
+```
+
+Once ready, the response is:
+
+```json
+{
+  "status": "ok",
+  "lanIp": "192.168.1.23",
+  "port": 23334,
+  "token": "0123456789abcdef0123456789abcdef",
+  "pairUrl": "http://192.168.1.23:23334/mobile/?host=192.168.1.23&port=23334&token=0123456789abcdef0123456789abcdef"
+}
+```
+
+The public `/api/connection-info` endpoint intentionally does not return the
+token. Pairing URLs are shown from Settings only.
+
 ## Limitations
 
-- No TLS — LAN only, not suitable for untrusted networks
-- No authentication beyond shared token — token compromise = full access
-- Session data is eventually consistent (2s poll interval for state changes)
-- Permission requests are real-time; session state changes have up to 2s latency
-- `tool_output` messages are not yet bridged (planned for v2)
-- Max 10 concurrent PWA clients
-- Token is not revocable without manual file deletion
+- LAN only; no TLS.
+- Token compromise grants read-only session preview access until the token file
+  is deleted or rotated manually.
+- Session state is eventually consistent because the bridge polls the desktop
+  session cache every 2 seconds.
+- Max 10 concurrent PWA clients.
+- No remote approval, elicitation, terminal control, prompt sync, tool output
+  sync, or transcript sync in M1.
 
-## M2 — Planned (Secure Approval)
+## M2 Planned Work
 
-The following message types are not implemented in M1 and will be added in M2 once pairing and token rotation are in place.
-
-### Sequence Diagram (M2 additions)
-
-```
-Mobile                          Desktop
-  │                                │
-  │  ◀─────────────────────────    │  permission_request
-  │                                │
-  │  permission_response           │
-  │  ─────────────────────────▶    │
-  │                                │  Resolve → HTTP response
-  │  ◀─────────────────────────    │  permission_dismissed
-  │                                │
-```
-
-### Server → Client
-
-#### `permission_request`
-
-```json
-{
-  "version": "v1",
-  "type": "permission_request",
-  "timestamp": 1717200003000,
-  "requestId": "perm_1717200003000",
-  "data": {
-    "agentId": "claude-code",
-    "toolName": "Bash",
-    "toolInputSummary": "Run npm test",
-    "suggestions": [
-      { "label": "Allow", "behavior": "allow" },
-      { "label": "Deny", "behavior": "deny" }
-    ],
-    "sessionFolder": "project",
-    "sessionShortId": "123",
-    "timeout": 90000
-  }
-}
-```
-
-#### `elicitation_request`
-
-```json
-{
-  "version": "v1",
-  "type": "elicitation_request",
-  "timestamp": 1717200004000,
-  "requestId": "perm_1717200004000",
-  "data": {
-    "agentId": "claude-code",
-    "toolName": "AskUserQuestion",
-    "prompt": "Which framework?",
-    "suggestions": [],
-    "timeout": 90000
-  }
-}
-```
-
-#### `permission_dismissed`
-
-Sent when a permission is resolved (from any client or desktop bubble).
-
-```json
-{
-  "version": "v1",
-  "type": "permission_dismissed",
-  "timestamp": 1717200005000,
-  "requestId": "perm_1717200003000"
-}
-```
-
-### Client → Server
-
-#### `permission_response`
-
-```json
-{
-  "type": "permission_response",
-  "requestId": "perm_1717200003000",
-  "behavior": "allow"
-}
-```
-
-`behavior`: `"allow"` | `"deny"`
-
-#### `elicitation_response`
-
-```json
-{
-  "type": "elicitation_response",
-  "requestId": "perm_1717200004000",
-  "answers": { "value": "React" }
-}
-```
+Secure remote approval can be considered in M2 only after pairing, token
+rotation/revocation, approval auditability, and a clear fallback story are
+designed. Those message types are intentionally absent from v1 M1.

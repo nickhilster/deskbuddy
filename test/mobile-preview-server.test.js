@@ -134,9 +134,27 @@ describe("Mobile Preview Server", () => {
     assert.ok(res.headers["content-type"].includes("text/html"));
   });
 
+  it("serves public connection info without exposing the token", async () => {
+    const res = await httpGet(port, "/api/connection-info");
+    assert.strictEqual(res.status, 200);
+    const info = JSON.parse(res.body);
+    assert.strictEqual(info.status, "ok");
+    assert.strictEqual(info.port, port);
+    assert.strictEqual(typeof info.lanIp, "string");
+    assert.ok(!("token" in info));
+  });
+
   it("returns 404 for non-mobile paths", async () => {
     const res = await httpGet(port, "/other");
     assert.strictEqual(res.status, 404);
+  });
+
+  it("rejects path traversal attempts instead of serving files outside the PWA directory", async () => {
+    const dotDot = await httpGet(port, "/mobile/%2e%2e/package.json");
+    assert.notStrictEqual(dotDot.status, 200);
+
+    const encodedSlash = await httpGet(port, "/mobile/%2e%2e%2fpackage.json");
+    assert.notStrictEqual(encodedSlash.status, 200);
   });
 
   it("rejects WebSocket with invalid token", async () => {

@@ -444,6 +444,9 @@ function registerSettingsIpc(options = {}) {
       if (!lanWsServer) return { status: "error", message: "LAN bridge not available" };
       const port = lanWsServer.getPort();
       const tok = lanWsServer.getToken();
+      if (!Number.isInteger(port) || port <= 0 || typeof tok !== "string" || !tok) {
+        return { status: "starting", message: "LAN bridge is starting" };
+      }
       const os = require("os");
       let lanIp = "127.0.0.1";
       const interfaces = os.networkInterfaces();

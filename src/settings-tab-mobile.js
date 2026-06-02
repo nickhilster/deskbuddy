@@ -1,10 +1,14 @@
 "use strict";
 
 (function initSettingsTabMobile(root) {
+  const MOBILE_INFO_RETRY_MS = 200;
+  const MOBILE_INFO_MAX_RETRIES = 10;
+
   let runtime = null;
   let helpers = null;
   let state = null;
   let infoContainer = null;
+  let changeListenerRegistered = false;
 
   function t(key) {
     return helpers.t(key);
@@ -21,7 +25,20 @@
     return window.settingsAPI.getMobileConnectionInfo().catch(() => null);
   }
 
-  function renderConnectionInfo(container) {
+  function isReadyMobileInfo(info) {
+    return !!(
+      info
+      && info.status === "ok"
+      && Number.isInteger(info.port)
+      && info.port > 0
+      && typeof info.token === "string"
+      && info.token
+      && typeof info.lanIp === "string"
+      && info.lanIp
+    );
+  }
+
+  function renderConnectionInfo(container, attempt = 0) {
     container.innerHTML = "";
     const snapshot = (state && state.snapshot) || {};
     const enabled = snapshot.mobilePreviewEnabled === true;
@@ -34,7 +51,17 @@
 
     fetchMobileInfo().then((info) => {
       if (!container.parentNode) return;
-      if (!info || info.status !== "ok") {
+      if (!isReadyMobileInfo(info)) {
+        if (
+          attempt < MOBILE_INFO_MAX_RETRIES
+          && info
+          && (info.status === "starting" || info.status === "ok")
+        ) {
+          setTimeout(() => {
+            if (container.parentNode) renderConnectionInfo(container, attempt + 1);
+          }, MOBILE_INFO_RETRY_MS);
+          return;
+        }
         container.innerHTML = `<p class="mobile-info-error">${escapeHtml(t("mobileError") || "Unable to load connection info.")}</p>`;
         return;
       }
@@ -110,10 +137,11 @@
     renderConnectionInfo(infoContainer);
 
     // Re-render connection info when toggle changes
-    if (window.settingsAPI && typeof window.settingsAPI.onChanged === "function") {
+    if (!changeListenerRegistered && window.settingsAPI && typeof window.settingsAPI.onChanged === "function") {
+      changeListenerRegistered = true;
       window.settingsAPI.onChanged((evt) => {
         if (evt && evt.changes && Object.prototype.hasOwnProperty.call(evt.changes, "mobilePreviewEnabled")) {
-          renderConnectionInfo(infoContainer);
+          if (infoContainer) renderConnectionInfo(infoContainer);
         }
       });
     }

@@ -55,6 +55,11 @@ function buildMessage(type, payload) {
   return JSON.stringify({ version: PROTOCOL_VERSION, type, timestamp: Date.now(), ...payload });
 }
 
+function isPathInside(parent, child) {
+  const relative = path.relative(parent, child);
+  return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
 function initMobilePreviewServer(ctx) {
   const token = loadOrCreateToken();
   const clients = new Set();
@@ -95,7 +100,8 @@ function initMobilePreviewServer(ctx) {
 
     // API endpoint for connection info (M1: no token — must come from Settings page or URL params)
     if (urlPath === "/api/connection-info") {
-      const info = { port: activePort, lanIp: getLocalIP() };
+      const ready = Number.isInteger(activePort) && activePort > 0;
+      const info = { status: ready ? "ok" : "starting", port: ready ? activePort : null, lanIp: getLocalIP() };
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-cache" });
       res.end(JSON.stringify(info));
       return;
@@ -105,7 +111,7 @@ function initMobilePreviewServer(ctx) {
     if (!urlPath.startsWith("/mobile/")) { res.writeHead(404); res.end(); return; }
     const rel = urlPath.slice("/mobile/".length);
     const filePath = path.join(PWA_DIR, rel);
-    if (!filePath.startsWith(PWA_DIR)) { res.writeHead(403); res.end(); return; }
+    if (!isPathInside(PWA_DIR, filePath)) { res.writeHead(403); res.end(); return; }
     const ext = path.extname(filePath).toLowerCase();
     fs.readFile(filePath, (err, data) => {
       if (err) { res.writeHead(404); res.end(); return; }
