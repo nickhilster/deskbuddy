@@ -48,7 +48,7 @@ mobile companion over LAN, and Hermes Agent clarify / permission-bubble groundwo
 
 - A new `docs/connections/` plan set documents the Telegram native rework end to end: the D-migration path, the native companion architecture, the R3 Direct Send design, and the code-state reviews that corrected it.
 - Added five bundled Clawd SVG animation assets (`clawd-coffee-hand`, `clawd-coffee-head-flip`, `clawd-aegyo-shy`, `clawd-dizzy`, `clawd-idle-low-battery`) for future theme wiring; they are not yet bound to the default state map.
-- External contributors shipped code across mobile preview, launch-session, Hermes, keep-awake, opencode, theme, and UI fixes, including two first-time contributors (@QingXB, @29206394); 藤知 co-authored the Qoder integration (#423).
+- External contributors shipped code across mobile preview, launch-session, Hermes, keep-awake, opencode, theme, and UI fixes, including two first-time contributors (@QingXB, @29206394 / 藤知).
 
 ### Contributors
 
@@ -57,12 +57,11 @@ Huge thanks to everyone who shipped code, tests, docs, or release polish for v0.
 - **@rullerzhou-afk** (鹿鹿 · creator) - Telegram native rework end to end (migration state machine + owner manager, native client, rich approval, R1a completion notifications, R3 Direct Send), Codex session / state fixes, opencode attribution and loading fixes, macOS dock behavior, Qoder state-only integration, and release work.
 - **@Bynlk** - Read-only mobile PWA companion (LAN preview M1, session cards, event-driven push, smooth expand + live timers, PWA reliability), macOS Dock icon sizing, and the mini-mode edge auto-snap toggle.
 - **@QingXB** - Launch a Claude Code session from the pet's right-click menu (#409). *First-time contributor.*
-- **@29206394** - Hermes Agent permission bubble + elicitation integration (#387). *First-time contributor.*
+- **@29206394 (藤知)** - Hermes Agent permission bubble + elicitation integration (#387). *First-time contributor.*
 - **@zxypro1** (Zone Tome) - Block system sleep while agent tasks are in progress (#358).
 - **@NeroAyase** - opencode plugin headless child sessions and state-flow / sessionID fixes (#401, #366).
 - **@divergentD** - Directional Codex Pet drag animations (#388).
 - **@Ne9roni** - Stale ExitPlanMode bubble fix and the plan-feedback button (#402).
-- **藤知** - Co-authored the Qoder state-only integration (#423).
 
 ### Known Limitations
 
