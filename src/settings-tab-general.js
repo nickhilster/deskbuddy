@@ -94,11 +94,6 @@
       buildLanguageRow(),
       buildSizeSliderRow(),
       buildSoundGroup(),
-      helpers.buildSwitchRow({
-        key: "lowPowerIdleMode",
-        labelKey: "rowLowPowerIdleMode",
-        descKey: "rowLowPowerIdleModeDesc",
-      }),
       buildFlashGroup(),
       helpers.buildSwitchRow({
         key: "allowEdgePinning",
@@ -120,15 +115,23 @@
     parent.appendChild(helpers.buildSection(t("sectionSession"), [
       buildSessionHudGroup(),
       buildSessionCleanupGroup(),
-      // Keep-awake is a session-lifecycle behavior (block OS sleep while an
-      // agent task is in progress), so it belongs here rather than under
-      // Appearance where it originally sat.
+      buildDashboardRow(),
+    ]));
+
+    // System: global power / system behaviors that aren't per-session and
+    // aren't appearance. Both toggles affect the whole machine's power state
+    // (low-power idle throttling; blocking OS sleep while any task runs).
+    parent.appendChild(helpers.buildSection(t("sectionSystem"), [
+      helpers.buildSwitchRow({
+        key: "lowPowerIdleMode",
+        labelKey: "rowLowPowerIdleMode",
+        descKey: "rowLowPowerIdleModeDesc",
+      }),
       helpers.buildSwitchRow({
         key: "keepAwakeWhileWorking",
         labelKey: "rowKeepAwakeWhileWorking",
         descKey: "rowKeepAwakeWhileWorkingDesc",
       }),
-      buildDashboardRow(),
     ]));
 
     const manageClaudeHooksEnabled = !!(state.snapshot && state.snapshot.manageClaudeHooksAutomatically);
