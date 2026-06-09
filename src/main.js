@@ -1012,7 +1012,8 @@ const _permCtx = {
   // DANGER "auto-pilot": when true, showPermissionBubble auto-approves every
   // request instead of rendering a bubble. DND / per-agent / headless gates
   // run earlier in the route, so they still win — this only fires once a
-  // bubble would otherwise show.
+  // bubble would otherwise show. Headless fallback stays agent-specific
+  // (no-decision/native fallback, opencode silent TUI fallback, or CC deny).
   isAutoApproveAllEnabled: () =>
     _settingsController.get("autoApproveAllPermissions") === true,
   focusTerminalForSession: (sessionId, options = {}) => {

@@ -73,6 +73,12 @@ function shouldMuteCodexNativeNotificationSound(ctx) {
   return ctx.isCodexNativeNotificationSoundEnabled() === false;
 }
 
+function isHeadlessSession(ctx, sessionId) {
+  if (!ctx || !ctx.sessions || typeof ctx.sessions.get !== "function") return false;
+  const session = ctx.sessions.get(sessionId);
+  return !!(session && session.headless);
+}
+
 function arePermissionBubblesEnabled(ctx) {
   if (typeof ctx.getBubblePolicy === "function") {
     try {
@@ -339,6 +345,12 @@ function handlePermissionPost(req, res, options) {
           return;
         }
 
+        if (isHeadlessSession(ctx, sessionId)) {
+          recordRequestHookEvent.accepted();
+          ctx.permLog(`opencode headless session=${sessionId} → silent drop, TUI fallback — request=${requestId}`);
+          return;
+        }
+
         // No HTTP connection to hold open — only degradation is to
         // not render a bubble and let the TUI prompt handle it.
         const opencodeSubGateBypass = shouldBypassOpencodeBubble(ctx);
@@ -438,6 +450,13 @@ function handlePermissionPost(req, res, options) {
         if (ctx.doNotDisturb) {
           recordRequestHookEvent.droppedByDnd();
           ctx.permLog(`codex DND -> no decision, native prompt fallback (tool=${toolName})`);
+          sendCodexPermissionNoDecision(res);
+          return;
+        }
+
+        if (isHeadlessSession(ctx, sessionId)) {
+          recordRequestHookEvent.accepted();
+          ctx.permLog(`codex headless session=${sessionId} -> no decision, native prompt fallback (tool=${toolName})`);
           sendCodexPermissionNoDecision(res);
           return;
         }
@@ -547,6 +566,13 @@ function handlePermissionPost(req, res, options) {
           return;
         }
 
+        if (isHeadlessSession(ctx, sessionId)) {
+          recordRequestHookEvent.accepted();
+          ctx.permLog(`qwen headless session=${sessionId} -> no decision, native prompt fallback (tool=${toolName})`);
+          sendQwenCodePermissionNoDecision(res);
+          return;
+        }
+
         if (typeof ctx.isAgentEnabled === "function" && !ctx.isAgentEnabled("qwen-code")) {
           recordRequestHookEvent.droppedByDisabled();
           ctx.permLog(`qwen disabled -> no decision, native prompt fallback (tool=${toolName})`);
@@ -642,6 +668,13 @@ function handlePermissionPost(req, res, options) {
         if (ctx.doNotDisturb) {
           recordRequestHookEvent.droppedByDnd();
           ctx.permLog(`copilot DND -> no decision, native prompt fallback (tool=${toolName})`);
+          sendCopilotPermissionNoDecision(res);
+          return;
+        }
+
+        if (isHeadlessSession(ctx, sessionId)) {
+          recordRequestHookEvent.accepted();
+          ctx.permLog(`copilot headless session=${sessionId} -> no decision, native prompt fallback (tool=${toolName})`);
           sendCopilotPermissionNoDecision(res);
           return;
         }
@@ -750,6 +783,13 @@ function handlePermissionPost(req, res, options) {
         if (ctx.doNotDisturb) {
           recordRequestHookEvent.droppedByDnd();
           ctx.permLog(`hermes DND -> no decision, native fallback (tool=${toolName})`);
+          sendHermesPermissionNoDecision(res);
+          return;
+        }
+
+        if (isHeadlessSession(ctx, sessionId)) {
+          recordRequestHookEvent.accepted();
+          ctx.permLog(`hermes headless session=${sessionId} -> no decision, native fallback (tool=${toolName})`);
           sendHermesPermissionNoDecision(res);
           return;
         }

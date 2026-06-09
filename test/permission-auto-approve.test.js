@@ -2,10 +2,11 @@
 //
 // When the toggle is on, showPermissionBubble must resolve the entry as
 // "allow" and return BEFORE constructing a BrowserWindow — that early return
-// is also what lets this test run without a real Electron window. The DND /
-// per-agent / headless gates live earlier in the route (server-route-
-// permission.js), so they still win: by the time showPermissionBubble runs,
-// a gated request never reaches it.
+// The DND / per-agent / headless gates live earlier in the route (server-
+// route-permission.js), so they still win: by the time showPermissionBubble
+// runs, a gated request never reaches it. Headless fallback is deliberately
+// agent-specific: some agents get no-decision/native fallback, opencode gets
+// silent TUI fallback, and Claude/CodeBuddy keep their existing auto-deny.
 //
 // Exclusions: passive codex/kimi notifications and the hardware-buddy self
 // test are not approvals and must NOT be auto-resolved.

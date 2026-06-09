@@ -235,6 +235,28 @@ describe("server-route-permission POST", () => {
     assert.deepStrictEqual(res.ctx.calls.addPendingPermission, [entry]);
   });
 
+  it("returns no-decision for headless Codex sessions before auto-pilot can allow", async () => {
+    const sessionId = "codex:headless-subagent";
+    const res = await callPermissionPost(JSON.stringify({
+      agent_id: "codex",
+      session_id: sessionId,
+      tool_name: "Bash",
+      tool_input: { command: "npm test" },
+    }), {
+      ctx: {
+        sessions: new Map([[sessionId, { agentId: "codex", headless: true }]]),
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers[CLAWD_SERVER_HEADER], CLAWD_SERVER_ID);
+    assert.deepStrictEqual(res.recorder.map((entry) => entry.outcome).filter(Boolean), ["accepted"]);
+    assert.deepStrictEqual(res.ctx.pendingPermissions, []);
+    assert.deepStrictEqual(res.ctx.calls.showPermissionBubble, []);
+    assert.deepStrictEqual(res.ctx.calls.addPendingPermission, []);
+    assert.deepStrictEqual(res.ctx.calls.maybeStartRemoteApproval, []);
+  });
+
   it("silently drops disabled opencode permissions after ACK", async () => {
     const res = await callPermissionPost(JSON.stringify({
       agent_id: "opencode",
@@ -279,6 +301,30 @@ describe("server-route-permission POST", () => {
       { agentId: "opencode" },
     ]]);
     assert.deepStrictEqual(res.recorder.map((item) => item.outcome).filter(Boolean), ["accepted"]);
+  });
+
+  it("silently drops headless opencode sessions before auto-pilot can bridge allow", async () => {
+    const sessionId = "opencode:headless";
+    const res = await callPermissionPost(JSON.stringify({
+      agent_id: "opencode",
+      session_id: sessionId,
+      tool_name: "Bash",
+      tool_input: { command: "npm test" },
+      request_id: "req-headless",
+      bridge_url: "http://127.0.0.1:1234",
+      bridge_token: "token",
+    }), {
+      ctx: {
+        sessions: new Map([[sessionId, { agentId: "opencode", headless: true }]]),
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.body, "ok");
+    assert.deepStrictEqual(res.recorder.map((entry) => entry.outcome).filter(Boolean), ["accepted"]);
+    assert.deepStrictEqual(res.ctx.pendingPermissions, []);
+    assert.deepStrictEqual(res.ctx.calls.showPermissionBubble, []);
+    assert.deepStrictEqual(res.ctx.calls.replyOpencodePermission, []);
   });
 
   it("destroys the Claude/CodeBuddy connection during DND", async () => {
@@ -655,6 +701,28 @@ describe("server-route-permission POST", () => {
     assert.deepStrictEqual(res.ctx.calls.showPermissionBubble, []);
   });
 
+  it("returns no-decision for headless Copilot sessions before auto-pilot can allow", async () => {
+    const sessionId = "copilot:headless";
+    const res = await callPermissionPost(JSON.stringify({
+      agent_id: "copilot-cli",
+      session_id: sessionId,
+      tool_name: "edit",
+      tool_input: { filePath: "a.txt" },
+    }), {
+      ctx: {
+        sessions: new Map([[sessionId, { agentId: "copilot-cli", headless: true }]]),
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers[CLAWD_SERVER_HEADER], CLAWD_SERVER_ID);
+    assert.deepStrictEqual(res.recorder.map((entry) => entry.outcome).filter(Boolean), ["accepted"]);
+    assert.deepStrictEqual(res.ctx.pendingPermissions, []);
+    assert.deepStrictEqual(res.ctx.calls.showPermissionBubble, []);
+    assert.deepStrictEqual(res.ctx.calls.addPendingPermission, []);
+    assert.deepStrictEqual(res.ctx.calls.maybeStartRemoteApproval, []);
+  });
+
   it("pushes a Copilot permission entry with isCopilotCli=true and shows the bubble", async () => {
     const sessionId = "copilot:01HQABCD";
     const res = await callPermissionPost(JSON.stringify({
@@ -842,6 +910,28 @@ describe("server-route-permission POST", () => {
     assert.strictEqual(res.headers[CLAWD_SERVER_HEADER], CLAWD_SERVER_ID);
     assert.deepStrictEqual(res.ctx.pendingPermissions, []);
     assert.deepStrictEqual(res.ctx.calls.showPermissionBubble, []);
+  });
+
+  it("returns no-decision for headless Hermes sessions before auto-pilot can allow", async () => {
+    const sessionId = "hermes:headless";
+    const res = await callPermissionPost(JSON.stringify({
+      agent_id: "hermes",
+      session_id: sessionId,
+      tool_name: "execute_bash",
+      tool_input: { command: "rm -rf /tmp/test" },
+    }), {
+      ctx: {
+        sessions: new Map([[sessionId, { agentId: "hermes", headless: true }]]),
+      },
+    });
+
+    assert.strictEqual(res.statusCode, 204);
+    assert.strictEqual(res.headers[CLAWD_SERVER_HEADER], CLAWD_SERVER_ID);
+    assert.deepStrictEqual(res.recorder.map((entry) => entry.outcome).filter(Boolean), ["accepted"]);
+    assert.deepStrictEqual(res.ctx.pendingPermissions, []);
+    assert.deepStrictEqual(res.ctx.calls.showPermissionBubble, []);
+    assert.deepStrictEqual(res.ctx.calls.addPendingPermission, []);
+    assert.deepStrictEqual(res.ctx.calls.maybeStartRemoteApproval, []);
   });
 
   it("pushes a Hermes permission entry with isHermes=true and full metadata", async () => {

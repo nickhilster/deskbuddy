@@ -127,6 +127,10 @@ const SCHEMA = {
   // the only way to flip it on is the explicit, confirmation-gated toggle in
   // Settings. DND and per-agent permissionsEnabled gates still win — they are
   // checked before showPermissionBubble, which is where auto-approve hooks in.
+  // Headless sessions are also stopped before that chokepoint, but their
+  // downstream fallback is agent-specific: Claude/CodeBuddy auto-deny, while
+  // Codex/Qwen/Copilot/Hermes return no-decision and opencode silently falls
+  // back to its TUI prompt.
   //
   // `ephemeral: true` — this field is runtime-only. It is NOT written to disk
   // by save(), and load()/validate() force it back to the default. So enabling
