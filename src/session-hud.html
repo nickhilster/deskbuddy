@@ -192,11 +192,13 @@ body { padding: 2px 3px 8px; }
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   max-width: 58%;
-  /* Intentionally NO width-floor override here: with elapsed hidden the
-     chips are the only content, and letting .right shrink below its
-     min-content would clip them at the window edge. The elapsed span carries
-     its own zero floor, so the squeeze order stays: elapsed truncates first,
-     chips never clip. */
+  /* Flexbox quirk: overflow:hidden makes a flex item's AUTOMATIC minimum
+     size 0, so under squeeze .right shrinks below its chips and its own
+     overflow clipping cuts them mid-glyph. min-content restores a real
+     floor: it equals bell+chips+gaps exactly, because the elapsed span
+     carries its own zero floor and contributes nothing. Squeeze order:
+     title first, then elapsed, chips never clip. */
+  min-width: min-content;
   overflow: hidden;
   white-space: nowrap;
 }

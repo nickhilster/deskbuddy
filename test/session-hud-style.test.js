@@ -66,14 +66,15 @@ describe("session HUD visual shell", () => {
   });
 
   it("keeps context usage chips visible before truncating elapsed text", () => {
-    // .right shrinks to content (auto basis) but never below its min-content:
-    // with elapsed hidden the chips are the only content, and a min-width: 0
-    // on .right would let overflow:hidden clip them at the window edge. The
-    // elapsed span carries its own min-width: 0, so it truncates first.
-    assert.match(sessionHudHtml, /\.right\s*\{[\s\S]*?flex:\s*0 1 auto;[\s\S]*?max-width:\s*58%;[\s\S]*?overflow:\s*hidden;[\s\S]*?\}/);
+    // Flexbox quirk regression guard: overflow:hidden gives a flex item an
+    // AUTOMATIC minimum size of 0, so without an explicit min-content floor
+    // .right shrinks below its chips under squeeze and its own overflow
+    // clipping cuts them mid-glyph. The elapsed span keeps min-width: 0 so it
+    // contributes nothing to that floor and truncates first.
+    assert.match(sessionHudHtml, /\.right\s*\{[\s\S]*?flex:\s*0 1 auto;[\s\S]*?max-width:\s*58%;[\s\S]*?min-width:\s*min-content;[\s\S]*?overflow:\s*hidden;[\s\S]*?\}/);
     const rightBlock = sessionHudHtml.match(/\.right\s*\{[\s\S]*?\}/);
     assert.ok(rightBlock, "session-hud.html should define a .right rule");
-    assert.doesNotMatch(rightBlock[0], /min-width:\s*0/, ".right must keep its min-content floor");
+    assert.doesNotMatch(rightBlock[0], /min-width:\s*0\b/, ".right must not zero its width floor");
     assert.match(sessionHudHtml, /\.elapsed\s*\{[\s\S]*min-width:\s*0;[\s\S]*text-overflow:\s*ellipsis;[\s\S]*\}/);
     assert.match(sessionHudHtml, /\.usage-chip\s*\{[\s\S]*flex:\s*0 0 auto;[\s\S]*white-space:\s*nowrap;[\s\S]*\}/);
   });
