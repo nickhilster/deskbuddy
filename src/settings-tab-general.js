@@ -3,6 +3,7 @@
 (function initSettingsTabGeneral(root) {
   const GENERAL_IN_PLACE_KEYS = new Set([
     "size",
+    "textScale",
     "soundMuted",
     "flashTaskbarOnComplete",
     "flashIntervalMs",
@@ -93,6 +94,7 @@
     parent.appendChild(helpers.buildSection(t("sectionAppearance"), [
       buildLanguageRow(),
       buildSizeSliderRow(),
+      buildTextScaleRow(),
       buildSoundGroup(),
       buildFlashGroup(),
       helpers.buildSwitchRow({
@@ -1348,6 +1350,121 @@
     return row;
   }
 
+  // Mirrors TEXT_SCALE_MIN/MAX/STEP in src/text-scale.js (×100). The renderer
+  // can't require that module, so keep the two in sync by hand.
+  const TEXT_SCALE_UI_MIN = 80;
+  const TEXT_SCALE_UI_MAX = 160;
+  const TEXT_SCALE_UI_STEP = 5;
+  const TEXT_SCALE_UI_DEFAULT = 100;
+
+  function buildTextScaleRow() {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML =
+      `<div class="row-text">` +
+        `<span class="row-label"></span>` +
+        `<span class="row-desc"></span>` +
+      `</div>` +
+      `<div class="row-control volume-control text-scale-control">` +
+        `<input type="range" class="volume-slider text-scale-slider"` +
+          ` min="${TEXT_SCALE_UI_MIN}" max="${TEXT_SCALE_UI_MAX}" step="${TEXT_SCALE_UI_STEP}" />` +
+        `<button type="button" class="volume-readout text-scale-readout"></button>` +
+      `</div>`;
+    row.querySelector(".row-label").textContent = t("rowTextScale");
+    row.querySelector(".row-desc").textContent = t("rowTextScaleDesc");
+
+    const slider = row.querySelector(".text-scale-slider");
+    const readout = row.querySelector(".text-scale-readout");
+    readout.title = t("textScaleResetTitle");
+
+    function readSnapshotPercent() {
+      const v = state.snapshot && typeof state.snapshot.textScale === "number"
+        ? state.snapshot.textScale : 1;
+      return Math.round(v * 100);
+    }
+
+    function paint(pct) {
+      slider.value = String(pct);
+      const fill = ((pct - TEXT_SCALE_UI_MIN) / (TEXT_SCALE_UI_MAX - TEXT_SCALE_UI_MIN)) * 100;
+      slider.style.setProperty("--volume-fill", `${fill}%`);
+      readout.textContent = `${pct}%`;
+    }
+
+    // Single-flight gate instead of a timer: at most one preview IPC in the
+    // air, the freshest dragged value queued behind it.
+    let previewInFlight = false;
+    let previewQueued = null;
+    function sendPreview(pct) {
+      if (typeof window.settingsAPI.previewTextScale !== "function") return;
+      if (previewInFlight) {
+        previewQueued = pct;
+        return;
+      }
+      previewInFlight = true;
+      Promise.resolve(window.settingsAPI.previewTextScale(pct / 100))
+        .catch(() => {})
+        .then(() => {
+          previewInFlight = false;
+          if (previewQueued !== null) {
+            const next = previewQueued;
+            previewQueued = null;
+            sendPreview(next);
+          }
+        });
+    }
+
+    function rollbackPreview() {
+      if (typeof window.settingsAPI.endTextScalePreview !== "function") return;
+      Promise.resolve(window.settingsAPI.endTextScalePreview()).catch(() => {});
+    }
+
+    function commit(pct) {
+      window.settingsAPI.update("textScale", pct / 100).then((result) => {
+        if (!result || result.status !== "ok") {
+          const msg = (result && result.message) || "unknown error";
+          rollbackPreview();
+          paint(readSnapshotPercent());
+          ops.showToast(t("toastSaveFailed") + msg, { error: true });
+        }
+      }).catch(() => {
+        rollbackPreview();
+        paint(readSnapshotPercent());
+      });
+    }
+
+    slider.addEventListener("input", () => {
+      const pct = Number(slider.value);
+      paint(pct);
+      sendPreview(pct);
+    });
+    slider.addEventListener("change", () => {
+      commit(Number(slider.value));
+    });
+    slider.addEventListener("blur", () => {
+      // A real edit already committed via change (which clears the preview in
+      // the main process); this only rolls back an abandoned preview.
+      rollbackPreview();
+    });
+    readout.addEventListener("click", () => {
+      paint(TEXT_SCALE_UI_DEFAULT);
+      commit(TEXT_SCALE_UI_DEFAULT);
+    });
+
+    paint(readSnapshotPercent());
+
+    state.mountedControls.textScale = {
+      row,
+      syncValueFromSnapshot() {
+        paint(readSnapshotPercent());
+      },
+      dispose() {
+        rollbackPreview();
+      },
+    };
+
+    return row;
+  }
+
   function buildSizeSliderRow() {
     const row = document.createElement("div");
     row.className = "row";
@@ -1572,6 +1689,10 @@
     if (keys.length === 0) return false;
     if (!keys.every((key) => GENERAL_IN_PLACE_KEYS.has(key))) return false;
     if (keys.includes("size") && !ops.syncMountedSizeControl({ fromBroadcast: true })) return false;
+    if (keys.includes("textScale")) {
+      const tc = state.mountedControls.textScale;
+      if (!tc || !document.body.contains(tc.row)) return false;
+    }
     if (keys.includes("soundVolume") || keys.includes("soundMuted")) {
       const vc = state.mountedControls.soundVolume;
       if (!vc || !document.body.contains(vc.row)) return false;
@@ -1605,7 +1726,7 @@
       }
     }
     for (const key of keys) {
-      if (key === "size" || key === "soundVolume") continue;
+      if (key === "size" || key === "soundVolume" || key === "textScale") continue;
       if (BUBBLE_POLICY_KEYS.has(key)) {
         const meta = state.mountedControls.bubblePolicyControls.get(key);
         if (!meta || !document.body.contains(meta.row)) return false;
@@ -1618,6 +1739,10 @@
     }
     for (const key of keys) {
       if (key === "size") continue;
+      if (key === "textScale") {
+        state.mountedControls.textScale.syncValueFromSnapshot();
+        continue;
+      }
       if (key === "soundVolume") {
         state.mountedControls.soundVolume.syncValueFromSnapshot();
         continue;

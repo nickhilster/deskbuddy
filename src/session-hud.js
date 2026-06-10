@@ -3,6 +3,7 @@
 const { BrowserWindow, screen } = require("electron");
 const path = require("path");
 const { keepOutOfTaskbar } = require("./taskbar");
+const { clampTextScale, scaleWidth, scaleHeight, applyZoomToWindow } = require("./text-scale");
 
 const isLinux = process.platform === "linux";
 const isMac = process.platform === "darwin";
@@ -175,27 +176,42 @@ function computeHudReservedOffset(cardHeight) {
   return HUD_PET_GAP + h + HUD_WINDOW_SHELL.bottom + BUBBLE_GAP;
 }
 
-function computeSessionHudBounds({ hitRect, anchorRect, workArea, width = HUD_WIDTH, height = HUD_HEIGHT }) {
+function computeSessionHudBounds({ hitRect, anchorRect, workArea, width = HUD_WIDTH, height = HUD_HEIGHT, scale = 1 }) {
   const followRect = isScreenRect(anchorRect) ? anchorRect : hitRect;
   if (!isScreenRect(followRect) || !workArea) return null;
   const followTop = Math.round(followRect.top);
   const followBottom = Math.round(followRect.bottom);
   const followCx = Math.round((followRect.left + followRect.right) / 2);
 
-  const outerWidth = width + HUD_WINDOW_SHELL.left + HUD_WINDOW_SHELL.right;
-  const outerHeight = height + HUD_WINDOW_SHELL.top + HUD_WINDOW_SHELL.bottom;
-  const minX = Math.round(workArea.x);
-  const maxX = Math.round(workArea.x + workArea.width - width);
-  const x = clampToWorkArea(followCx - Math.round(width / 2), minX, maxX);
+  // width/height arrive in CSS px (HUD constants); rects are DIP. Convert
+  // everything page-rendered — including the shell, which the renderer draws
+  // as CSS shadow padding — before mixing the two coordinate spaces.
+  const s = clampTextScale(scale);
+  const dipWidth = Math.round(width * s);
+  const dipHeight = Math.ceil(height * s);
+  const shell = {
+    top: Math.round(HUD_WINDOW_SHELL.top * s),
+    right: Math.round(HUD_WINDOW_SHELL.right * s),
+    bottom: Math.round(HUD_WINDOW_SHELL.bottom * s),
+    left: Math.round(HUD_WINDOW_SHELL.left * s),
+  };
+  const petGap = Math.round(HUD_PET_GAP * s);
+  const edgeMargin = Math.round(EDGE_MARGIN * s);
 
-  const belowY = followBottom + HUD_PET_GAP;
-  const belowMax = workArea.y + workArea.height - EDGE_MARGIN;
-  if (belowY + height <= belowMax) {
-    const contentBounds = { x, y: belowY, width, height };
+  const outerWidth = dipWidth + shell.left + shell.right;
+  const outerHeight = dipHeight + shell.top + shell.bottom;
+  const minX = Math.round(workArea.x);
+  const maxX = Math.round(workArea.x + workArea.width - dipWidth);
+  const x = clampToWorkArea(followCx - Math.round(dipWidth / 2), minX, maxX);
+
+  const belowY = followBottom + petGap;
+  const belowMax = workArea.y + workArea.height - edgeMargin;
+  if (belowY + dipHeight <= belowMax) {
+    const contentBounds = { x, y: belowY, width: dipWidth, height: dipHeight };
     return {
       bounds: {
-        x: contentBounds.x - HUD_WINDOW_SHELL.left,
-        y: contentBounds.y - HUD_WINDOW_SHELL.top,
+        x: contentBounds.x - shell.left,
+        y: contentBounds.y - shell.top,
         width: outerWidth,
         height: outerHeight,
       },
@@ -204,19 +220,19 @@ function computeSessionHudBounds({ hitRect, anchorRect, workArea, width = HUD_WI
     };
   }
 
-  const minY = Math.round(workArea.y + EDGE_MARGIN);
-  const maxY = Math.round(workArea.y + workArea.height - EDGE_MARGIN - height);
-  const aboveY = followTop - height - HUD_PET_GAP;
+  const minY = Math.round(workArea.y + edgeMargin);
+  const maxY = Math.round(workArea.y + workArea.height - edgeMargin - dipHeight);
+  const aboveY = followTop - dipHeight - petGap;
   const contentBounds = {
     x,
     y: clampToWorkArea(aboveY, minY, maxY),
-    width,
-    height,
+    width: dipWidth,
+    height: dipHeight,
   };
   return {
     bounds: {
-      x: contentBounds.x - HUD_WINDOW_SHELL.left,
-      y: contentBounds.y - HUD_WINDOW_SHELL.top,
+      x: contentBounds.x - shell.left,
+      y: contentBounds.y - shell.top,
       width: outerWidth,
       height: outerHeight,
     },
@@ -251,6 +267,10 @@ module.exports = function initSessionHud(ctx) {
   let latestSnapshot = null;
   let hudFlippedAbove = false;
   let lastReservedOffset = 0;
+
+  function getTextScale() {
+    return clampTextScale(typeof ctx.getTextScale === "function" ? ctx.getTextScale() : 1);
+  }
   let lastHudHeight = HUD_ROW_HEIGHT;
   let pollTimer = null;
   let clickRevealed = false;
@@ -486,10 +506,13 @@ module.exports = function initSessionHud(ctx) {
       ctx.sessionHudShowStateLabels !== false,
       ctx.sessionHudShowContextUsage !== false
     );
+    // Provisional CSS px → DIP size; syncSessionHud() replaces it with the
+    // precise computeSessionHudBounds() result before the window is shown.
+    const scale = getTextScale();
     hudWindow = new BrowserWindow({
       parent: ctx.win,
-      width: hudWidth + HUD_WINDOW_SHELL.left + HUD_WINDOW_SHELL.right,
-      height: HUD_HEIGHT + HUD_WINDOW_SHELL.top + HUD_WINDOW_SHELL.bottom,
+      width: scaleWidth(hudWidth + HUD_WINDOW_SHELL.left + HUD_WINDOW_SHELL.right, scale),
+      height: scaleHeight(HUD_HEIGHT + HUD_WINDOW_SHELL.top + HUD_WINDOW_SHELL.bottom, scale),
       show: false,
       frame: false,
       transparent: true,
@@ -518,6 +541,9 @@ module.exports = function initSessionHud(ctx) {
     hudWindow.loadFile(path.join(__dirname, "session-hud.html"));
     hudWindow.webContents.once("did-finish-load", () => {
       didFinishLoad = true;
+      // Explicit even though same-origin propagation usually covers it — a
+      // stale partition-persisted factor must never win over prefs.
+      applyZoomToWindow(hudWindow, getTextScale());
       sendI18n();
       syncSessionHud();
     });
@@ -560,7 +586,7 @@ module.exports = function initSessionHud(ctx) {
       ctx.sessionHudShowContextUsage !== false
     );
     lastHudHeight = height;
-    return computeSessionHudBounds({ hitRect, anchorRect, workArea, width, height });
+    return computeSessionHudBounds({ hitRect, anchorRect, workArea, width, height, scale: getTextScale() });
   }
 
   function showSessionHud(win) {
@@ -617,7 +643,9 @@ module.exports = function initSessionHud(ctx) {
   function readHudReservedOffset() {
     if (!hudWindow || hudWindow.isDestroyed() || !hudWindow.isVisible()) return 0;
     if (hudFlippedAbove) return 0;
-    return computeHudReservedOffset(lastHudHeight);
+    // computeHudReservedOffset works in CSS px; consumers (bubble avoidance)
+    // position windows in DIP.
+    return scaleHeight(computeHudReservedOffset(lastHudHeight), getTextScale());
   }
 
   function notifyReservedOffsetIfChanged() {

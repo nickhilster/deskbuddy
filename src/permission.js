@@ -4,6 +4,7 @@
 const { BrowserWindow, globalShortcut } = require("electron");
 const { getDefaultShortcuts } = require("./shortcut-actions");
 const { keepOutOfTaskbar } = require("./taskbar");
+const { clampTextScale, scaleWidth, scaleHeight, applyZoomToWindow } = require("./text-scale");
 const path = require("path");
 const http = require("http");
 const {
@@ -39,6 +40,12 @@ const LINUX_WINDOW_TYPE = "toolbar";
 // 24px matches the 8px stack margin on both edges plus a small buffer, so a
 // single tall bubble never hugs or exceeds the visible work area.
 const BUBBLE_HEIGHT_RESERVE = 24;
+// CSS px. Multiple of 20 on purpose: every 5% textScale step scales it to an
+// integer DIP width, so the CSS viewport width (and therefore renderer-side
+// height measurements) stays exact across scale changes.
+const BUBBLE_BASE_WIDTH = 340;
+// Hard cap so a scaled bubble can't swallow a small work area.
+const BUBBLE_MAX_WORK_AREA_WIDTH_RATIO = 0.9;
 const REMOTE_RICH_APPROVAL_AGENT_IDS = new Set(["claude-code", "codebuddy"]);
 
 function requiredDependency(value, name, owner) {
@@ -521,9 +528,21 @@ const unsubscribeShortcuts = typeof ctx.subscribeShortcuts === "function"
   ? ctx.subscribeShortcuts(() => syncPermissionShortcuts())
   : null;
 
-// Fallback height before renderer reports actual measurement
+// Fallback height before renderer reports actual measurement. CSS px, like
+// perm.measuredHeight — both are converted to DIP at the consumption points.
 function estimateBubbleHeight(sugCount) {
   return 200 + (sugCount || 0) * 37;
+}
+
+function getTextScale() {
+  return clampTextScale(typeof ctx.getTextScale === "function" ? ctx.getTextScale() : 1);
+}
+
+function getBubbleWidth(scale, workArea) {
+  const scaled = scaleWidth(BUBBLE_BASE_WIDTH, scale);
+  const waWidth = Math.floor(Number(workArea && workArea.width) || 0);
+  if (waWidth <= 0) return scaled;
+  return Math.min(scaled, Math.floor(waWidth * BUBBLE_MAX_WORK_AREA_WIDTH_RATIO));
 }
 
 function getAnchorWorkArea(petBounds) {
@@ -537,17 +556,22 @@ function repositionBubbles() {
   // Thin wrapper around computeBubbleStackLayout (top of file). All the
   // geometry lives there so it can be unit-tested without Electron windows.
   if (!ctx.win || ctx.win.isDestroyed()) return;
-  const margin = 8;
-  const gap = 6;
-  const bw = 340;
+  const scale = getTextScale();
+  const margin = Math.round(8 * scale);
+  const gap = Math.round(6 * scale);
   const petBounds = ctx.getPetWindowBounds();
   const wa = getAnchorWorkArea(petBounds);
+  const bw = getBubbleWidth(scale, wa);
   const hitRect = ctx.bubbleFollowPet ? ctx.getHitRectScreen(petBounds) : null;
 
   const layoutPermissions = pendingPermissions.filter((perm) => !isHardwareBuddyTestPermission(perm));
   const bubbleHeights = layoutPermissions.map(perm =>
     clampBubbleHeight(
-      perm.measuredHeight || estimateBubbleHeight((perm.suggestions || []).length),
+      // measuredHeight/estimate are CSS px; the window needs DIP.
+      scaleHeight(
+        perm.measuredHeight || estimateBubbleHeight((perm.suggestions || []).length),
+        scale
+      ),
       wa.height
     )
   );
@@ -630,10 +654,11 @@ function showPermissionBubble(permEntry) {
   if (maybeAutoApprovePermission(permEntry)) return;
 
   const sugCount = (permEntry.suggestions || []).length;
+  const scale = getTextScale();
   const wa = getAnchorWorkArea();
-  const bh = clampBubbleHeight(estimateBubbleHeight(sugCount), wa.height);
+  const bh = clampBubbleHeight(scaleHeight(estimateBubbleHeight(sugCount), scale), wa.height);
   // Temporary position — repositionBubbles() will finalize after renderer reports real height
-  const pos = { x: 0, y: 0, width: 340, height: bh };
+  const pos = { x: 0, y: 0, width: getBubbleWidth(scale, wa), height: bh };
 
   const bub = new BrowserWindow({
     width: pos.width,
@@ -673,6 +698,9 @@ function showPermissionBubble(permEntry) {
 
   bub.webContents.once("did-finish-load", () => {
     permEntry.bubbleReady = true;
+    // Explicit even though same-origin propagation usually covers it — a
+    // stale partition-persisted factor must never win over prefs.
+    applyZoomToWindow(bub, getTextScale());
     syncPermissionBubbleContent(permEntry);
     // Elicitation bubbles need keyboard focus so arrow keys and Enter work.
     // Regular permission bubbles must NOT steal focus from the terminal —

@@ -72,6 +72,8 @@ contextBridge.exposeInMainWorld("settingsAPI", {
   beginSizePreview: () => ipcRenderer.invoke("settings:begin-size-preview"),
   previewSize: (value) => ipcRenderer.invoke("settings:preview-size", value),
   endSizePreview: (value) => ipcRenderer.invoke("settings:end-size-preview", value),
+  previewTextScale: (value) => ipcRenderer.invoke("settings:preview-text-scale", value),
+  endTextScalePreview: () => ipcRenderer.invoke("settings:end-text-scale-preview"),
   exportAnimationOverrides: () => ipcRenderer.invoke("settings:export-animation-overrides"),
   importAnimationOverrides: () => ipcRenderer.invoke("settings:import-animation-overrides"),
   enterShortcutRecording: (actionId) => ipcRenderer.invoke("settings:enterShortcutRecording", actionId),

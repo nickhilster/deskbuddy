@@ -1,4 +1,5 @@
-const { app, BrowserWindow, screen, ipcMain, globalShortcut, nativeTheme, dialog, shell, nativeImage, powerSaveBlocker, clipboard } = require("electron");
+const { app, BrowserWindow, screen, ipcMain, globalShortcut, nativeTheme, dialog, shell, nativeImage, powerSaveBlocker, clipboard, webContents, session } = require("electron");
+const { clampTextScale, scaleWidth, scaleHeight, NO_ZOOM_PARTITION } = require("./text-scale");
 const path = require("path");
 const fs = require("fs");
 const { EventEmitter } = require("events");
@@ -448,6 +449,7 @@ const settingsWindowRuntime = createSettingsWindowRuntime({
   path,
   getPetWindowBounds: () => getPetWindowBounds(),
   getNearestWorkArea: (cx, cy) => getNearestWorkArea(cx, cy),
+  getTextScale: () => getEffectiveTextScale(),
   onBeforeCreate: () => bumpAnimationOverridePreviewPosterGeneration(),
   onBeforeClosed: () => {
     bumpAnimationOverridePreviewPosterGeneration();
@@ -686,6 +688,71 @@ let keepAwakeWhileWorking = _settingsController.get("keepAwakeWhileWorking");
 let allowEdgePinningCached = _settingsController.get("allowEdgePinning");
 let disableMiniModeCached = _settingsController.get("disableMiniMode");
 let keepSizeAcrossDisplaysCached = _settingsController.get("keepSizeAcrossDisplays");
+let textScale = _settingsController.get("textScale");
+// Transient slider-drag override: applied to live windows but never written to
+// the store. Cleared on commit (mirror setter) or rollback (endTextScalePreview).
+let textScalePreviewValue = null;
+
+function getEffectiveTextScale() {
+  return clampTextScale(textScalePreviewValue == null ? textScale : textScalePreviewValue);
+}
+
+// The whole textScale cascade for live windows: zoom every default-partition
+// file:// page (same-origin propagation makes this near-idempotent), let the
+// resizable windows raise their minimums, then re-lay-out HUD + bubbles with
+// the scaled widths. Fixed-width windows pick the new width up from their
+// reposition paths; the resume input reads the scale at creation.
+function applyTextScaleNow(options = {}) {
+  const scale = getEffectiveTextScale();
+  // While the settings slider is dragging, leave the settings window itself
+  // alone: zooming the page mid-drag moves the slider under the pointer and
+  // makes the drag wobble. It catches up on commit/rollback.
+  const skipSettingsWindow = !!options.skipSettingsWindow;
+  let settingsWin = null;
+  try { settingsWin = skipSettingsWindow ? settingsWindowRuntime.getWindow() : null; } catch {}
+  let noZoomSession = null;
+  try { noZoomSession = session.fromPartition(NO_ZOOM_PARTITION); } catch {}
+  let liveContents = [];
+  try { liveContents = webContents.getAllWebContents(); } catch {}
+  for (const wc of liveContents) {
+    try {
+      if (!wc || wc.isDestroyed()) continue;
+      if (noZoomSession && wc.session === noZoomSession) continue;
+      if (settingsWin && !settingsWin.isDestroyed() && wc === settingsWin.webContents) continue;
+      if (!String(wc.getURL() || "").startsWith("file:")) continue;
+      wc.setZoomFactor(scale);
+    } catch {}
+  }
+  try {
+    if (!skipSettingsWindow && settingsWindowRuntime && typeof settingsWindowRuntime.applyTextScaleToWindow === "function") {
+      settingsWindowRuntime.applyTextScaleToWindow();
+    }
+  } catch (err) {
+    console.warn("Clawd: settings window text scale failed:", err && err.message);
+  }
+  try {
+    if (_dashboard && typeof _dashboard.applyTextScaleToWindow === "function") {
+      _dashboard.applyTextScaleToWindow();
+    }
+  } catch (err) {
+    console.warn("Clawd: dashboard text scale failed:", err && err.message);
+  }
+  repositionAnchoredFloatingSurfaces();
+}
+
+function previewTextScale(value) {
+  const n = Number(value);
+  textScalePreviewValue = Number.isFinite(n) ? clampTextScale(n) : null;
+  applyTextScaleNow({ skipSettingsWindow: true });
+  return { status: "ok" };
+}
+
+function endTextScalePreview() {
+  if (textScalePreviewValue == null) return { status: "ok", noop: true };
+  textScalePreviewValue = null;
+  applyTextScaleNow();
+  return { status: "ok" };
+}
 
 function getRuntimeBubblePolicy(kind) {
   return getBubblePolicy(_settingsController.getSnapshot(), kind);
@@ -1007,6 +1074,7 @@ const _permCtx = {
   getNearestWorkArea,
   getHitRectScreen,
   getHudReservedOffset: () => getSessionHudReservedOffset(),
+  getTextScale: () => getEffectiveTextScale(),
   guardAlwaysOnTop,
   reapplyMacVisibility,
   isAgentPermissionsEnabled: (agentId) =>
@@ -1078,6 +1146,7 @@ const _updateBubbleCtx = {
   getUpdateBubbleAnchorRect,
   getHitRectScreen,
   getHudReservedOffset: () => getSessionHudReservedOffset(),
+  getTextScale: () => getEffectiveTextScale(),
   guardAlwaysOnTop,
   reapplyMacVisibility,
 };
@@ -1389,6 +1458,7 @@ const _dashboard = require("./dashboard")({
   getPetWindowBounds,
   getNearestWorkArea,
   getSettingsWindow: () => settingsWindowRuntime.getWindow(),
+  getTextScale: () => getEffectiveTextScale(),
   iconPath: settingsWindowRuntime.getIconPath(),
 });
 showDashboard = _dashboard.showDashboard;
@@ -1411,6 +1481,7 @@ const _sessionHud = require("./session-hud")({
   getHitRectScreen,
   getSessionHudAnchorRect,
   getNearestWorkArea,
+  getTextScale: () => getEffectiveTextScale(),
   guardAlwaysOnTop,
   reapplyMacVisibility,
   onReservedOffsetChange: () => repositionFloatingBubbles(),
@@ -2421,9 +2492,12 @@ async function runLaunchClaudeSession(t, mode, cwd, sessionId) {
 
 function showResumeInput(t) {
   return new Promise((resolve) => {
+    // data: URL — outside the file:// zoom map, so the scale is baked into the
+    // window size and an inline body zoom instead.
+    const resumeScale = getEffectiveTextScale();
     const inputWin = new BrowserWindow({
-      width: 420,
-      height: 180,
+      width: scaleWidth(420, resumeScale),
+      height: scaleHeight(180, resumeScale),
       resizable: false,
       alwaysOnTop: true,
       frame: false,
@@ -2439,7 +2513,7 @@ function showResumeInput(t) {
     const cancelLabel = t("dismiss") || "Cancel";
     const html = `<!DOCTYPE html><html><head><style>
       *{margin:0;padding:0;box-sizing:border-box}
-      body{font-family:system-ui,-apple-system,sans-serif;background:#1e1e2e;color:#cdd6f4;display:flex;flex-direction:column;height:100vh;padding:16px;border-radius:12px;overflow:hidden}
+      body{zoom:${resumeScale};font-family:system-ui,-apple-system,sans-serif;background:#1e1e2e;color:#cdd6f4;display:flex;flex-direction:column;height:100vh;padding:16px;border-radius:12px;overflow:hidden}
       .title{font-size:14px;font-weight:600;margin-bottom:12px}
       input{width:100%;padding:8px 12px;border:1px solid #45475a;border-radius:6px;background:#313244;color:#cdd6f4;font-size:13px;outline:none}
       input:focus{border-color:#89b4fa}
@@ -2655,6 +2729,7 @@ const SETTINGS_MIRROR_SETTERS = {
   soundMuted: (v) => { soundMuted = v; }, soundVolume: (v) => { soundVolume = v; }, lowPowerIdleMode: (v) => { lowPowerIdleMode = v; },
   keepAwakeWhileWorking: (v) => { keepAwakeWhileWorking = v; },
   allowEdgePinning: (v) => { allowEdgePinningCached = v; }, disableMiniMode: (v) => { disableMiniModeCached = v; }, keepSizeAcrossDisplays: (v) => { keepSizeAcrossDisplaysCached = v; },
+  textScale: (v) => { textScale = v; textScalePreviewValue = null; },
 };
 
 function updateSettingsMirrors(changes) { for (const [key, value] of Object.entries(changes)) if (SETTINGS_MIRROR_SETTERS[key]) SETTINGS_MIRROR_SETTERS[key](value); }
@@ -2689,6 +2764,7 @@ const settingsEffectRouter = createSettingsEffectRouter({
   hideUpdateBubbleForPolicy: () => callRuntimeMethod(_updateBubble, "hideForPolicy"),
   refreshUpdateBubbleAutoClose: () => callRuntimeMethod(_updateBubble, "refreshAutoCloseForPolicy"),
   repositionFloatingBubbles,
+  applyTextScale: () => applyTextScaleNow(),
   syncSessionHudVisibility: () => syncSessionHudVisibility(),
   handleSessionHudPinnedChanged: (next) => {
     if (_sessionHud && typeof _sessionHud.handlePinnedChanged === "function") {
@@ -2887,6 +2963,8 @@ registerSettingsIpc({
   getLang: () => lang,
   settingsSizePreviewSession,
   isValidSizePreviewKey,
+  previewTextScale,
+  endTextScalePreview,
   sendToRenderer,
   getDoNotDisturb: () => doNotDisturb,
   getSoundMuted: () => soundMuted,

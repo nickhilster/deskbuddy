@@ -58,6 +58,7 @@ function createHarness(options = {}) {
     hideUpdateBubbleForPolicy: () => calls.push(["hideUpdateBubbleForPolicy"]),
     refreshUpdateBubbleAutoClose: () => calls.push(["refreshUpdateBubbleAutoClose"]),
     repositionFloatingBubbles: () => calls.push(["repositionFloatingBubbles"]),
+    applyTextScale: (next) => calls.push(["applyTextScale", next]),
     syncSessionHudVisibility: () => calls.push(["syncSessionHudVisibility"]),
     handleSessionHudPinnedChanged: (next) => calls.push(["handleSessionHudPinnedChanged", next]),
     reclampPetAfterEdgePinningChange: () => calls.push(["reclampPetAfterEdgePinningChange"]),
@@ -138,6 +139,23 @@ describe("settings-effect-router", () => {
       ["updateMirrors", { updateBubbleAutoCloseSeconds: 8 }],
       ["refreshUpdateBubbleAutoClose"],
       ["rebuildAllMenus"],
+    ]);
+  });
+
+  it("routes textScale changes to applyTextScale without a menu rebuild", () => {
+    const { calls, emit } = createHarness();
+
+    emit({ textScale: 1.25 });
+    assert.deepStrictEqual(calls, [
+      ["updateMirrors", { textScale: 1.25 }],
+      ["applyTextScale", 1.25],
+    ]);
+
+    calls.length = 0;
+    emit({ textScale: 1 });
+    assert.deepStrictEqual(calls, [
+      ["updateMirrors", { textScale: 1 }],
+      ["applyTextScale", 1],
     ]);
   });
 

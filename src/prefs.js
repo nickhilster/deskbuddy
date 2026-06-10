@@ -37,6 +37,11 @@ const {
   MAX_AUTO_CLOSE_SECONDS,
 } = require("./bubble-policy");
 const { normalizeSessionAliases } = require("./session-alias");
+const {
+  TEXT_SCALE_MIN,
+  TEXT_SCALE_MAX,
+  TEXT_SCALE_DEFAULT,
+} = require("./text-scale");
 
 const CURRENT_VERSION = 9;
 
@@ -182,6 +187,14 @@ const SCHEMA = {
   // proportional pixel-size recomputation. The pet keeps its current
   // window size; the size slider still works (per-display proportional).
   keepSizeAcrossDisplays: { type: "boolean", default: false },
+  // Global zoom factor for text windows (bubbles, HUD, dashboard, settings,
+  // resume input). The pet itself scales via `size`; its windows live in the
+  // no-zoom partition so this factor never reaches them.
+  textScale: {
+    type: "number",
+    default: TEXT_SCALE_DEFAULT,
+    validate: (v) => Number.isFinite(v) && v >= TEXT_SCALE_MIN && v <= TEXT_SCALE_MAX,
+  },
   shortcuts: {
     type: "object",
     defaultFactory: () => getDefaultShortcuts(),

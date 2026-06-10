@@ -121,6 +121,57 @@ describe("session HUD geometry", () => {
     assert.ok(constants.HUD_WINDOW_SHELL.bottom > constants.HUD_WINDOW_SHELL.left);
     assert.ok(constants.HUD_WINDOW_SHELL.bottom > constants.HUD_WINDOW_SHELL.right);
   });
+
+  it("converts CSS px inputs to scaled DIP bounds when textScale is set", () => {
+    const scale = 1.5;
+    const result = computeSessionHudBounds({
+      hitRect: { left: 10, top: 80, right: 90, bottom: 160 },
+      workArea: { x: 0, y: 0, width: 1200, height: 900 },
+      scale,
+    });
+
+    const dipWidth = Math.round(constants.HUD_WIDTH * scale);
+    const dipHeight = Math.ceil(constants.HUD_HEIGHT * scale);
+    const shellLeft = Math.round(constants.HUD_WINDOW_SHELL.left * scale);
+    const shellRight = Math.round(constants.HUD_WINDOW_SHELL.right * scale);
+    const shellTop = Math.round(constants.HUD_WINDOW_SHELL.top * scale);
+    const shellBottom = Math.round(constants.HUD_WINDOW_SHELL.bottom * scale);
+    const petGap = Math.round(constants.HUD_PET_GAP * scale);
+
+    assert.deepStrictEqual(result.contentBounds, {
+      x: 0,
+      y: 160 + petGap,
+      width: dipWidth,
+      height: dipHeight,
+    });
+    assert.deepStrictEqual(result.bounds, {
+      x: -shellLeft,
+      y: 160 + petGap - shellTop,
+      width: dipWidth + shellLeft + shellRight,
+      height: dipHeight + shellTop + shellBottom,
+    });
+    assert.strictEqual(result.flippedAbove, false);
+  });
+
+  it("treats scale 1 (and an omitted scale) as the identity", () => {
+    const args = {
+      hitRect: { left: 10, top: 80, right: 90, bottom: 160 },
+      workArea: { x: 0, y: 0, width: 800, height: 600 },
+    };
+    assert.deepStrictEqual(
+      computeSessionHudBounds({ ...args, scale: 1 }),
+      computeSessionHudBounds(args),
+    );
+  });
+
+  it("clamps a garbage scale to the supported range before converting", () => {
+    const result = computeSessionHudBounds({
+      hitRect: { left: 10, top: 80, right: 90, bottom: 160 },
+      workArea: { x: 0, y: 0, width: 1200, height: 900 },
+      scale: 99,
+    });
+    assert.strictEqual(result.contentBounds.width, Math.round(constants.HUD_WIDTH * 1.6));
+  });
 });
 
 describe("session HUD layout", () => {

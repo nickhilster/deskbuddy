@@ -49,6 +49,7 @@
 // keep validate side-effect-free.
 
 const { CURRENT_VERSION } = require("./prefs");
+const { TEXT_SCALE_MIN, TEXT_SCALE_MAX } = require("./text-scale");
 const { isValidDisplaySnapshot } = require("./work-area");
 const {
   MAX_AUTO_CLOSE_SECONDS,
@@ -185,6 +186,7 @@ const updateRegistry = {
   lang: requireEnum("lang", ["en", "zh", "zh-TW", "ko", "ja"]),
   soundMuted: requireBoolean("soundMuted"),
   soundVolume: requireNumberInRange("soundVolume", 0, 1),
+  textScale: requireNumberInRange("textScale", TEXT_SCALE_MIN, TEXT_SCALE_MAX),
   flashTaskbarOnComplete: requireBoolean("flashTaskbarOnComplete"),
   flashIntervalMs: requireNumberInRange("flashIntervalMs", 200, 2000),
   flashDurationMs: requireNumberInRange("flashDurationMs", 0, 60000),

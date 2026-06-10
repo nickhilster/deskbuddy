@@ -1050,6 +1050,25 @@ html, body {
   opacity: 0.45;
   pointer-events: none;
 }
+/* Text-size readout doubles as the reset-to-100% button. */
+.text-scale-readout {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  min-width: 42px;
+}
+.text-scale-readout:hover {
+  text-decoration: underline;
+}
+.text-scale-readout:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 .volume-control.disabled .volume-slider {
   cursor: not-allowed;
 }

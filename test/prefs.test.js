@@ -343,6 +343,16 @@ describe("prefs.validate", () => {
     assert.strictEqual(v.soundVolume, 0);
   });
 
+  it("keeps textScale within 0.8–1.6 and defaults out-of-range values", () => {
+    assert.strictEqual(prefs.validate({ textScale: 1.25 }).textScale, 1.25);
+    assert.strictEqual(prefs.validate({ textScale: 0.8 }).textScale, 0.8);
+    assert.strictEqual(prefs.validate({ textScale: 1.6 }).textScale, 1.6);
+    assert.strictEqual(prefs.validate({ textScale: 0.5 }).textScale, 1);
+    assert.strictEqual(prefs.validate({ textScale: 2 }).textScale, 1);
+    assert.strictEqual(prefs.validate({ textScale: "1.2" }).textScale, 1);
+    assert.strictEqual(prefs.getDefaults().textScale, 1);
+  });
+
   it("normalizes agents (drops malformed entries)", () => {
     const v = prefs.validate({
       agents: {

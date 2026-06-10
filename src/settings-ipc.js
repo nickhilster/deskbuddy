@@ -121,6 +121,10 @@ function registerSettingsIpc(options = {}) {
   const getDoNotDisturb = options.getDoNotDisturb || (() => false);
   const getSoundMuted = options.getSoundMuted || (() => false);
   const getSoundVolume = options.getSoundVolume || (() => 1);
+  const previewTextScale = options.previewTextScale
+    || (() => ({ status: "error", message: "text scale preview unavailable" }));
+  const endTextScalePreview = options.endTextScalePreview
+    || (() => ({ status: "error", message: "text scale preview unavailable" }));
   const getAllAgents = requiredDependency(options.getAllAgents, "getAllAgents");
   const checkForUpdates = options.checkForUpdates || (() => {});
   const getHardwareBuddyStatus = options.getHardwareBuddyStatus || (() => null);
@@ -188,6 +192,17 @@ function registerSettingsIpc(options = {}) {
     }
     return settingsSizePreviewSession.end(value || null);
   });
+  // Transient textScale preview while the slider drags: applies zoom to live
+  // windows but never writes the store. Commit still goes through
+  // settings:update so the controller stays the only writer.
+  handle("settings:preview-text-scale", (_event, value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) {
+      return { status: "error", message: `invalid text scale "${value}"` };
+    }
+    return previewTextScale(n);
+  });
+  handle("settings:end-text-scale-preview", () => endTextScalePreview());
   handle("settings:get-preview-sound-url", () => {
     try { return themeLoader.getPreviewSoundUrl(); }
     catch { return null; }
