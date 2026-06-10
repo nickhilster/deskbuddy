@@ -9,6 +9,7 @@ const vm = require("node:vm");
 const SRC_DIR = path.join(__dirname, "..", "src");
 const SETTINGS_HTML = path.join(SRC_DIR, "settings.html");
 const SETTINGS_CSS = path.join(SRC_DIR, "settings.css");
+const SETTINGS_TAB_GENERAL = path.join(SRC_DIR, "settings-tab-general.js");
 const SETTINGS_RENDERER = path.join(SRC_DIR, "settings-renderer.js");
 const SETTINGS_UI_CORE = path.join(SRC_DIR, "settings-ui-core.js");
 const SETTINGS_ANIM_OVERRIDES_MERGE = path.join(SRC_DIR, "settings-anim-overrides-merge.js");
@@ -2221,7 +2222,7 @@ describe("settings renderer browser environment", () => {
     assert.ok(css.includes(".doctor-action-notice-icon"));
     assert.ok(/@media \(prefers-color-scheme:\s*dark\)\s*\{[\s\S]*\.doctor-action-notice\.ok[\s\S]*color:\s*#8ce99a;[\s\S]*\.doctor-action-notice\.error[\s\S]*color:\s*#fca5a5;/.test(css));
     assert.ok(css.includes("@keyframes doctor-notice-in"));
-    assert.ok(/\.doctor-modal\s*\{[\s\S]*width:\s*min\(728px,\s*100%\);[\s\S]*max-height:\s*calc\(100vh - 32px\);/.test(css));
+    assert.ok(/\.doctor-modal\s*\{[\s\S]*width:\s*min\(728px,\s*100%\);[\s\S]*max-height:\s*calc\(100vh \/ var\(--clawd-text-zoom, 1\) - 32px\);/.test(css));
     assert.ok(/\.doctor-modal\s*\{[\s\S]*gap:\s*8px;[\s\S]*padding:\s*14px;/.test(css));
     assert.ok(css.includes(".doctor-modal-entering"));
     assert.ok(css.includes("@keyframes doctor-modal-in"));
@@ -2303,25 +2304,142 @@ describe("settings renderer browser environment", () => {
     assert.ok(!i18nSource.includes('doctorOpenLogOpened: "デバッグログを開きました。"'));
   });
 
-  it("does not animate the size bubble's horizontal position", () => {
+  it("unifies the size slider on the simple volume-style control (no floating bubble, no ticks)", () => {
     const css = fs.readFileSync(SETTINGS_CSS, "utf8");
-    const match = css.match(/\.size-bubble\s*\{([\s\S]*?)\n\}/);
-    assert.ok(match, "settings.css should define a .size-bubble rule");
-    assert.ok(!/transition:\s*left\b/.test(match[1]));
-    assert.ok(/transition:\s*transform 0\.14s ease,\s*box-shadow 0\.18s ease;/.test(match[1]));
+    const tabSource = fs.readFileSync(SETTINGS_TAB_GENERAL, "utf8");
+    // Old floating-bubble/tick design must be fully gone.
+    assert.ok(!/\.size-bubble/.test(css));
+    assert.ok(!/\.size-ticks/.test(css));
+    assert.ok(!/\.size-slider-wrap/.test(css));
+    assert.ok(!/size-bubble/.test(tabSource));
+    assert.ok(!/size-ticks/.test(tabSource));
+    // The size row reuses the volume-style classes plus its preview-session
+    // drag affordances.
+    assert.ok(/volume-control size-control/.test(tabSource));
+    assert.ok(/volume-slider size-slider/.test(tabSource));
+    assert.ok(/\.size-control\.dragging \.volume-slider::-webkit-slider-thumb/.test(css));
+    assert.ok(/\.size-control\.pending \.volume-slider\s*\{[\s\S]*cursor:\s*ew-resize;/.test(css));
   });
 
-  it("renders the size bubble tail as a separated double-layer callout instead of overlapping the pill", () => {
+  it("compensates every viewport unit for the injected text zoom", () => {
+    // vh/vw resolve against the UNZOOMED window (verified by probe: a 100vh
+    // box renders S× the window height under the injected root zoom), so any
+    // bare viewport unit overflows the window at scale > 1 — symptom:
+    // settings pages that cannot scroll to the bottom. Every occurrence must
+    // divide by --clawd-text-zoom or use the zoom-aware 100% chain instead.
     const css = fs.readFileSync(SETTINGS_CSS, "utf8");
-    assert.ok(/--size-bubble-tail-size:\s*4px;/.test(css));
-    assert.ok(/--size-bubble-tail-inner-size:\s*3px;/.test(css));
-    assert.ok(/--size-bubble-tail-gap:\s*1px;/.test(css));
-    assert.ok(/padding-top:\s*29px;/.test(css));
-    assert.ok(/\.size-bubble\s*\{[\s\S]*top:\s*6px;[\s\S]*border-radius:\s*9px;[\s\S]*padding:\s*0 7px;[\s\S]*line-height:\s*1\.2;[\s\S]*\}/.test(css));
-    assert.ok(/\.size-bubble::before,\s*\.size-bubble::after\s*\{/.test(css));
-    assert.ok(/\.size-bubble::before\s*\{[\s\S]*top:\s*calc\(100%\s*\+\s*var\(--size-bubble-tail-gap\)\);[\s\S]*border-top:\s*var\(--size-bubble-tail-size\)\s+solid\s+var\(--accent\);[\s\S]*\}/.test(css));
-    assert.ok(/\.size-bubble::after\s*\{[\s\S]*top:\s*calc\(100%\s*\+\s*var\(--size-bubble-tail-gap\)\);[\s\S]*border-top:\s*var\(--size-bubble-tail-inner-size\)\s+solid\s+var\(--panel-bg\);[\s\S]*\}/.test(css));
-    assert.ok(!/\.size-bubble::after\s*\{[\s\S]*margin-top:\s*-1px;/.test(css));
+    const dashboardHtml = fs.readFileSync(path.join(SRC_DIR, "dashboard.html"), "utf8");
+    const mainSource = fs.readFileSync(MAIN_PROCESS, "utf8");
+    const bare = css.match(/\d+(?:\.\d+)?v[hw]\b(?!\s*\/\s*var\(--clawd-text-zoom)/g) || [];
+    assert.deepStrictEqual(bare, [], "settings.css has uncompensated viewport units");
+    assert.doesNotMatch(dashboardHtml, /\d+(?:\.\d+)?v[hw]\b/, "dashboard.html must not use viewport units");
+    assert.match(mainSource, /height:calc\(100vh \/ \$\{resumeScale\}\)/);
+  });
+
+  it("keeps the text-scale slider in sync across display moves without fighting a live drag", () => {
+    const tabSource = fs.readFileSync(SETTINGS_TAB_GENERAL, "utf8");
+    const uiCoreSource = fs.readFileSync(SETTINGS_UI_CORE, "utf8");
+    // The committed percent is per-display and lives main-side; a window move
+    // never produces a settings-changed broadcast, so the row must subscribe
+    // to the context-changed poke from the settings-window runtime…
+    assert.ok(/onTextScaleContextChanged\(\(\) => \{\s*if \(!previewLive\) syncFromContext\(\);/.test(tabSource),
+      "text-scale row must re-pull context on display change, gated on previewLive");
+    // …and must not repaint to the committed value mid-drag (the preview
+    // itself triggers pokes via applyTextScaleNow).
+    assert.ok(/previewLive = true;/.test(tabSource));
+    // Preview exits clear the flag: manual pointer release, commit (change),
+    // and rollback (blur).
+    // (Lookbehind excludes the `let previewLive = false;` declaration.)
+    assert.strictEqual((tabSource.match(/(?<!let )previewLive = false;/g) || []).length, 3);
+    // Full re-renders must dispose the row (unsubscribe + roll back a
+    // stranded transient preview) — see clearMountedControls.
+    assert.ok(/unsubscribeContextChanged\(\);/.test(tabSource));
+    assert.ok(/mountedControls\.textScale && typeof state\.mountedControls\.textScale\.dispose === "function"/.test(uiCoreSource),
+      "clearMountedControls must dispose the text-scale control");
+    assert.ok(/state\.mountedControls\.textScale = null;/.test(uiCoreSource));
+    // Renderer-side rollback rides IPC and can't be trusted during window
+    // teardown — main must clear the transient preview when settings closes,
+    // or a mid-drag ⌘W pins the preview scale to the display until restart.
+    const mainSource = fs.readFileSync(MAIN_PROCESS, "utf8");
+    assert.ok(/onBeforeClosed: \(\) => \{[^}]*endTextScalePreview\(\);/.test(mainSource),
+      "settings onBeforeClosed must end a live text-scale preview");
+  });
+
+  it("keeps text-scale pointer drags stable while the Settings page live-zooms", async () => {
+    const previewCalls = [];
+    const commandCalls = [];
+    const harness = loadGeneralTabForTest({
+      snapshot: makeGeneralSnapshot(),
+      settingsAPI: {
+        getTextScaleContext: () => Promise.resolve({ percent: 100 }),
+        previewTextScale: (value) => {
+          previewCalls.push(value);
+          return Promise.resolve({ status: "ok" });
+        },
+        endTextScalePreview: () => Promise.resolve({ status: "ok" }),
+        command: (action, payload) => {
+          commandCalls.push({ action, payload });
+          return Promise.resolve({ status: "ok" });
+        },
+      },
+    });
+    harness.renderContent();
+    await Promise.resolve();
+
+    const slider = harness.content.querySelector(".text-scale-slider");
+    assert.ok(slider);
+    let rect = { left: 100, width: 240, top: 0, height: 28, right: 340, bottom: 28 };
+    slider.getBoundingClientRect = () => rect;
+
+    slider.dispatchEvent({
+      type: "pointerdown",
+      pointerId: 1,
+      button: 0,
+      isPrimary: true,
+      screenX: 160,
+      clientX: 160,
+      bubbles: false,
+    });
+
+    // Simulate the Settings page live-zooming wider after the first preview.
+    // The manual pointer math must keep using the pointerdown geometry above:
+    // screenX 145 is 95% on the original 240px track, but would be ~90% if the
+    // now-wider track were used mid-drag.
+    rect = { left: 100, width: 384, top: 0, height: 45, right: 484, bottom: 45 };
+    slider.dispatchEvent({
+      type: "pointermove",
+      pointerId: 1,
+      screenX: 145,
+      clientX: 145,
+      bubbles: false,
+    });
+    assert.strictEqual(slider.value, "95");
+    assert.strictEqual(previewCalls.at(-1), 0.95);
+
+    slider.dispatchEvent({
+      type: "pointerup",
+      pointerId: 1,
+      screenX: 145,
+      clientX: 145,
+      bubbles: false,
+    });
+    await Promise.resolve();
+
+    assert.strictEqual(commandCalls.at(-1).action, "setTextScaleForDisplay");
+    assert.strictEqual(commandCalls.at(-1).payload.value, 0.95);
+  });
+
+  it("makes both percent readouts clickable reset buttons", () => {
+    const css = fs.readFileSync(SETTINGS_CSS, "utf8");
+    const tabSource = fs.readFileSync(SETTINGS_TAB_GENERAL, "utf8");
+    assert.ok(/\.text-scale-readout\s*\{[\s\S]*cursor:\s*pointer;/.test(css));
+    // Size readout resets the pet to the prefs default (P:9 → 30 on the UI scale).
+    assert.ok(/SIZE_UI_DEFAULT = 30/.test(tabSource));
+    assert.ok(/controller\.change\(SIZE_UI_DEFAULT\)/.test(tabSource));
+    assert.ok(/rowSizeResetTitle/.test(tabSource));
+    // Text-size readout resets to 100% via the per-display command.
+    assert.ok(/setTextScaleForDisplay/.test(tabSource));
+    assert.ok(/textScaleResetTitle/.test(tabSource));
   });
 
   it("uses transform-based Settings switch motion with a calmer shared timing", () => {
@@ -2814,11 +2932,10 @@ describe("settings renderer browser environment", () => {
     assert.strictEqual(calls.length, 0);
   });
 
-  it("adds hover affordance to General size and volume sliders", () => {
+  it("adds hover affordance to General sliders via the shared volume-style classes", () => {
     const css = fs.readFileSync(SETTINGS_CSS, "utf8");
-    assert.ok(/\.size-slider:hover::-webkit-slider-thumb\s*\{[\s\S]*transform:\s*scale\(1\.08\);/.test(css));
     assert.ok(/\.volume-slider:hover::-webkit-slider-thumb\s*\{[\s\S]*transform:\s*scale\(1\.08\);/.test(css));
-    assert.ok(/@media \(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*\.size-slider:hover::-webkit-slider-thumb,[\s\S]*\.volume-slider:hover::-webkit-slider-thumb\s*\{[\s\S]*transform:\s*none;/.test(css));
+    assert.ok(/@media \(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*\.volume-slider:hover::-webkit-slider-thumb,[\s\S]*\.size-control\.dragging \.volume-slider::-webkit-slider-thumb\s*\{[\s\S]*transform:\s*none;/.test(css));
   });
 
   it("describes notification bubble seconds as an auto-close upper bound instead of a guaranteed visible duration", () => {

@@ -61,7 +61,8 @@ body { user-select: none; }
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* 100% (zoom-aware), not viewport units — see settings.css .app for why. */
+  height: 100%;
   min-width: 0;
 }
 

@@ -37,8 +37,14 @@ const {
   MAX_AUTO_CLOSE_SECONDS,
 } = require("./bubble-policy");
 const { normalizeSessionAliases } = require("./session-alias");
+const {
+  TEXT_SCALE_MIN,
+  TEXT_SCALE_MAX,
+  TEXT_SCALE_DEFAULT,
+  normalizeTextScaleByDisplay,
+} = require("./text-scale");
 
-const CURRENT_VERSION = 9;
+const CURRENT_VERSION = 10;
 
 // ── Schema ──
 // Each field has: type, default OR defaultFactory, optional enum/normalize/validate.
@@ -97,9 +103,9 @@ const SCHEMA = {
   bubbleFollowPet: { type: "boolean", default: false },
   sessionHudEnabled: { type: "boolean", default: true },
   sessionHudShowStateLabels: { type: "boolean", default: true },
-  sessionHudShowElapsed: { type: "boolean", default: true },
+  sessionHudShowElapsed: { type: "boolean", default: false },
   sessionHudShowContextUsage: { type: "boolean", default: true },
-  sessionHudCleanupDetached: { type: "boolean", default: false },
+  sessionHudCleanupDetached: { type: "boolean", default: true },
   sessionHudPinned: { type: "boolean", default: false },
   // Stale-cleanup intervals (ms). Defaults match the historical constants in
   // state-stale-cleanup.js so upgrading users see no behavioral change.
@@ -182,6 +188,21 @@ const SCHEMA = {
   // proportional pixel-size recomputation. The pet keeps its current
   // window size; the size slider still works (per-display proportional).
   keepSizeAcrossDisplays: { type: "boolean", default: false },
+  // Text-window zoom (bubbles, HUD, dashboard, settings, resume input). The
+  // pet itself scales via `size` and is never zoomed. `textScale` is the
+  // global default; `textScaleByDisplay` overrides it per display id (the
+  // slider writes the entry for the display the settings window sits on, via
+  // the setTextScaleForDisplay command).
+  textScale: {
+    type: "number",
+    default: TEXT_SCALE_DEFAULT,
+    validate: (v) => Number.isFinite(v) && v >= TEXT_SCALE_MIN && v <= TEXT_SCALE_MAX,
+  },
+  textScaleByDisplay: {
+    type: "object",
+    defaultFactory: () => ({}),
+    normalize: normalizeTextScaleByDisplay,
+  },
   shortcuts: {
     type: "object",
     defaultFactory: () => getDefaultShortcuts(),
@@ -502,6 +523,18 @@ function migrate(raw) {
   if (out.version < 9) {
     out.autoApproveAllPermissions = false;
     out.version = 9;
+  }
+  // v9 -> v10: sessionHudShowElapsed / sessionHudCleanupDetached flipped their
+  // schema defaults for FRESH INSTALLS ONLY (compact HUD by default). Existing
+  // files normally carry both keys explicitly (save() bakes the full
+  // snapshot), but a file written by a pre-HUD-toggle build or hand-trimmed
+  // by the user lacks them — without this backfill validate() would hand
+  // those users the new defaults and visibly change their HUD. Pin the old
+  // defaults for every pre-v10 file; fresh installs never run migrate().
+  if (out.version < 10) {
+    if (!("sessionHudShowElapsed" in out)) out.sessionHudShowElapsed = true;
+    if (!("sessionHudCleanupDetached" in out)) out.sessionHudCleanupDetached = false;
+    out.version = 10;
   }
   if ((typeof out.version === "number" ? out.version : 0) < CURRENT_VERSION) {
     out.version = CURRENT_VERSION;

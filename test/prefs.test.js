@@ -52,9 +52,9 @@ describe("prefs.getDefaults", () => {
     assert.strictEqual(d.keepSizeAcrossDisplays, false);
     assert.strictEqual(d.sessionHudEnabled, true);
     assert.strictEqual(d.sessionHudShowStateLabels, true);
-    assert.strictEqual(d.sessionHudShowElapsed, true);
+    assert.strictEqual(d.sessionHudShowElapsed, false);
     assert.strictEqual(d.sessionHudShowContextUsage, true);
-    assert.strictEqual(d.sessionHudCleanupDetached, false);
+    assert.strictEqual(d.sessionHudCleanupDetached, true);
     assert.strictEqual("sessionHudAutoHide" in d, false);
     assert.strictEqual(d.sessionHudPinned, false);
     assert.strictEqual(d.savedPixelWidth, 0);
@@ -186,9 +186,9 @@ describe("prefs.validate", () => {
     assert.strictEqual(v.bubbleFollowPet, true);
     assert.strictEqual(v.sessionHudEnabled, true);
     assert.strictEqual(v.sessionHudShowStateLabels, true);
-    assert.strictEqual(v.sessionHudShowElapsed, true);
+    assert.strictEqual(v.sessionHudShowElapsed, false);
     assert.strictEqual(v.sessionHudShowContextUsage, true);
-    assert.strictEqual(v.sessionHudCleanupDetached, false);
+    assert.strictEqual(v.sessionHudCleanupDetached, true);
     assert.strictEqual(v.hideBubbles, false);
     assert.strictEqual(v.permissionBubblesEnabled, true);
     assert.strictEqual(v.notificationBubbleAutoCloseSeconds, 6);
@@ -341,6 +341,16 @@ describe("prefs.validate", () => {
   it("accepts soundVolume 0 (silent playback is valid)", () => {
     const v = prefs.validate({ soundVolume: 0 });
     assert.strictEqual(v.soundVolume, 0);
+  });
+
+  it("keeps textScale within 0.8–1.6 and defaults out-of-range values", () => {
+    assert.strictEqual(prefs.validate({ textScale: 1.25 }).textScale, 1.25);
+    assert.strictEqual(prefs.validate({ textScale: 0.8 }).textScale, 0.8);
+    assert.strictEqual(prefs.validate({ textScale: 1.6 }).textScale, 1.6);
+    assert.strictEqual(prefs.validate({ textScale: 0.5 }).textScale, 1);
+    assert.strictEqual(prefs.validate({ textScale: 2 }).textScale, 1);
+    assert.strictEqual(prefs.validate({ textScale: "1.2" }).textScale, 1);
+    assert.strictEqual(prefs.getDefaults().textScale, 1);
   });
 
   it("normalizes agents (drops malformed entries)", () => {
@@ -912,6 +922,44 @@ describe("prefs.migrate v8 → v9 (auto-approve auto-pilot)", () => {
 
   it("fresh defaults keep auto-pilot off", () => {
     assert.strictEqual(prefs.getDefaults().autoApproveAllPermissions, false);
+  });
+});
+
+describe("prefs.migrate v9 → v10 (compact HUD defaults are fresh-install only)", () => {
+  it("backfills the old HUD defaults for pre-v10 files missing the keys", () => {
+    // save() normally bakes every key, but files from pre-HUD-toggle builds
+    // (or hand-trimmed ones) lack these two — without the backfill validate()
+    // would hand existing users the flipped fresh-install defaults.
+    for (const version of [8, 9]) {
+      const validated = prefs.validate(prefs.migrate({ version, lang: "en" }));
+      assert.strictEqual(validated.version, prefs.CURRENT_VERSION);
+      assert.strictEqual(validated.sessionHudShowElapsed, true, `v${version}: elapsed stays on for upgraders`);
+      assert.strictEqual(validated.sessionHudCleanupDetached, false, `v${version}: cleanup stays off for upgraders`);
+    }
+  });
+
+  it("preserves explicit values that match neither old nor new default", () => {
+    const validated = prefs.validate(prefs.migrate({
+      version: 9,
+      sessionHudShowElapsed: false,
+      sessionHudCleanupDetached: true,
+    }));
+    assert.strictEqual(validated.sessionHudShowElapsed, false);
+    assert.strictEqual(validated.sessionHudCleanupDetached, true);
+  });
+
+  it("fresh defaults (no prefs file, migrate never runs) get the compact HUD", () => {
+    const d = prefs.getDefaults();
+    assert.strictEqual(d.sessionHudShowElapsed, false);
+    assert.strictEqual(d.sessionHudCleanupDetached, true);
+  });
+
+  it("is idempotent on v10 input (a fresh-install save is not re-backfilled)", () => {
+    // A v10 file that legitimately lacks the keys does not exist (save()
+    // bakes them), but the branch must still not fire for v10 input.
+    const upgraded = prefs.migrate({ version: 10 });
+    assert.strictEqual("sessionHudShowElapsed" in upgraded, false);
+    assert.strictEqual("sessionHudCleanupDetached" in upgraded, false);
   });
 });
 

@@ -28,6 +28,7 @@ const shortcutRecordKeyListeners = new Set();
 const remoteSshStatusListeners = new Set();
 const remoteSshProgressListeners = new Set();
 const hardwareBuddyStatusListeners = new Set();
+const textScaleContextListeners = new Set();
 ipcRenderer.on("settings-changed", (_event, payload) => {
   for (const cb of listeners) {
     try { cb(payload); } catch (err) { console.warn("settings onChanged listener threw:", err); }
@@ -58,6 +59,14 @@ ipcRenderer.on("hardwareBuddy:status-changed", (_event, payload) => {
     try { cb(payload); } catch (err) { console.warn("hardwareBuddy status listener threw:", err); }
   }
 });
+// Fired by the settings-window runtime whenever the window's effective text
+// scale was re-resolved (display move, topology change, commit) — the
+// committed percent lives main-side, so the slider must re-pull it.
+ipcRenderer.on("settings:text-scale-context-changed", () => {
+  for (const cb of textScaleContextListeners) {
+    try { cb(); } catch (err) { console.warn("text scale context listener threw:", err); }
+  }
+});
 
 contextBridge.exposeInMainWorld("settingsAPI", {
   getSnapshot: () => ipcRenderer.invoke("settings:get-snapshot"),
@@ -72,6 +81,14 @@ contextBridge.exposeInMainWorld("settingsAPI", {
   beginSizePreview: () => ipcRenderer.invoke("settings:begin-size-preview"),
   previewSize: (value) => ipcRenderer.invoke("settings:preview-size", value),
   endSizePreview: (value) => ipcRenderer.invoke("settings:end-size-preview", value),
+  previewTextScale: (value) => ipcRenderer.invoke("settings:preview-text-scale", value),
+  endTextScalePreview: () => ipcRenderer.invoke("settings:end-text-scale-preview"),
+  getTextScaleContext: () => ipcRenderer.invoke("settings:get-text-scale-context"),
+  onTextScaleContextChanged: (cb) => {
+    if (typeof cb !== "function") return () => {};
+    textScaleContextListeners.add(cb);
+    return () => textScaleContextListeners.delete(cb);
+  },
   exportAnimationOverrides: () => ipcRenderer.invoke("settings:export-animation-overrides"),
   importAnimationOverrides: () => ipcRenderer.invoke("settings:import-animation-overrides"),
   enterShortcutRecording: (actionId) => ipcRenderer.invoke("settings:enterShortcutRecording", actionId),

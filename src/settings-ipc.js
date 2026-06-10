@@ -121,6 +121,12 @@ function registerSettingsIpc(options = {}) {
   const getDoNotDisturb = options.getDoNotDisturb || (() => false);
   const getSoundMuted = options.getSoundMuted || (() => false);
   const getSoundVolume = options.getSoundVolume || (() => 1);
+  const previewTextScale = options.previewTextScale
+    || (() => ({ status: "error", message: "text scale preview unavailable" }));
+  const endTextScalePreview = options.endTextScalePreview
+    || (() => ({ status: "error", message: "text scale preview unavailable" }));
+  const getTextScaleContext = options.getTextScaleContext
+    || (() => ({ percent: 100 }));
   const getAllAgents = requiredDependency(options.getAllAgents, "getAllAgents");
   const checkForUpdates = options.checkForUpdates || (() => {});
   const getHardwareBuddyStatus = options.getHardwareBuddyStatus || (() => null);
@@ -188,6 +194,21 @@ function registerSettingsIpc(options = {}) {
     }
     return settingsSizePreviewSession.end(value || null);
   });
+  // Transient textScale preview while the slider drags: applies zoom to live
+  // windows but never writes the store. Commit still goes through
+  // settings:update so the controller stays the only writer.
+  handle("settings:preview-text-scale", (_event, value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) {
+      return { status: "error", message: `invalid text scale "${value}"` };
+    }
+    return previewTextScale(n);
+  });
+  handle("settings:end-text-scale-preview", () => endTextScalePreview());
+  // textScale is per-display; the renderer can't resolve its own display, so
+  // the slider asks main for the committed value of the display the settings
+  // window currently sits on.
+  handle("settings:get-text-scale-context", () => getTextScaleContext());
   handle("settings:get-preview-sound-url", () => {
     try { return themeLoader.getPreviewSoundUrl(); }
     catch { return null; }

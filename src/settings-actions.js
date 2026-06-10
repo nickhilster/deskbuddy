@@ -49,6 +49,12 @@
 // keep validate side-effect-free.
 
 const { CURRENT_VERSION } = require("./prefs");
+const {
+  TEXT_SCALE_MIN,
+  TEXT_SCALE_MAX,
+  isValidTextScale,
+  normalizeTextScaleByDisplay,
+} = require("./text-scale");
 const { isValidDisplaySnapshot } = require("./work-area");
 const {
   MAX_AUTO_CLOSE_SECONDS,
@@ -185,6 +191,24 @@ const updateRegistry = {
   lang: requireEnum("lang", ["en", "zh", "zh-TW", "ko", "ja"]),
   soundMuted: requireBoolean("soundMuted"),
   soundVolume: requireNumberInRange("soundVolume", 0, 1),
+  textScale: requireNumberInRange("textScale", TEXT_SCALE_MIN, TEXT_SCALE_MAX),
+  // Committed by the setTextScaleForDisplay command (the controller requires
+  // every commit key to have a registry entry). Strict per-entry validation
+  // so a direct settings:update can't park junk in the in-memory store.
+  textScaleByDisplay: (value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return { status: "error", message: "textScaleByDisplay must be an object map" };
+    }
+    for (const [key, raw] of Object.entries(value)) {
+      if (typeof key !== "string" || !key.trim() || !isValidTextScale(raw)) {
+        return {
+          status: "error",
+          message: `textScaleByDisplay entry "${key}" must map a display id to ${TEXT_SCALE_MIN}–${TEXT_SCALE_MAX}`,
+        };
+      }
+    }
+    return { status: "ok" };
+  },
   flashTaskbarOnComplete: requireBoolean("flashTaskbarOnComplete"),
   flashIntervalMs: requireNumberInRange("flashIntervalMs", 200, 2000),
   flashDurationMs: requireNumberInRange("flashDurationMs", 0, 60000),
@@ -1154,6 +1178,35 @@ const repairDoctorIssue = createRepairDoctorIssue({
   setBubbleCategoryEnabled,
 });
 
+// textScale is per-display: the slider edits the entry for the display the
+// settings window currently sits on (what you see is what you tune). The
+// renderer can't know which display that is, so the key is resolved
+// main-side via the injected resolveTextScaleDisplayKey dep. Without display
+// context (tests, headless) fall back to committing the legacy global so the
+// slider still works.
+function setTextScaleForDisplay(payload, deps) {
+  const value = Number(payload && payload.value);
+  if (!isValidTextScale(value)) {
+    return {
+      status: "error",
+      message: `textScale must be a number between ${TEXT_SCALE_MIN} and ${TEXT_SCALE_MAX}`,
+    };
+  }
+  const key = deps && typeof deps.resolveTextScaleDisplayKey === "function"
+    ? deps.resolveTextScaleDisplayKey()
+    : null;
+  if (typeof key !== "string" || !key) {
+    return { status: "ok", commit: { textScale: value } };
+  }
+  const snapshot = (deps && deps.snapshot) || {};
+  // New key goes first so the normalize cap can only trim stale displays,
+  // never the entry being written.
+  const prev = { ...(snapshot.textScaleByDisplay || {}) };
+  delete prev[key];
+  const next = normalizeTextScaleByDisplay({ [key]: value, ...prev });
+  return { status: "ok", commit: { textScaleByDisplay: next } };
+}
+
 const commandRegistry = {
   removeTheme,
   installHooks,
@@ -1173,6 +1226,7 @@ const commandRegistry = {
   setBubbleCategoryEnabled,
   "sessionCleanup.setTriple": setSessionCleanupTriple,
   setSessionAlias,
+  setTextScaleForDisplay,
   setAnimationOverride,
   setSoundOverride,
   setThemeOverrideDisabled,
