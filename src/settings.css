@@ -3001,7 +3001,6 @@ html, body {
   cursor: default;
   opacity: 0.6;
 }
-.about-footer-action-status,
 .about-cleanup-status {
   color: var(--text-tertiary);
   font-size: 11px;

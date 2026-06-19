@@ -90,11 +90,14 @@
     for (const a of list || []) {
       if (!a || !a.agentId) continue;
       live.add(a.agentId);
-      // New recommendations are selected by default. If the user manually
-      // unchecks one, state refreshes do not silently re-check it.
+      // New install recommendations are selected by default. Cleanup is safer
+      // as explicit opt-in because detector misses can happen.
       if (!knownSelectableIds[kind].has(a.agentId)) {
         knownSelectableIds[kind].add(a.agentId);
-        selected[kind].add(a.agentId);
+        // Enabling a detected tool is low risk, so preselect it. Cleanup can
+        // break an existing integration if detection missed a nonstandard
+        // install path, so make the user explicitly opt in.
+        if (kind === "install") selected[kind].add(a.agentId);
       }
     }
     for (const id of Array.from(knownSelectableIds[kind])) {
@@ -209,6 +212,14 @@
     return wrap;
   }
 
+  function inlineLink(label, onClick) {
+    return el("button", {
+      type: "button",
+      class: "inline-link",
+      onclick: onClick,
+    }, label);
+  }
+
   function initials(name) {
     const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return "?";
@@ -270,8 +281,8 @@
         el("span", { class: "ag-desc" }, rowDesc("active"))));
   }
 
-  function agentNoticeNode(kind) {
-    if (!agentNotice || agentNotice.kind !== kind || !agentNotice.text) return null;
+  function activeAgentNoticeNode() {
+    if (!agentNotice || !agentNotice.text) return null;
     return el("div", { class: "ag-notice " + agentNotice.tone }, agentNotice.text);
   }
 
@@ -285,13 +296,10 @@
           el("p", { class: "ag-panel-desc" }, i18n(descKey, descFb))),
         el("button", {
           class: "ag-panel-action " + kind,
-          disabled: isBusy ? "" : null,
+          disabled: (isBusy || count === 0) ? "" : null,
           onclick: () => runAgentBatch(kind),
         }, isBusy ? busyFb : i18n(actionKey, actionFb))));
     for (const a of entries) panel.appendChild(selectableAgentRow(a, kind));
-    const notice = agentNoticeNode(kind);
-    if (notice) panel.appendChild(notice);
-    if (!isBusy && count === 0) panel.classList.add("none-selected");
     return panel;
   }
 
@@ -301,14 +309,16 @@
     wrap.appendChild(el("h2", { class: "step-title" }, i18n("tutorialAgentsTitle", "Let Clawd follow your AI tools")));
     wrap.appendChild(el("p", { class: "step-sub" }, i18n("tutorialAgentsSub",
       "This only changes Clawd's connection. It won't install or remove the tools themselves.")));
+    const notice = activeAgentNoticeNode();
+    if (notice) wrap.appendChild(notice);
 
     const hasAny = ag.active.length || ag.install.length || ag.cleanup.length;
     if (!hasAny) {
       wrap.appendChild(el("div", { class: "empty-note" },
         i18n("tutorialAgentsEmpty", "No agents detected yet. You can connect them anytime in Settings → Agents.")));
       wrap.appendChild(el("div", { style: "margin-top:12px" },
-        el("span", { class: "inline-link", onclick: () => api.openSettingsTab && api.openSettingsTab("agents") },
-          i18n("tutorialAgentsOpenSettings", "Open Settings → Agents"))));
+        inlineLink(i18n("tutorialAgentsOpenSettings", "Open Settings → Agents"),
+          () => api.openSettingsTab && api.openSettingsTab("agents"))));
       return wrap;
     }
 
@@ -650,9 +660,14 @@
     wrap.appendChild(el("h2", { class: "step-title" }, i18n("tutorialFeaturesTitle", "Useful things to try later")));
     wrap.appendChild(el("p", { class: "step-sub" }, i18n("tutorialFeaturesSub",
       "Nothing here is required for setup. These are handy once Clawd is running.")));
+    const platformStarter = isMac()
+      ? featureCard("tutorialFeatureDashboard", "Session dashboard",
+        "tutorialFeatureDashboardDesc", "See live sessions, aliases, and recent activity in one place.")
+      : featureCard("tutorialFeatureDrag", "Drop a project folder",
+        "tutorialFeatureDragDesc", "Drop a folder on Clawd to open a terminal in that directory.",
+        i18n("tutorialFeatureDragPlatform", "Windows / Linux"));
     const grid = el("div", { class: "features" },
-      featureCard("tutorialFeatureDrag", "Drop a project folder",
-        "tutorialFeatureDragDesc", "Drop a folder on Clawd to open a terminal in that directory.", "Windows / Linux"),
+      platformStarter,
       featureCard("tutorialFeatureThemes", "Themes and mini mode",
         "tutorialFeatureThemesDesc", "Switch character themes, or tuck Clawd against a screen edge."),
       featureCard("tutorialFeatureMobile", "Phone / Telegram approval",
@@ -671,8 +686,8 @@
     wrap.appendChild(el("p", { class: "step-sub" }, i18n("tutorialDoneBody",
       "Start a connected AI tool and Clawd will react on your desktop. You can reopen this guide from Settings → General.")));
     wrap.appendChild(el("div", { style: "margin-top:14px" },
-      el("span", { class: "inline-link", onclick: () => api.openSettingsTab && api.openSettingsTab("general") },
-        i18n("tutorialDoneOpenSettings", "Open Settings"))));
+      inlineLink(i18n("tutorialDoneOpenSettings", "Open Settings"),
+        () => api.openSettingsTab && api.openSettingsTab("general"))));
     return wrap;
   }
 

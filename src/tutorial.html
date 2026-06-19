@@ -309,7 +309,7 @@ body { user-select: none; }
   font-weight: 700;
 }
 .ag-notice {
-  margin: 10px 12px 12px;
+  margin: 0 0 12px;
   padding: 8px 10px;
   border-radius: 8px;
   font-size: 12px;
@@ -458,8 +458,22 @@ body { user-select: none; }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-ghost { border-color: transparent; background: transparent; color: var(--muted); }
 .btn-ghost:hover { background: var(--surface-alt); color: var(--text); }
-.inline-link { color: var(--info); cursor: pointer; font-weight: 600; }
+.inline-link {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--info);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+}
 .inline-link:hover { text-decoration: underline; }
+.inline-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--info) 42%, transparent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
 </style>
 </head>
 <body>

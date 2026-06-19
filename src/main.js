@@ -69,6 +69,7 @@ if (_xwaylandRelaunch) {
 const { clampTextScale, scaleWidth, scaleHeight, resolveTextScaleForKey } = require("./text-scale");
 const path = require("path");
 const fs = require("fs");
+const { pathToFileURL } = require("url");
 const { EventEmitter } = require("events");
 const {
   applyWindowsAppUserModelId,
@@ -1646,15 +1647,15 @@ function buildTutorialShortcutsSummary() {
 }
 
 // The welcome screen uses the app icon so first run feels like product setup.
-// Read once, lazily, and pass a data URL to keep the renderer CSP simple.
+// Keep this as a file URL so repeated tutorial state pushes don't clone the
+// 1.46 MB PNG as a base64 string on every agent/shortcut update.
 let _tutorialHeroSrcCache = null;
 function getTutorialHeroSrc() {
   if (_tutorialHeroSrcCache != null) return _tutorialHeroSrcCache;
   try {
-    const icon = fs.readFileSync(path.join(__dirname, "..", "assets", "icon.png"));
-    _tutorialHeroSrcCache = "data:image/png;base64," + icon.toString("base64");
+    _tutorialHeroSrcCache = pathToFileURL(path.join(__dirname, "..", "assets", "icon.png")).href;
   } catch (err) {
-    console.warn("Clawd: failed to read tutorial icon:", err && err.message);
+    console.warn("Clawd: failed to resolve tutorial icon:", err && err.message);
     _tutorialHeroSrcCache = "";
   }
   return _tutorialHeroSrcCache;
