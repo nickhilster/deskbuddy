@@ -194,6 +194,20 @@ const updateRegistry = {
   },
   savedPixelWidth: requireNonNegativeFiniteNumber("savedPixelWidth"),
   savedPixelHeight: requireNonNegativeFiniteNumber("savedPixelHeight"),
+  // #408: frozen-origin work area for keepSizeAcrossDisplays. null = unknown
+  // (legacy prefs / never seeded); otherwise positive width+height.
+  savedPixelWorkArea: (value) => {
+    if (value === null) return { status: "ok" };
+    if (!value || typeof value !== "object") {
+      return { status: "error", message: "savedPixelWorkArea must be null or { width, height }" };
+    }
+    const w = Number(value.width);
+    const h = Number(value.height);
+    if (!Number.isFinite(w) || w <= 0 || !Number.isFinite(h) || h <= 0) {
+      return { status: "error", message: "savedPixelWorkArea.width/height must be positive finite numbers" };
+    }
+    return { status: "ok" };
+  },
 
   // ── Pure data prefs (function-form: validator only) ──
   lang: requireEnum("lang", ["en", "zh", "zh-TW", "ko", "ja"]),

@@ -80,6 +80,16 @@ const SCHEMA = {
   // when keepSizeAcrossDisplays is enabled.
   savedPixelWidth: { type: "number", default: 0, validate: (v) => Number.isFinite(v) && v >= 0 },
   savedPixelHeight: { type: "number", default: 0, validate: (v) => Number.isFinite(v) && v >= 0 },
+  // #408: work area of the display the keep-size was *frozen* on (i.e. the
+  // realized origin). Kept separately from positionDisplay because that one
+  // tracks the LAST display the window sat on — after a "Send to display"
+  // the two diverge, and using positionDisplay as the frozen origin would
+  // clamp legitimate cross-display sizes back to the launch fallback.
+  savedPixelWorkArea: {
+    type: "object",
+    defaultFactory: () => null,
+    normalize: normalizeSavedPixelWorkArea,
+  },
   size: {
     type: "string",
     default: "P:9",
@@ -637,6 +647,15 @@ function normalizeDismissedAgentHintMap(value) {
     if (typeof key === "string" && key && value[key] === true) out[key] = true;
   }
   return out;
+}
+
+function normalizeSavedPixelWorkArea(value) {
+  if (!value || typeof value !== "object") return null;
+  const w = Number(value.width);
+  const h = Number(value.height);
+  if (!Number.isFinite(w) || w <= 0) return null;
+  if (!Number.isFinite(h) || h <= 0) return null;
+  return { width: w, height: h };
 }
 
 function normalizePositionDisplay(value) {

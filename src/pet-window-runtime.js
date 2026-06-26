@@ -657,12 +657,10 @@ function createPetWindowRuntime(options = {}) {
       dragSnapshot = null;
       return;
     }
-    // When keepSizeAcrossDisplays is on, the pet may currently be sized from
-    // a prior display. Snapshotting getCurrentPixelSize() here would snap it
-    // to the current display's proportional size at drag start.
-    const size = getKeepSizeAcrossDisplays()
-      ? { width: bounds.width, height: bounds.height }
-      : getCurrentPixelSize();
+    // #408: use the effective size (frozen, when keepSizeAcrossDisplays is on)
+    // so the drag snapshot follows the frozen invariant instead of re-reading
+    // live bounds — keeps every size path on one source of truth.
+    const size = getEffectiveCurrentPixelSize();
     dragSnapshot = createDragSnapshot(
       getCursorScreenPoint(),
       bounds,
@@ -808,12 +806,14 @@ function createPetWindowRuntime(options = {}) {
       return;
     }
     const current = getPetWindowBounds();
-    const size = getKeepSizeAcrossDisplays()
-      ? { width: current.width, height: current.height }
-      : getCurrentPixelSize();
+    const size = getEffectiveCurrentPixelSize();
     const clamped = clampToScreenVisual(current.x, current.y, size.width, size.height);
     const proportionalRecalc = isProportionalMode() && !getKeepSizeAcrossDisplays();
-    if (proportionalRecalc || clamped.x !== current.x || clamped.y !== current.y) {
+    // #408: also re-apply when the live size drifted from the effective size — a
+    // Windows sleep/wake can resize the window without moving it, and keepSize
+    // must snap it back to the frozen size even when no position clamp is needed.
+    const sizeDrifted = current.width !== size.width || current.height !== size.height;
+    if (proportionalRecalc || sizeDrifted || clamped.x !== current.x || clamped.y !== current.y) {
       applyPetWindowBounds({ ...clamped, width: size.width, height: size.height });
       syncHitWin();
       repositionAnchoredSurfaces();
@@ -830,9 +830,7 @@ function createPetWindowRuntime(options = {}) {
       return;
     }
     const current = getPetWindowBounds();
-    const size = getKeepSizeAcrossDisplays()
-      ? { width: current.width, height: current.height }
-      : getCurrentPixelSize();
+    const size = getEffectiveCurrentPixelSize();
     const clamped = clampToScreenVisual(current.x, current.y, size.width, size.height);
     applyPetWindowBounds({ ...clamped, width: size.width, height: size.height });
     syncHitWin();

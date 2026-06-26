@@ -59,6 +59,7 @@ describe("prefs.getDefaults", () => {
     assert.strictEqual(d.sessionHudPinned, false);
     assert.strictEqual(d.savedPixelWidth, 0);
     assert.strictEqual(d.savedPixelHeight, 0);
+    assert.strictEqual(d.savedPixelWorkArea, null);
     assert.strictEqual(d.permissionBubblesEnabled, true);
     assert.strictEqual(d.notificationBubbleAutoCloseSeconds, 6);
     assert.strictEqual(d.updateBubbleAutoCloseSeconds, 9);
@@ -192,6 +193,7 @@ describe("prefs.validate", () => {
       disableMiniMode: "yes",
       savedPixelWidth: -1,
       savedPixelHeight: "286",
+      savedPixelWorkArea: "bogus",
     });
     const d = prefs.getDefaults();
     assert.strictEqual(v.lang, d.lang);
@@ -213,6 +215,7 @@ describe("prefs.validate", () => {
     assert.strictEqual(v.disableMiniMode, false);
     assert.strictEqual(v.savedPixelWidth, 0);
     assert.strictEqual(v.savedPixelHeight, 0);
+    assert.strictEqual(v.savedPixelWorkArea, null);
   });
 
   it("backfills split bubble prefs from legacy hideBubbles=true", () => {
@@ -326,6 +329,7 @@ describe("prefs.validate", () => {
       keepSizeAcrossDisplays: true,
       savedPixelWidth: 286,
       savedPixelHeight: 286,
+      savedPixelWorkArea: { width: 1920, height: 1080 },
       x: 100,
       y: -50,
       size: "P:15",
@@ -347,6 +351,7 @@ describe("prefs.validate", () => {
     assert.strictEqual(v.keepSizeAcrossDisplays, true);
     assert.strictEqual(v.savedPixelWidth, 286);
     assert.strictEqual(v.savedPixelHeight, 286);
+    assert.deepStrictEqual(v.savedPixelWorkArea, { width: 1920, height: 1080 });
     assert.strictEqual(v.x, 100);
     assert.strictEqual(v.y, -50);
     assert.strictEqual(v.size, "P:15");

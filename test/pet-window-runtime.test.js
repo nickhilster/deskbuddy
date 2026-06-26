@@ -485,6 +485,44 @@ describe("pet-window-runtime", () => {
     ]);
   });
 
+  it("snaps the pet back to the frozen size when live bounds drift on display-metrics-changed (#408)", () => {
+    // Windows sleep/wake can resize the pet without moving it (DPI flux).
+    // Even when the clamped position is unchanged, the runtime must re-apply
+    // the frozen size — otherwise keepSize silently absorbs the drift.
+    const renderWin = makeWindow({ x: 200, y: 100, width: 140, height: 140 });
+    const harness = createRuntime({
+      renderWin,
+      effectivePixelSize: { width: 100, height: 100 },
+      currentPixelSize: { width: 100, height: 100 },
+      keepSizeAcrossDisplays: true,
+      proportional: true,
+    });
+
+    harness.runtime.handleDisplayMetricsChanged();
+
+    const setBoundsCalls = renderWin.calls.filter((call) => call[0] === "setBounds");
+    assert.equal(setBoundsCalls.length, 1);
+    assert.deepEqual(setBoundsCalls[0][1], { x: 200, y: 100, width: 100, height: 100 });
+  });
+
+  it("leaves the pet alone when live bounds already match the frozen size and no clamp is needed (#408)", () => {
+    // Regression guard for the sizeDrifted branch: in steady state we must
+    // not write bounds unnecessarily.
+    const renderWin = makeWindow({ x: 200, y: 100, width: 100, height: 100 });
+    const harness = createRuntime({
+      renderWin,
+      effectivePixelSize: { width: 100, height: 100 },
+      currentPixelSize: { width: 100, height: 100 },
+      keepSizeAcrossDisplays: true,
+      proportional: true,
+    });
+
+    harness.runtime.handleDisplayMetricsChanged();
+
+    const setBoundsCalls = renderWin.calls.filter((call) => call[0] === "setBounds");
+    assert.equal(setBoundsCalls.length, 0);
+  });
+
   it("brings the pet to primary display and flushes runtime prefs", () => {
     const harness = createRuntime({
       effectivePixelSize: { width: 200, height: 160 },
