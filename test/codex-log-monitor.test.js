@@ -1016,6 +1016,56 @@ describe("CodexLogMonitor", () => {
     monitor.start();
   });
 
+  it("should NOT emit codex-permission for Codex Desktop sessions (native guardian UI)", (_, done) => {
+    const testFile = path.join(dateDir, TEST_FILENAME);
+    // Desktop session_meta sets originator=Codex Desktop; a shell function_call
+    // with no exec_command_end would normally trip the 2s approval heuristic,
+    // but Desktop has its own native permission/guardian UI so the heuristic
+    // (and the passive notify bubble it triggers) must be skipped.
+    fs.writeFileSync(testFile, [
+      '{"type":"session_meta","payload":{"cwd":"/projects/foo","originator":"Codex Desktop","source":"vscode"}}',
+      '{"type":"response_item","payload":{"type":"function_call","name":"shell_command","arguments":"{\\"command\\":\\"npm run build\\"}"}}',
+    ].join("\n") + "\n");
+
+    const config = makeConfig(tmpDir);
+    const states = [];
+    monitor = new CodexLogMonitor(config, (sid, state) => {
+      states.push(state);
+    });
+    monitor.start();
+
+    setTimeout(() => {
+      assert.ok(!states.includes("codex-permission"),
+        "Desktop sessions should not trigger the CLI approval heuristic");
+      assert.ok(states.includes("working"),
+        "Desktop function_call should still map to working");
+      done();
+    }, 3000);
+  });
+
+  it("should NOT emit codex-permission for Codex Desktop even on explicit escalated requests", (_, done) => {
+    const testFile = path.join(dateDir, TEST_FILENAME);
+    // sandbox_permissions=require_escalated would normally emit codex-permission
+    // immediately, but Desktop routes all permissions through its native UI.
+    fs.writeFileSync(testFile, [
+      '{"type":"session_meta","payload":{"cwd":"/projects/foo","originator":"Codex Desktop"}}',
+      '{"type":"response_item","payload":{"type":"function_call","name":"exec_command","arguments":"{\\"cmd\\":\\"npm run build\\",\\"sandbox_permissions\\":\\"require_escalated\\",\\"justification\\":\\"needs local build\\"}"}}',
+    ].join("\n") + "\n");
+
+    const config = makeConfig(tmpDir);
+    const states = [];
+    monitor = new CodexLogMonitor(config, (sid, state) => {
+      states.push(state);
+    });
+    monitor.start();
+
+    setTimeout(() => {
+      assert.ok(!states.includes("codex-permission"),
+        "Desktop escalated requests should also defer to native UI");
+      done();
+    }, 500);
+  });
+
   it("should NOT emit codex-permission for non-shell function calls", (_, done) => {
     const testFile = path.join(dateDir, TEST_FILENAME);
     // web_search_call — not a shell command, no approval needed
