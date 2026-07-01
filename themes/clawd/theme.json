@@ -157,8 +157,7 @@
       "notification": 5000,
       "carrying": 3000,
       "working": 1000,
-      "thinking": 1000,
-      "dizzy": 6000
+      "thinking": 1000
     },
     "autoReturn": {
       "attention": 4000,
