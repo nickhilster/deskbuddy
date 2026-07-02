@@ -34,20 +34,25 @@ const MIME = {
   ".webmanifest": "application/manifest+json",
 };
 
-function loadOrCreateToken() {
+function loadOrCreateIdentity() {
+  let token = null;
+  let machineId = null;
   try {
     const raw = JSON.parse(fs.readFileSync(TOKEN_PATH, "utf8"));
-    if (raw && typeof raw.token === "string" && /^[a-f0-9]{32,64}$/.test(raw.token)) return raw.token;
+    if (raw && typeof raw.token === "string" && /^[a-f0-9]{32,64}$/.test(raw.token)) token = raw.token;
+    if (raw && typeof raw.machineId === "string" && /^[a-f0-9]{32,64}$/.test(raw.machineId)) machineId = raw.machineId;
   } catch {}
-  const token = crypto.randomBytes(16).toString("hex");
+  if (token && machineId) return { token, machineId };
+  token = token || crypto.randomBytes(16).toString("hex");
+  machineId = machineId || crypto.randomBytes(16).toString("hex");
   try {
     const dir = path.dirname(TOKEN_PATH);
     fs.mkdirSync(dir, { recursive: true });
     const tmpPath = TOKEN_PATH + ".tmp";
-    fs.writeFileSync(tmpPath, JSON.stringify({ token }, null, 2), "utf8");
+    fs.writeFileSync(tmpPath, JSON.stringify({ token, machineId }, null, 2), "utf8");
     fs.renameSync(tmpPath, TOKEN_PATH);
   } catch {}
-  return token;
+  return { token, machineId };
 }
 
 function buildMessage(type, payload) {
@@ -60,7 +65,8 @@ function isPathInside(parent, child) {
 }
 
 function initMobilePreviewServer(ctx) {
-  const token = loadOrCreateToken();
+  const { token, machineId } = loadOrCreateIdentity();
+  const machineName = os.hostname() || "clawd";
   const clients = new Set();
   const clientMeta = new Map();
   let sessionCache = new Map();
@@ -99,7 +105,13 @@ function initMobilePreviewServer(ctx) {
     // API endpoint for connection info (M1: no token — must come from Settings page or URL params)
     if (urlPath === "/api/connection-info") {
       const ready = Number.isInteger(activePort) && activePort > 0;
-      const info = { status: ready ? "ok" : "starting", port: ready ? activePort : null, lanIp: getLocalIP() };
+      const info = {
+        status: ready ? "ok" : "starting",
+        port: ready ? activePort : null,
+        lanIp: getLocalIP(),
+        machineId,
+        machineName,
+      };
       res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-cache" });
       res.end(JSON.stringify(info));
       return;
@@ -148,7 +160,7 @@ function initMobilePreviewServer(ctx) {
       try {
         const snapshot = {};
         for (const [sid, data] of sessionCache) snapshot[sid] = data;
-        ws.send(buildMessage("snapshot", { sessions: snapshot }));
+        ws.send(buildMessage("snapshot", { machineId, machineName, sessions: snapshot }));
       } catch {}
 
       startHeartbeat();
@@ -244,7 +256,7 @@ function initMobilePreviewServer(ctx) {
       }
       const snapshot = {};
       for (const [sid, data] of sessionCache) snapshot[sid] = data;
-      broadcast(buildMessage("snapshot", { sessions: snapshot }));
+      broadcast(buildMessage("snapshot", { machineId, machineName, sessions: snapshot }));
       return;
     }
 
@@ -327,6 +339,8 @@ function initMobilePreviewServer(ctx) {
     onSnapshot,
     getPort: () => activePort,
     getToken: () => token,
+    getMachineId: () => machineId,
+    getMachineName: () => machineName,
     PROTOCOL_VERSION,
   };
 }

@@ -1,7 +1,7 @@
 {
-  "name": "Clawd Mobile",
+  "name": "Clawd on Mobile",
   "short_name": "Clawd",
-  "description": "Monitor Claude Code sessions from your phone",
+  "description": "Track AI coding agent sessions across all your machines from your phone",
   "start_url": "/mobile/",
   "display": "standalone",
   "background_color": "#111318",

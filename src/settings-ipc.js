@@ -444,6 +444,8 @@ function registerSettingsIpc(options = {}) {
       if (!lanWsServer) return { status: "error", message: "LAN bridge not available" };
       const port = lanWsServer.getPort();
       const tok = lanWsServer.getToken();
+      const machineId = typeof lanWsServer.getMachineId === "function" ? lanWsServer.getMachineId() : null;
+      const machineName = typeof lanWsServer.getMachineName === "function" ? lanWsServer.getMachineName() : null;
       if (!Number.isInteger(port) || port <= 0 || typeof tok !== "string" || !tok) {
         return { status: "starting", message: "LAN bridge is starting" };
       }
@@ -469,8 +471,9 @@ function registerSettingsIpc(options = {}) {
           if (lanIp !== "127.0.0.1") break;
         }
       }
-      const pairUrl = `http://${lanIp}:${port}/mobile/?host=${lanIp}&port=${port}&token=${tok}`;
-      return { status: "ok", port, token: tok, lanIp, pairUrl };
+      const nameParam = machineName ? `&name=${encodeURIComponent(machineName)}` : "";
+      const pairUrl = `http://${lanIp}:${port}/mobile/?host=${lanIp}&port=${port}&token=${tok}${nameParam}`;
+      return { status: "ok", port, token: tok, lanIp, machineId, machineName, pairUrl };
     } catch (err) {
       return { status: "error", message: (err && err.message) || String(err) };
     }

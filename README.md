@@ -78,6 +78,12 @@ Thinking when you prompt, typing when tools run, grooving or juggling for subage
 - **Process liveness detection** — detects crashed/exited supported agent processes and cleans up orphan sessions
 - **Startup recovery** — if Clawd restarts while any supported agent is still running, it stays awake instead of falling asleep
 
+### Clawd on Mobile
+- **Multi-machine dashboard** — install Clawd on every machine you code on; each one runs its own local, read-only LAN bridge, no single machine has to stay on for the others to be visible
+- **One phone app, many machines** — pair once from `Settings…` → `Mobile` on each desktop (copy the connection link, paste it into the phone app's "Add device" box); sessions from every paired machine show up grouped together, with per-machine online/offline status
+- **Push notifications** — get notified on your phone when a session needs attention or finishes, even while the app is backgrounded
+- **Local-only, read-only** — LAN WebSocket bridge, no cloud relay, no write or approval operations from the phone
+
 ### System
 - **Click-through** — transparent areas pass clicks to windows below; only Clawd's body is interactive
 - **Position memory** — Clawd remembers where you left it across restarts (including mini mode)
