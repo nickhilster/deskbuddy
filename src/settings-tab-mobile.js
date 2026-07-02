@@ -70,6 +70,9 @@
 
       // Connection details
       html += '<div class="mobile-conn-details">';
+      if (info.machineName) {
+        html += `<div class="mobile-conn-row"><span class="mobile-conn-label">${escapeHtml(t("mobileDeviceName") || "Device name")}</span><span class="mobile-conn-value">${escapeHtml(info.machineName)}</span></div>`;
+      }
       html += `<div class="mobile-conn-row"><span class="mobile-conn-label">LAN IP</span><span class="mobile-conn-value">${escapeHtml(info.lanIp)}</span>`;
       html += `<button class="mobile-copy-btn" data-copy="${escapeHtml(info.lanIp)}">Copy</button></div>`;
       html += `<div class="mobile-conn-row"><span class="mobile-conn-label">Port</span><span class="mobile-conn-value">${info.port}</span>`;
@@ -112,12 +115,12 @@
 
     // Title & description
     const title = document.createElement("h3");
-    title.textContent = t("mobileTitle") || "Mobile / PWA";
+    title.textContent = t("mobileTitle") || "Clawd on Mobile";
     section.appendChild(title);
 
     const desc = document.createElement("p");
     desc.className = "settings-tab-desc";
-    desc.textContent = t("mobileDesc") || "Connect your phone to monitor sessions remotely.";
+    desc.textContent = t("mobileDesc") || "Add this machine to the Clawd on Mobile app on your phone to monitor sessions from anywhere.";
     section.appendChild(desc);
 
     // Enable toggle

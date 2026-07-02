@@ -20,7 +20,7 @@
     connected:    { dot: "connected", text: "已连接", color: "#22c55e" },
     connecting:   { dot: "connecting", text: "连接中...", color: "#b45309" },
     reconnecting: { dot: "reconnecting", text: "重连中...", color: "#ef4444" },
-    disconnected: { dot: "", text: "", color: "#52525b" },
+    disconnected: { dot: "", text: "离线", color: "#52525b" },
     auth_failed:  { dot: "", text: "认证失败", color: "#ef4444" },
   };
 
@@ -31,7 +31,9 @@
     SubagentStart: "子代理启动", SubagentStop: "子代理停止",
   };
 
-
+  var MACHINES_KEY = "clawd-machines";
+  var LEGACY_HISTORY_KEY = "clawd-history";
+  var MAX_MACHINES = 12;
   var MAX_HISTORY = 5;
   var MAX_LOG_LINES = 200;
   var _logBuffer = [];
@@ -81,11 +83,12 @@
     return EVENT_ICONS[eventName] || "●";
   }
 
-  function log(msg) {
+  function log(msg, machineName) {
     var now = new Date();
     var ts = [now.getHours(), now.getMinutes(), now.getSeconds()]
       .map(function(n) { return String(n).padStart(2, "0"); }).join(":");
-    var line = "[" + ts + "] " + msg;
+    var prefix = machineName ? "[" + machineName + "] " : "";
+    var line = "[" + ts + "] " + prefix + msg;
     _logBuffer.push(line);
     if (_logBuffer.length > MAX_LOG_LINES) _logBuffer.shift();
     var el = document.getElementById("settings-log-content");
@@ -120,6 +123,32 @@
     }
   }
 
+  // === Pairing input parsing ===
+  // Accepts a full pairUrl (http://ip:port/mobile/?host=..&port=..&token=..&name=..)
+  // or a bare query string. Returns { host, port, token, name } or null.
+  function parsePairInput(text) {
+    if (!text || typeof text !== "string") return null;
+    var trimmed = text.trim();
+    if (!trimmed) return null;
+    var url;
+    try {
+      if (/^[a-z]+:\/\//i.test(trimmed)) {
+        url = new URL(trimmed);
+      } else if (trimmed.indexOf("=") !== -1) {
+        url = new URL("http://x/?" + trimmed.replace(/^\?/, ""));
+      } else {
+        return null;
+      }
+    } catch (e) { return null; }
+    var host = url.searchParams.get("host");
+    var portRaw = url.searchParams.get("port");
+    var token = url.searchParams.get("token");
+    var name = url.searchParams.get("name");
+    var port = parseInt(portRaw, 10);
+    if (!host || !token || !Number.isInteger(port) || port <= 0) return null;
+    return { host: host, port: port, token: token, name: name || null };
+  }
+
   // === NotificationManager ===
 
   class NotificationManager {
@@ -134,18 +163,19 @@
       }
     }
 
-    onStateChange(sessionId, data) {
+    onStateChange(compositeId, data, machineName) {
       if (this.permission !== "granted" || document.visibilityState === "visible") return;
-      var prev = this.lastStates.get(sessionId);
-      this.lastStates.set(sessionId, data.state);
+      var prev = this.lastStates.get(compositeId);
+      this.lastStates.set(compositeId, data.state);
       var s = data.state;
       var config = STATE_CONFIG[s];
       if (!config) return;
       var label = data.title || data.agentId || "Agent";
+      var suffix = machineName ? " · " + machineName : "";
       if (s === "error" || s === "attention") {
-        this._notify(config.label, label + " - " + config.label, s);
+        this._notify(config.label, label + suffix + " - " + config.label, s);
       } else if ((prev === "working" || prev === "thinking") && s === "idle") {
-        this._notify("任务完成", label + " 已完成任务", "idle");
+        this._notify("任务完成", label + suffix + " 已完成任务", "idle");
       }
     }
 
@@ -162,159 +192,345 @@
     }
   }
 
-  // === ConnectionManager ===
+  // === MachineConnection (one persistent WS connection to one machine) ===
 
-  class ConnectionManager {
-    constructor() {
-      this.ws = null; this.config = null;
+  class MachineConnection {
+    constructor(record, handlers) {
+      this.id = record.id;
+      this.name = record.name;
+      this.host = record.host;
+      this.port = record.port;
+      this.token = record.token;
+      this.ws = null;
       this.reconnectDelay = 1000; this.maxReconnectDelay = 30000;
       this.reconnectTimer = null; this.state = "disconnected";
       this.retryCount = 0;
-      this.onStateChange = null; this.onMessage = null; this.onDisconnected = null;
+      this.handlers = handlers || {};
       this._hiddenAt = 0;
       this._bindVisibility();
     }
 
-    connect(config) {
-      this.config = config;
+    updateRecord(record) {
+      this.name = record.name;
+      this.host = record.host;
+      this.port = record.port;
+      this.token = record.token;
+    }
+
+    connect() {
       this.retryCount = 0;
       this.reconnectDelay = 1000;
       clearTimeout(this.reconnectTimer);
-      this._saveToHistory(config);
       this._doConnect();
     }
 
+    disconnect() {
+      clearTimeout(this.reconnectTimer);
+      var old = this.ws;
+      this.ws = null;
+      if (old) {
+        old.onopen = old.onmessage = old.onclose = old.onerror = null;
+        try { old.close(); } catch {}
+      }
+    }
+
     _doConnect() {
-      if (!this.config) return;
-      // Tear down old socket — clear callbacks first to prevent stale events
       var old = this.ws;
       if (old) {
         old.onopen = old.onmessage = old.onclose = old.onerror = null;
         try { old.close(); } catch {}
       }
-      var url = "ws://" + this.config.host + ":" + this.config.port + "/ws?token=" + this.config.token;
+      var url = "ws://" + this.host + ":" + this.port + "/ws?token=" + this.token;
       this._setState("connecting");
-      log("Connecting to " + this.config.host + ":" + this.config.port + "...");
+      log("Connecting to " + this.host + ":" + this.port + "...", this.name);
       var socket;
-      try { socket = new WebSocket(url); } catch (err) { log("WS create failed: " + err.message); this._scheduleReconnect(); return; }
+      try { socket = new WebSocket(url); } catch (err) { log("WS create failed: " + err.message, this.name); this._scheduleReconnect(); return; }
       this.ws = socket;
       var self = this;
       var connected = false;
       socket.onopen = function() {
         if (socket !== self.ws) return; // stale socket — ignore
         connected = true; self.retryCount = 0; self.reconnectDelay = 1000;
-        self._setState("connected"); log("Connected"); showToast("已连接到桌面端", "success");
-        // Dismiss any persistent toasts (e.g. retry hint)
+        self._setState("connected"); log("Connected", self.name);
         var persisted = document.querySelectorAll(".toast-persist");
         for (var i = 0; i < persisted.length; i++) { persisted[i].remove(); }
       };
       socket.onmessage = function(event) {
         if (socket !== self.ws) return;
-        try { var msg = JSON.parse(event.data); if (self.onMessage) self.onMessage(msg); } catch {}
+        try {
+          var msg = JSON.parse(event.data);
+          if (self.handlers.onMessage) self.handlers.onMessage(self, msg);
+        } catch {}
       };
       socket.onclose = function(event) {
         if (socket !== self.ws) return; // stale socket — ignore
-        if (event.code === 1008) { self._setState("auth_failed"); log("Auth failed"); showToast("Token 已过期，请重新连接", "error"); return; }
-        if (connected) log("Disconnected (code: " + event.code + ")");
-        if (self.onDisconnected) self.onDisconnected();
+        if (event.code === 1008) { self._setState("auth_failed"); log("Auth failed", self.name); showToast((self.name || self.host) + ": Token 已过期，请重新添加", "error"); return; }
+        if (connected) log("Disconnected (code: " + event.code + ")", self.name);
+        if (self.handlers.onDisconnected) self.handlers.onDisconnected(self);
         self._scheduleReconnect();
       };
       socket.onerror = function() {};
     }
 
-    send(data) { if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(typeof data === "string" ? data : JSON.stringify(data)); }
-
     _scheduleReconnect() {
-      if (!this.config) return;
       this.retryCount++;
       this._setState("reconnecting");
-      // After several retries, give actionable feedback (don't stop — just inform)
       if (this.retryCount === 5) {
-        showToast("仍在重连…请检查地址、端口或桌面端是否已开启", "info", true);
+        showToast((this.name || this.host) + ": 仍在重连…请检查该设备是否已开启", "info", true);
       }
       var self = this;
       this.reconnectTimer = setTimeout(function() { self.reconnectDelay = Math.min(self.reconnectDelay * 2, self.maxReconnectDelay); self._doConnect(); }, this.reconnectDelay);
     }
 
-    _setState(state) { this.state = state; if (this.onStateChange) this.onStateChange(state); }
-
-    _saveToHistory(config) {
-      var history = []; try { history = JSON.parse(localStorage.getItem("clawd-history") || "[]"); } catch {}
-      var entry = { host: config.host, port: config.port, token: config.token, timestamp: Date.now() };
-      var filtered = history.filter(function(h) { return h.host !== config.host || h.port !== config.port; });
-      filtered.unshift(entry);
-      localStorage.setItem("clawd-history", JSON.stringify(filtered.slice(0, MAX_HISTORY)));
+    _setState(state) {
+      this.state = state;
+      if (this.handlers.onStateChange) this.handlers.onStateChange(this, state);
     }
-
-    getHistory() { try { return JSON.parse(localStorage.getItem("clawd-history") || "[]"); } catch { return []; } }
-    deleteHistory(index) { var h = this.getHistory(); h.splice(index, 1); localStorage.setItem("clawd-history", JSON.stringify(h)); }
 
     _bindVisibility() {
       var self = this;
-      document.addEventListener("visibilitychange", function() {
+      this._visibilityHandler = function() {
         if (document.visibilityState !== "visible") {
           self._hiddenAt = Date.now();
           return;
         }
-        if (!self.config) return;
         var hiddenFor = self._hiddenAt ? Date.now() - self._hiddenAt : 0;
-        // Short tab switch: trust OPEN. Background > 30s: force reconnect (zombie guard)
         if (hiddenFor < 30000 && self.ws && self.ws.readyState === WebSocket.OPEN) return;
-        log("Page visible after " + Math.round(hiddenFor / 1000) + "s, reconnecting...");
         self.retryCount = 0;
         self.reconnectDelay = 1000;
         clearTimeout(self.reconnectTimer);
         self._doConnect();
+      };
+      document.addEventListener("visibilitychange", this._visibilityHandler);
+    }
+
+    teardown() {
+      this.disconnect();
+      document.removeEventListener("visibilitychange", this._visibilityHandler);
+    }
+  }
+
+  // === MachineManager (owns the list of machines + their connections) ===
+
+  class MachineManager {
+    constructor(handlers) {
+      this.handlers = handlers || {};
+      this.machines = new Map(); // id -> { id, name, host, port, token, conn }
+      this._load();
+    }
+
+    list() {
+      var out = [];
+      this.machines.forEach(function(m) {
+        out.push({ id: m.id, name: m.name, host: m.host, port: m.port, state: m.conn ? m.conn.state : "disconnected" });
       });
+      return out;
+    }
+
+    get(id) { return this.machines.get(id); }
+
+    _load() {
+      var raw = null;
+      try { raw = JSON.parse(localStorage.getItem(MACHINES_KEY) || "null"); } catch {}
+      if (!Array.isArray(raw)) {
+        raw = this._migrateLegacyHistory();
+      }
+      var self = this;
+      (raw || []).forEach(function(entry) {
+        if (!entry || !entry.host || !entry.port || !entry.token) return;
+        self._register(entry, false);
+      });
+    }
+
+    _migrateLegacyHistory() {
+      var history = null;
+      try { history = JSON.parse(localStorage.getItem(LEGACY_HISTORY_KEY) || "null"); } catch {}
+      if (!Array.isArray(history) || !history.length) return [];
+      return history.slice(0, 1).map(function(h) {
+        return { id: h.host + ":" + h.port, name: h.host, host: h.host, port: h.port, token: h.token };
+      });
+    }
+
+    _persist() {
+      var out = [];
+      this.machines.forEach(function(m) {
+        out.push({ id: m.id, name: m.name, host: m.host, port: m.port, token: m.token });
+      });
+      try { localStorage.setItem(MACHINES_KEY, JSON.stringify(out)); } catch {}
+    }
+
+    _register(entry, persist) {
+      var id = entry.id || (entry.host + ":" + entry.port);
+      var existing = this.machines.get(id);
+      if (existing) {
+        existing.name = entry.name || existing.name;
+        existing.token = entry.token;
+        existing.conn.updateRecord(existing);
+        existing.conn.connect();
+        if (persist) this._persist();
+        return existing;
+      }
+      var record = { id: id, name: entry.name || entry.host, host: entry.host, port: entry.port, token: entry.token, conn: null };
+      var self = this;
+      record.conn = new MachineConnection(record, {
+        onStateChange: function(conn, state) { if (self.handlers.onStatusChange) self.handlers.onStatusChange(record, state); },
+        onMessage: function(conn, msg) {
+          if (
+            msg && msg.type === "snapshot" && typeof msg.machineName === "string" && msg.machineName
+            && !record.userNamed && record.name !== msg.machineName
+          ) {
+            record.name = msg.machineName;
+            record.conn.name = msg.machineName;
+            self._persist();
+          }
+          if (self.handlers.onMessage) self.handlers.onMessage(record, msg);
+        },
+        onDisconnected: function() { if (self.handlers.onStatusChange) self.handlers.onStatusChange(record, "disconnected"); },
+      });
+      this.machines.set(id, record);
+      record.conn.connect();
+      if (persist) this._persist();
+      return record;
+    }
+
+    addMachine(input) {
+      if (!input || !input.host || !input.port || !input.token) {
+        return { ok: false, error: "请填写完整的 Host / Port / Token" };
+      }
+      if (this.machines.size >= MAX_MACHINES && !this.machines.has(input.host + ":" + input.port)) {
+        return { ok: false, error: "最多支持 " + MAX_MACHINES + " 台设备" };
+      }
+      var record = this._register({
+        id: input.host + ":" + input.port,
+        name: input.name || input.host,
+        host: input.host,
+        port: input.port,
+        token: input.token,
+      }, true);
+      if (input.name) record.userNamed = true;
+      return { ok: true, machine: record };
+    }
+
+    removeMachine(id) {
+      var record = this.machines.get(id);
+      if (!record) return;
+      record.conn.teardown();
+      this.machines.delete(id);
+      this._persist();
+      if (this.handlers.onRemoved) this.handlers.onRemoved(record);
+    }
+
+    connectAll() {
+      this.machines.forEach(function(m) { m.conn.connect(); });
     }
   }
 
   // === SessionRenderer ===
 
   class SessionRenderer {
-    constructor(container) { this.container = container; this.sessions = new Map(); this.staleTimer = null; this.expandedSet = new Set(); this._startTimerUpdater(); }
+    constructor(container) {
+      this.container = container;
+      this.sessions = new Map(); // compositeId -> session data (with machineId attached)
+      this.machinesMeta = []; // [{id, name, state}]
+      this.staleTimer = null;
+      this.expandedSet = new Set();
+      this._startTimerUpdater();
+    }
 
-    updateFromSnapshot(sessions) {
-      this.sessions.clear();
-      for (var sid in sessions) { if (sessions.hasOwnProperty(sid)) this.sessions.set(sid, sessions[sid]); }
+    updateMachines(list) { this.machinesMeta = list; this.render(); }
+
+    _compositeId(machineId, sessionId) { return machineId + "::" + sessionId; }
+
+    updateFromSnapshot(machineId, sessions) {
+      for (var key of Array.from(this.sessions.keys())) {
+        if (key.indexOf(machineId + "::") === 0) this.sessions.delete(key);
+      }
+      for (var sid in sessions) {
+        if (!sessions.hasOwnProperty(sid)) continue;
+        var data = sessions[sid];
+        data.machineId = machineId;
+        this.sessions.set(this._compositeId(machineId, sid), data);
+      }
       this.render();
     }
 
-    updateState(sessionId, data) {
-      var existing = this.sessions.get(sessionId) || {};
+    updateState(machineId, sessionId, data) {
+      var compositeId = this._compositeId(machineId, sessionId);
+      var existing = this.sessions.get(compositeId) || {};
       var merged = {}; for (var k in existing) { if (existing.hasOwnProperty(k)) merged[k] = existing[k]; }
       for (var k2 in data) { if (data.hasOwnProperty(k2)) merged[k2] = data[k2]; }
-      this.sessions.set(sessionId, merged);
+      merged.machineId = machineId;
+      this.sessions.set(compositeId, merged);
       this.render();
     }
 
-    removeSession(sessionId) { this.sessions.delete(sessionId); this.expandedSet.delete(sessionId); this.render(); }
-    toggleExpand(sid) {
-      var wasExpanded = this.expandedSet.has(sid);
-      if (wasExpanded) this.expandedSet.delete(sid); else this.expandedSet.add(sid);
-      this._animatingSid = sid;
+    removeSession(machineId, sessionId) {
+      var compositeId = this._compositeId(machineId, sessionId);
+      this.sessions.delete(compositeId);
+      this.expandedSet.delete(compositeId);
+      this.render();
+    }
+
+    removeMachineSessions(machineId) {
+      for (var key of Array.from(this.sessions.keys())) {
+        if (key.indexOf(machineId + "::") === 0) { this.sessions.delete(key); this.expandedSet.delete(key); }
+      }
+      this.render();
+    }
+
+    toggleExpand(compositeId) {
+      var wasExpanded = this.expandedSet.has(compositeId);
+      if (wasExpanded) this.expandedSet.delete(compositeId); else this.expandedSet.add(compositeId);
+      this._animatingSid = compositeId;
       this.render();
     }
 
     render() {
       var self = this;
-      var entries = [];
-      this.sessions.forEach(function(v, k) { entries.push([k, v]); });
-      entries.sort(function(a, b) {
-        var pa = (STATE_CONFIG[a[1].state] || STATE_CONFIG.idle).priority;
-        var pb = (STATE_CONFIG[b[1].state] || STATE_CONFIG.idle).priority;
-        return pa - pb;
-      });
 
-      if (entries.length === 0) {
+      if (this.machinesMeta.length === 0) {
         this.container.innerHTML = '<div class="empty-state"><div class="empty-icon">' + icon("paw") + '</div>' +
-          '<div class="empty-text">连接桌面端开始监控</div>' +
-          '<div class="empty-hint">前往设置页配置连接</div></div>';
+          '<div class="empty-text">添加设备开始监控</div>' +
+          '<div class="empty-hint">前往"设备"页添加桌面端</div></div>';
         return;
       }
 
-      var html = '<div class="section-label">活跃会话 &middot; ' + entries.length + '</div>';
-      for (var i = 0; i < entries.length; i++) html += this._renderCard(entries[i][0], entries[i][1]);
+      var byMachine = new Map();
+      this.sessions.forEach(function(v, k) {
+        var mid = v.machineId;
+        if (!byMachine.has(mid)) byMachine.set(mid, []);
+        byMachine.get(mid).push([k, v]);
+      });
+
+      var totalSessions = this.sessions.size;
+      var html = '<div class="section-label">活跃会话 &middot; ' + totalSessions + '</div>';
+
+      var machinesSorted = this.machinesMeta.slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
+      for (var mi = 0; mi < machinesSorted.length; mi++) {
+        var machine = machinesSorted[mi];
+        var entries = byMachine.get(machine.id) || [];
+        entries.sort(function(a, b) {
+          var pa = (STATE_CONFIG[a[1].state] || STATE_CONFIG.idle).priority;
+          var pb = (STATE_CONFIG[b[1].state] || STATE_CONFIG.idle).priority;
+          return pa - pb;
+        });
+
+        var stateCfg = CONNECTION_STATES[machine.state] || CONNECTION_STATES.disconnected;
+        var isOffline = machine.state !== "connected";
+        html += '<div class="machine-group' + (isOffline ? ' offline' : '') + '">';
+        html += '<div class="machine-group-header"><span class="machine-status-dot ' + (stateCfg.dot || "") + '"></span>';
+        html += '<span class="machine-group-name">' + esc(machine.name) + '</span>';
+        if (isOffline) html += '<span class="machine-group-state">' + esc(stateCfg.text) + '</span>';
+        html += '</div>';
+
+        if (entries.length === 0) {
+          html += '<div class="machine-group-empty">' + (isOffline ? "等待连接…" : "暂无活跃会话") + '</div>';
+        } else {
+          for (var i = 0; i < entries.length; i++) html += this._renderCard(entries[i][0], entries[i][1]);
+        }
+        html += '</div>';
+      }
+
       this.container.innerHTML = html;
       this.container.querySelectorAll(".card-footer").forEach(function(el) {
         el.addEventListener("click", function() { self.toggleExpand(this.getAttribute("data-sid")); });
@@ -335,9 +551,9 @@
       }
     }
 
-    _renderCard(sid, s) {
+    _renderCard(compositeId, s) {
       var config = STATE_CONFIG[s.state] || STATE_CONFIG.idle;
-      var isExpanded = this.expandedSet.has(sid);
+      var isExpanded = this.expandedSet.has(compositeId);
       var events = s.recentEvents || [];
       var stateKey = s.state || "idle";
       var agentLabel = (s.agentId || "agent").toUpperCase();
@@ -352,10 +568,10 @@
       if (s.updatedAt) { html += '<span class="meta-sep">&middot;</span><span class="meta-item meta-time" data-ts="' + s.updatedAt + '">' + formatAgo(s.updatedAt) + '</span>'; }
       html += '</div>';
       html += '<div class="card-divider"></div>';
-      html += '<div class="card-footer" data-sid="' + sid + '"><div class="footer-events">' + icon("activity") + '<span>最近事件</span>';
+      html += '<div class="card-footer" data-sid="' + compositeId + '"><div class="footer-events">' + icon("activity") + '<span>最近事件</span>';
       if (events.length) html += '<span class="event-count">' + events.length + '</span>';
       html += '</div><span class="footer-chevron">' + (isExpanded ? icon("collapse") : icon("expand")) + '</span></div>';
-      if (events.length) html += this._renderEvents(events, isExpanded, this._animatingSid === sid);
+      if (events.length) html += this._renderEvents(events, isExpanded, this._animatingSid === compositeId);
       html += '</div>';
       return html;
     }
@@ -390,31 +606,59 @@
       var self = this;
       this.staleTimer = setInterval(function() {
         var changed = false;
-        self.sessions.forEach(function(s, sid) {
-          if (s.state === "sleeping") { self.sessions.delete(sid); changed = true; }
+        self.sessions.forEach(function(s, compositeId) {
+          if (s.state === "sleeping") { self.sessions.delete(compositeId); changed = true; }
         });
         if (changed) self.render();
       }, 15000);
     }
   }
 
-  // === SettingsRenderer ===
+  // === MachinesRenderer (device list + add-device form + log) ===
 
-  class SettingsRenderer {
+  class MachinesRenderer {
     constructor(container) { this.container = container; }
 
-    render(connection) {
+    render(machineManager) {
+      var self = this;
+      var machines = machineManager.list().sort(function(a, b) { return a.name.localeCompare(b.name); });
       var html = '';
 
-      // Connection status
+      // Device list
       html += '<div class="settings-section">';
-      html += '<div class="settings-section-title">连接</div>';
-      var st = connection.state;
-      var stCfg = CONNECTION_STATES[st] || CONNECTION_STATES.disconnected;
-      html += '<div class="conn-status">';
-      html += '<span class="conn-status-dot ' + stCfg.dot + '"></span>';
-      html += '<span class="conn-status-text">' + stCfg.text + '</span>';
-      if (connection.config) html += '<span class="conn-status-addr">' + esc(connection.config.host) + ':' + connection.config.port + '</span>';
+      html += '<div class="settings-section-title">已添加设备 &middot; ' + machines.length + '</div>';
+      if (machines.length === 0) {
+        html += '<div class="machines-empty">尚未添加任何设备</div>';
+      } else {
+        html += '<div class="machine-list">';
+        for (var i = 0; i < machines.length; i++) {
+          var m = machines[i];
+          var stCfg = CONNECTION_STATES[m.state] || CONNECTION_STATES.disconnected;
+          html += '<div class="machine-row">';
+          html += '<span class="conn-status-dot ' + (stCfg.dot || "") + '"></span>';
+          html += '<div class="machine-row-info"><div class="machine-row-name">' + esc(m.name) + '</div>';
+          html += '<div class="machine-row-addr">' + esc(m.host) + ':' + m.port + ' &middot; ' + esc(stCfg.text) + '</div></div>';
+          html += '<button class="machine-remove-btn" data-id="' + esc(m.id) + '">' + icon("x") + '</button>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // Add device
+      html += '<div class="settings-section">';
+      html += '<div class="settings-section-title">添加设备</div>';
+      html += '<p class="settings-tab-desc">在该设备的 Clawd 设置 → 移动端 中复制连接链接，粘贴到下方。</p>';
+      html += '<div class="input-group"><textarea id="pair-input" rows="2" placeholder="http://192.168.x.x:23334/mobile/?host=...&amp;port=...&amp;token=..."></textarea></div>';
+      html += '<div class="btn-group"><button class="primary-btn" id="btn-add-pair">添加</button>';
+      html += '<button class="secondary-btn" id="btn-toggle-manual">手动输入</button></div>';
+
+      html += '<div class="manual-form hidden" id="manual-form">';
+      html += '<div class="input-group"><label>名称（可选）</label><input type="text" id="manual-name" placeholder="我的笔记本"></div>';
+      html += '<div class="input-group"><label>Host / IP</label><input type="text" id="manual-host" placeholder="192.168.1.10"></div>';
+      html += '<div class="input-group"><label>Port</label><input type="number" id="manual-port" placeholder="23334"></div>';
+      html += '<div class="input-group"><label>Token</label><input type="text" id="manual-token" placeholder="token"></div>';
+      html += '<div class="btn-group"><button class="primary-btn" id="btn-add-manual">添加设备</button></div>';
       html += '</div>';
       html += '</div>';
 
@@ -426,7 +670,6 @@
 
       this.container.innerHTML = html;
 
-      // Render buffered log lines
       var logEl = document.getElementById("settings-log-content");
       if (logEl) {
         for (var li = 0; li < _logBuffer.length; li++) {
@@ -436,7 +679,6 @@
         }
       }
 
-      // Bind log toggle
       var logToggle = document.getElementById("btn-toggle-log");
       var logBody = document.getElementById("settings-log-content");
       if (logToggle && logBody) {
@@ -446,6 +688,35 @@
           if (logBody.classList.contains("open")) logBody.scrollTop = logBody.scrollHeight;
         });
       }
+
+      this.container.querySelectorAll(".machine-remove-btn").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          machineManager.removeMachine(this.getAttribute("data-id"));
+        });
+      });
+
+      document.getElementById("btn-add-pair").addEventListener("click", function() {
+        var text = document.getElementById("pair-input").value;
+        var parsed = parsePairInput(text);
+        if (!parsed) { showToast("无法解析连接信息，请检查粘贴内容", "error"); return; }
+        var result = machineManager.addMachine(parsed);
+        if (!result.ok) { showToast(result.error, "error"); return; }
+        showToast("已添加设备：" + result.machine.name, "success");
+      });
+
+      document.getElementById("btn-toggle-manual").addEventListener("click", function() {
+        document.getElementById("manual-form").classList.toggle("hidden");
+      });
+
+      document.getElementById("btn-add-manual").addEventListener("click", function() {
+        var name = document.getElementById("manual-name").value.trim();
+        var hostVal = document.getElementById("manual-host").value.trim();
+        var portVal = parseInt(document.getElementById("manual-port").value, 10);
+        var tokenVal = document.getElementById("manual-token").value.trim();
+        var result = machineManager.addMachine({ name: name, host: hostVal, port: portVal, token: tokenVal });
+        if (!result.ok) { showToast(result.error, "error"); return; }
+        showToast("已添加设备：" + result.machine.name, "success");
+      });
     }
   }
 
@@ -453,35 +724,79 @@
 
   class App {
     constructor() {
-      this.connection = new ConnectionManager();
       this.renderer = new SessionRenderer(document.getElementById("session-list"));
-      this.settingsRenderer = new SettingsRenderer(document.getElementById("settings-content"));
+      this.machinesRenderer = new MachinesRenderer(document.getElementById("settings-content"));
       this.notifier = new NotificationManager();
       this.activeTab = "sessions";
 
       window._clawdApp = this;
 
+      this.machineManager = new MachineManager({
+        onStatusChange: this._onMachineStatusChange.bind(this),
+        onMessage: this._onMachineMessage.bind(this),
+        onRemoved: this._onMachineRemoved.bind(this),
+      });
+
       this._bindNav();
-      this._bindConnection();
       this.renderer.startStaleCleanup();
 
       if ("serviceWorker" in navigator) navigator.serviceWorker.register("/mobile/sw.js").catch(function() {});
-      this._autoConnect();
+      this._bootstrapFromUrl();
+      this.renderer.updateMachines(this.machineManager.list());
+      this._updateAggregateStatus();
     }
 
-    _autoConnect() {
+    _bootstrapFromUrl() {
       var params = new URLSearchParams(window.location.search);
       var urlHost = params.get("host");
       var urlPort = params.get("port");
       var urlToken = params.get("token");
+      var urlName = params.get("name");
       if (urlHost && urlPort && urlToken) {
-        this.connection.connect({ host: urlHost, port: parseInt(urlPort, 10), token: urlToken });
-        return;
+        var result = this.machineManager.addMachine({
+          host: urlHost, port: parseInt(urlPort, 10), token: urlToken, name: urlName || undefined,
+        });
+        if (result.ok) showToast("已添加设备：" + result.machine.name, "success");
+        try { window.history.replaceState(null, "", window.location.pathname); } catch {}
+      } else {
+        this.machineManager.connectAll();
       }
-      var history = this.connection.getHistory();
-      if (history.length > 0) { this.connection.connect(history[0]); return; }
-      // M1: no auto-connect without token. User must open via clawd:// URL (from Settings page)
-      // or manually enter host/port/token in the connection history.
+    }
+
+    _onMachineStatusChange(machine, state) {
+      if (state === "connected") this.notifier.requestPermission();
+      this.renderer.updateMachines(this.machineManager.list());
+      this._updateAggregateStatus();
+      if (this.activeTab === "settings") this.machinesRenderer.render(this.machineManager);
+    }
+
+    _onMachineMessage(machine, msg) {
+      if (!msg) return;
+      if (msg.type === "snapshot") {
+        this.renderer.updateFromSnapshot(machine.id, msg.sessions || {});
+        this.renderer.updateMachines(this.machineManager.list());
+        log("Snapshot: " + Object.keys(msg.sessions || {}).length + " sessions", machine.name);
+        if (this.activeTab === "settings") this.machinesRenderer.render(this.machineManager);
+      } else if (msg.type === "state") {
+        this.renderer.updateState(machine.id, msg.sessionId, msg.data);
+        this.notifier.onStateChange(machine.id + "::" + msg.sessionId, msg.data, machine.name);
+      } else if (msg.type === "session_deleted") {
+        this.renderer.removeSession(machine.id, msg.sessionId);
+      } else if (msg.type === "tool_output") {
+        var compositeId = machine.id + "::" + msg.sessionId;
+        var session = this.renderer.sessions.get(compositeId);
+        if (session) {
+          session.lastOutput = { toolName: msg.data.toolName, output: (msg.data.output || "").substring(0, 200), at: msg.timestamp || Date.now() };
+          this.renderer.render();
+        }
+      }
+    }
+
+    _onMachineRemoved(machine) {
+      this.renderer.removeMachineSessions(machine.id);
+      this.renderer.updateMachines(this.machineManager.list());
+      this._updateAggregateStatus();
+      if (this.activeTab === "settings") this.machinesRenderer.render(this.machineManager);
     }
 
     _bindNav() {
@@ -498,39 +813,31 @@
       });
       document.getElementById("page-sessions").classList.toggle("hidden", tabId !== "sessions");
       document.getElementById("page-settings").classList.toggle("hidden", tabId !== "settings");
-      if (tabId === "settings") {
-        this._renderSettings();
-      }
+      if (tabId === "settings") this.machinesRenderer.render(this.machineManager);
     }
 
-    _renderSettings() {
-      this.settingsRenderer.render(this.connection);
-    }
-
-    _bindConnection() {
-      var self = this;
-      this.connection.onStateChange = function(state) {
-        self._updateConnectionStatus(state);
-        if (state === "connected") self.notifier.requestPermission();
-        if (self.activeTab === "settings") self._renderSettings();
-      };
-      this.connection.onMessage = function(msg) {
-        if (msg.type === "snapshot") { self.renderer.updateFromSnapshot(msg.sessions || {}); log("Snapshot: " + Object.keys(msg.sessions || {}).length + " sessions"); }
-        else if (msg.type === "state") { self.renderer.updateState(msg.sessionId, msg.data); self.notifier.onStateChange(msg.sessionId, msg.data); }
-        else if (msg.type === "session_deleted") { self.renderer.removeSession(msg.sessionId); }
-        else if (msg.type === "tool_output") { var sid = msg.sessionId; var session = self.renderer.sessions.get(sid); if (session) { session.lastOutput = { toolName: msg.data.toolName, output: (msg.data.output || "").substring(0, 200), at: msg.timestamp || Date.now() }; self.renderer.render(); } }
-      };
-    }
-
-    _updateConnectionStatus(state) {
-      var config = CONNECTION_STATES[state] || CONNECTION_STATES.disconnected;
+    _updateAggregateStatus() {
+      var list = this.machineManager.list();
+      var total = list.length;
+      var connected = list.filter(function(m) { return m.state === "connected"; }).length;
+      var anyConnecting = list.some(function(m) { return m.state === "connecting" || m.state === "reconnecting"; });
       var dot = document.getElementById("connection-dot");
       var text = document.getElementById("connection-text");
-      dot.className = "connection-dot " + config.dot;
-      text.textContent = state === "disconnected" ? "" : config.text;
-      text.className = "connection-text" + (state === "connected" ? " connected" : "");
+      var cls = "connection-dot";
+      var label = "";
+      if (total === 0) {
+        cls += "";
+      } else if (connected === total) {
+        cls += " connected"; label = connected + "/" + total;
+      } else if (anyConnecting) {
+        cls += " connecting"; label = connected + "/" + total;
+      } else {
+        cls += " reconnecting"; label = connected + "/" + total;
+      }
+      dot.className = cls;
+      text.textContent = label;
+      text.className = "connection-text" + (total > 0 && connected === total ? " connected" : "");
     }
-
   }
 
   // === Init ===

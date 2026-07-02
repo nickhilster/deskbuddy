@@ -170,11 +170,14 @@ body { display: flex; flex-direction: column; height: 100%; }
 /* === Inputs === */
 .input-group { margin-bottom: 12px; }
 .input-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-.input-group input {
+.input-group input, .input-group textarea {
   width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--card-border);
   border-radius: 8px; color: var(--text); font-size: 15px; outline: none;
+  font-family: inherit; resize: vertical;
 }
-.input-group input:focus { border-color: var(--accent); }
+.input-group textarea { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.input-group input:focus, .input-group textarea:focus { border-color: var(--accent); }
+.manual-form { margin-top: 14px; padding-top: 14px; border-top: 0.5px solid var(--card-border); }
 .btn-group { display: flex; gap: 10px; margin-top: 16px; }
 .primary-btn, .secondary-btn {
   flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px;
@@ -191,6 +194,30 @@ body { display: flex; flex-direction: column; height: 100%; }
 .history-time { color: var(--muted); font-size: 11px; }
 .history-connect { background: var(--accent); border: none; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
 .history-delete { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+
+/* === Machine list (Settings/Devices tab) === */
+.machines-empty { font-size: 13px; color: var(--faint); padding: 8px 0; }
+.machine-list { display: flex; flex-direction: column; gap: 6px; }
+.machine-row { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg); border-radius: 8px; }
+.machine-row-info { flex: 1; min-width: 0; }
+.machine-row-name { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.machine-row-addr { font-size: 11px; color: var(--faint); font-family: ui-monospace, Menlo, Consolas, monospace; margin-top: 2px; }
+.machine-remove-btn { background: none; border: none; color: var(--muted); cursor: pointer; flex-shrink: 0; padding: 4px; display: flex; }
+.machine-remove-btn svg { width: 16px; height: 16px; }
+.machine-remove-btn:active { opacity: 0.6; }
+
+/* === Machine group (Sessions page) === */
+.machine-group { display: flex; flex-direction: column; gap: 8px; }
+.machine-group-header { display: flex; align-items: center; gap: 7px; padding: 4px 6px; }
+.machine-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); flex-shrink: 0; }
+.machine-status-dot.connected { background: var(--green); }
+.machine-status-dot.connecting { background: var(--amber); animation: pulse 1.5s infinite; }
+.machine-status-dot.reconnecting { background: var(--red); animation: pulse 1.5s infinite; }
+.machine-group-name { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; }
+.machine-group-state { font-size: 11px; color: var(--faint); margin-left: auto; }
+.machine-group-empty { font-size: 12px; color: var(--faint); padding: 4px 6px 4px; }
+.machine-group.offline .machine-group-name { color: var(--faint); }
+.machine-group.offline .session-card { opacity: 0.55; }
 
 /* === Log Section (inside Settings) === */
 .log-section { margin-top: 4px; }

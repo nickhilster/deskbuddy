@@ -130,7 +130,7 @@ describe("Mobile Preview Server", () => {
   it("serves PWA static files", async () => {
     const res = await httpGet(port, "/mobile/");
     assert.strictEqual(res.status, 200);
-    assert.ok(res.body.includes("Clawd Mobile"));
+    assert.ok(res.body.includes("Clawd on Mobile"));
     assert.ok(res.headers["content-type"].includes("text/html"));
   });
 
@@ -141,7 +141,16 @@ describe("Mobile Preview Server", () => {
     assert.strictEqual(info.status, "ok");
     assert.strictEqual(info.port, port);
     assert.strictEqual(typeof info.lanIp, "string");
+    assert.strictEqual(info.machineId, server.getMachineId());
+    assert.strictEqual(info.machineName, server.getMachineName());
     assert.ok(!("token" in info));
+  });
+
+  it("exposes a stable machineId and machineName", () => {
+    assert.strictEqual(typeof server.getMachineId(), "string");
+    assert.ok(/^[a-f0-9]{32}$/.test(server.getMachineId()));
+    assert.strictEqual(typeof server.getMachineName(), "string");
+    assert.ok(server.getMachineName().length > 0);
   });
 
   it("returns 404 for non-mobile paths", async () => {
@@ -176,6 +185,8 @@ describe("Mobile Preview Server", () => {
 
     assert.strictEqual(snapshot.version, "v1");
     assert.ok(snapshot.timestamp > 0);
+    assert.strictEqual(snapshot.machineId, server.getMachineId());
+    assert.strictEqual(snapshot.machineName, server.getMachineName());
     assert.ok(snapshot.sessions.s1);
     assert.strictEqual(snapshot.sessions.s1.state, "working");
     assert.strictEqual(snapshot.sessions.s1.agentId, "claude-code");
