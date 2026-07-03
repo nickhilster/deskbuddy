@@ -158,12 +158,17 @@
     title.className = "about-title";
     title.textContent = "Clawd on Desk";
 
+    const buildBadge = document.createElement("span");
+    buildBadge.className = "about-build-badge";
+    buildBadge.textContent = "Teambotics Build";
+
     const tagline = document.createElement("p");
     tagline.className = "about-tagline";
     tagline.textContent = t("aboutTagline");
 
     hero.appendChild(crabWrap);
     hero.appendChild(title);
+    hero.appendChild(buildBadge);
     hero.appendChild(tagline);
     parent.appendChild(hero);
 
