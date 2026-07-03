@@ -178,5 +178,10 @@
     "koffi": "^2.15.2",
     "qrcode-generator": "^2.0.4",
     "ws": "^8.21.0"
+  },
+  "allowScripts": {
+    "electron@41.0.2": true,
+    "electron-winstaller@5.4.0": true,
+    "koffi@2.15.2": true
   }
 }
