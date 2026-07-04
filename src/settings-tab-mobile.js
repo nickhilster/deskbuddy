@@ -68,6 +68,16 @@
 
       let html = '';
 
+      // Preferred mobile client — controls which link/QR format is generated below
+      const preferredClient = info.preferredClient === "native" ? "native" : "pwa";
+      html += '<div class="mobile-client-toggle" role="group">';
+      html += `<button class="mobile-client-btn${preferredClient === "pwa" ? " active" : ""}" data-client="pwa">${escapeHtml(t("mobileClientPwa") || "PWA (browser)")}</button>`;
+      html += `<button class="mobile-client-btn${preferredClient === "native" ? " active" : ""}" data-client="native">${escapeHtml(t("mobileClientNative") || "Native App")}</button>`;
+      html += '</div>';
+      if (preferredClient === "native") {
+        html += `<p class="mobile-client-note">${escapeHtml(t("mobileClientNativeNote") || "Requires the Clawd Mobile app to already be installed — this link won't fall back to a browser.")}</p>`;
+      }
+
       // Connection details
       html += '<div class="mobile-conn-details">';
       if (info.machineName) {
@@ -88,11 +98,15 @@
 
       html += '</div>';
 
-      // QR code — scan with phone camera to open Clawd on Mobile directly
+      // QR code — scan to connect via whichever client is preferred above
       if (info.qrSvg) {
         html += '<div class="mobile-qr-section">';
         html += `<div class="mobile-qr-code">${info.qrSvg}</div>`;
-        html += `<p class="mobile-qr-hint">${escapeHtml(t("mobileQrHint") || "Scan with your phone's camera to open Clawd on Mobile")}</p>`;
+        const qrHintKey = preferredClient === "native" ? "mobileQrHintNative" : "mobileQrHint";
+        const qrHintFallback = preferredClient === "native"
+          ? "Scan with the Clawd Mobile app's built-in scanner"
+          : "Scan with your phone's camera to open Clawd on Mobile";
+        html += `<p class="mobile-qr-hint">${escapeHtml(t(qrHintKey) || qrHintFallback)}</p>`;
         html += '</div>';
       }
 
@@ -103,6 +117,18 @@
       html += '</div>';
 
       container.innerHTML = html;
+
+      // Preferred client toggle handlers
+      container.querySelectorAll(".mobile-client-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const client = btn.getAttribute("data-client");
+          if (client === preferredClient) return;
+          if (!window.settingsAPI || typeof window.settingsAPI.update !== "function") return;
+          window.settingsAPI.update("mobilePreferredClient", client).then(() => {
+            renderConnectionInfo(container);
+          });
+        });
+      });
 
       // Copy button handlers
       container.querySelectorAll(".mobile-copy-btn").forEach((btn) => {
@@ -187,7 +213,11 @@
     if (!changeListenerRegistered && window.settingsAPI && typeof window.settingsAPI.onChanged === "function") {
       changeListenerRegistered = true;
       window.settingsAPI.onChanged((evt) => {
-        if (evt && evt.changes && Object.prototype.hasOwnProperty.call(evt.changes, "mobilePreviewEnabled")) {
+        if (
+          evt && evt.changes
+          && (Object.prototype.hasOwnProperty.call(evt.changes, "mobilePreviewEnabled")
+            || Object.prototype.hasOwnProperty.call(evt.changes, "mobilePreferredClient"))
+        ) {
           if (infoContainer) renderConnectionInfo(infoContainer);
         }
       });

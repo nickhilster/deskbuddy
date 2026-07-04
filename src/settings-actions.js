@@ -306,6 +306,7 @@ const updateRegistry = {
   keepSizeAcrossDisplays: requireBoolean("keepSizeAcrossDisplays"),
   fullscreenOverlay: requireBoolean("fullscreenOverlay"),
   mobilePreviewEnabled: requireBoolean("mobilePreviewEnabled"),
+  mobilePreferredClient: requireEnum("mobilePreferredClient", ["pwa", "native"]),
 
   // ── System-backed prefs (object-form: validate + effect pre-commit gate) ──
   autoStartWithClaude,

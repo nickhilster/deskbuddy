@@ -3547,6 +3547,34 @@ html, body {
   font-size: 13px;
   padding: 10px 0;
 }
+.mobile-client-toggle {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.mobile-client-btn {
+  flex: 1;
+  font-size: 12px;
+  background: var(--sidebar-hover);
+  border: 1px solid var(--border, #3f3f46);
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.mobile-client-btn:hover { background: var(--sidebar-hover-strong, var(--sidebar-hover)); }
+.mobile-client-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.mobile-client-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
 .mobile-conn-details {
   margin-top: 8px;
 }

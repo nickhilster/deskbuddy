@@ -547,9 +547,18 @@ function registerSettingsIpc(options = {}) {
         }
       }
       const nameParam = machineName ? `&name=${encodeURIComponent(machineName)}` : "";
-      const pairUrl = `http://${lanIp}:${port}/mobile/?host=${lanIp}&port=${port}&token=${tok}${nameParam}`;
+      const pwaUrl = `http://${lanIp}:${port}/mobile/?host=${lanIp}&port=${port}&token=${tok}${nameParam}`;
+      // clawd://host:port/token — matches Clawd Mobile's ConnectionConfig.fromClawdUrl regex
+      // exactly (^clawd://([^:]+):(\d+)/([a-fA-F0-9]{16,})$). No browser fallback: if the
+      // native app isn't installed, scanning this link dead-ends instead of opening the PWA.
+      const nativeUrl = `clawd://${lanIp}:${port}/${tok}`;
+      let preferredClient = "pwa";
+      try {
+        if (settingsController.get("mobilePreferredClient") === "native") preferredClient = "native";
+      } catch {}
+      const pairUrl = preferredClient === "native" ? nativeUrl : pwaUrl;
       const qrSvg = buildPairUrlQrSvg(pairUrl);
-      return { status: "ok", port, token: tok, lanIp, machineId, machineName, pairUrl, qrSvg };
+      return { status: "ok", port, token: tok, lanIp, machineId, machineName, preferredClient, pairUrl, pwaUrl, nativeUrl, qrSvg };
     } catch (err) {
       return { status: "error", message: (err && err.message) || String(err) };
     }

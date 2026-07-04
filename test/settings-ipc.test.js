@@ -283,6 +283,35 @@ test("mobile connection info returns a ready pair URL only when port and token a
   assert.ok(!result.pairUrl.includes("port=null"));
   assert.strictEqual(typeof result.qrSvg, "string");
   assert.ok(result.qrSvg.startsWith("<svg"));
+  assert.strictEqual(result.preferredClient, "pwa");
+  assert.strictEqual(result.pairUrl, result.pwaUrl);
+  assert.ok(result.nativeUrl.startsWith("clawd://"));
+  assert.ok(result.nativeUrl.endsWith(`/${token}`));
+  runtime.dispose();
+});
+
+test("mobile connection info switches to a clawd:// deep link when the native client is preferred", async () => {
+  const token = "abcdef0123456789abcdef0123456789";
+  const { ipcMain, runtime } = createHarness({
+    getLanWsServer: () => ({
+      getPort: () => 23334,
+      getToken: () => token,
+    }),
+    settingsController: {
+      getSnapshot: () => ({ lang: "en" }),
+      get: (key) => (key === "mobilePreferredClient" ? "native" : undefined),
+      applyUpdate: () => ({ status: "ok" }),
+      applyCommand: async () => ({ status: "ok" }),
+    },
+  });
+
+  const result = await ipcMain.invoke("settings:mobile-connection-info");
+
+  assert.strictEqual(result.status, "ok");
+  assert.strictEqual(result.preferredClient, "native");
+  assert.strictEqual(result.pairUrl, result.nativeUrl);
+  assert.match(result.pairUrl, /^clawd:\/\/[^:]+:\d+\/[a-fA-F0-9]{16,}$/);
+  assert.ok(result.pwaUrl.startsWith("http://"));
   runtime.dispose();
 });
 
