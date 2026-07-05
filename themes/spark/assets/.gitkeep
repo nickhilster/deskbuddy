@@ -1,0 +1,13 @@
+# Spark Animation Assets
+
+This directory will contain:
+- Static SVG files (idle-curious.svg with eye-tracking)
+- APNG animation files (multi-frame expressions)
+- Reaction animations (click/drag responses)
+- Mini mode animations (screen-edge peeking)
+
+See ANIMATION_GUIDE.md for frame creation instructions.
+
+Current status:
+✅ SVG templates created (idle, happy, thinking, tired, dizzy, playful, sleeping, concerned)
+⏳ APNG animations pending (convert SVGs to multi-frame animations)

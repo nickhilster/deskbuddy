@@ -1,0 +1,179 @@
+{
+  "_comment": "Spark — Playful Pet Companion Theme for Clawd on Desk",
+
+  "schemaVersion": 1,
+  "name": "Spark",
+  "author": "Nikhil Hilster",
+  "version": "1.0.0",
+  "description": "A playful, mischievous pet companion that mirrors and amplifies the robot mascot's emotional state through expressive animations",
+
+  "viewBox": {
+    "_comment": "Logical canvas in SVG units. Matches robot mascot's 45x45 unit viewBox for consistency.",
+    "x": -15,
+    "y": -25,
+    "width": 45,
+    "height": 45
+  },
+
+  "layout": {
+    "_comment": "Character's visible body area in viewBox units. Spark is compact and playful.",
+    "contentBox": { "x": -4, "y": -3, "width": 23, "height": 20 },
+    "centerX": 7.5,
+    "baselineY": 17,
+    "visibleHeightRatio": 0.58,
+    "baselineBottomRatio": 0.05
+  },
+
+  "eyeTracking": {
+    "_comment": "Spark's eyes follow cursor in idle states only. Multi-layer tracking with eyes and subtle body rotation.",
+    "enabled": true,
+    "states": ["idle"],
+    "eyeRatioX": 0.5,
+    "eyeRatioY": 0.5,
+    "maxOffset": 3,
+    "bodyScale": 0.33,
+    "shadowStretch": 0.15,
+    "shadowShift": 0.3,
+    "ids": {
+      "eyes": "eyes-js",
+      "body": "body-js",
+      "shadow": "shadow-js"
+    },
+    "shadowOrigin": "7.5px 15px"
+  },
+
+  "states": {
+    "_comment": "Each state maps to animation files. Only idle MUST be SVG for eye-tracking. Others can be APNG, GIF, WebP, PNG, JPG.",
+    "idle":         ["idle-curious.svg"],
+    "thinking":     ["thinking-confused.apng"],
+    "working":      ["working-watch.apng"],
+    "juggling":     ["juggling-play.apng"],
+    "error":        ["concerned-error.apng"],
+    "attention":    ["happy-excited.apng"],
+    "notification": ["notification-alert.apng"],
+    "sleeping":     ["sleeping.apng"],
+    "waking":       ["waking-stretch.apng"],
+    "yawning":      ["yawning.apng"],
+    "dozing":       ["dozing.apng"],
+    "collapsing":   ["collapsing.apng"]
+  },
+
+  "_comment_optional_states": "Optional extras not in core 9 states. These use fallback behavior.",
+
+  "sleepSequence": {
+    "_comment": "Full = play all 4 sleep animations. Spark yawns, dozes, collapses, then sleeps.",
+    "mode": "full"
+  },
+
+  "workingTiers": [
+    {
+      "_comment": "3+ concurrent sessions: amazed/impressed reaction",
+      "minSessions": 3,
+      "file": "working-impressed.apng"
+    },
+    {
+      "_comment": "2 sessions: nods along, focused",
+      "minSessions": 2,
+      "file": "working-nod.apng"
+    },
+    {
+      "_comment": "1 session: watches intently",
+      "minSessions": 1,
+      "file": "working-watch.apng"
+    }
+  ],
+
+  "jugglingTiers": [
+    {
+      "_comment": "2+ subagents: Spark gets dizzy/overwhelmed",
+      "minSessions": 2,
+      "file": "juggling-dizzy.apng"
+    },
+    {
+      "_comment": "1 subagent: playful, joins in",
+      "minSessions": 1,
+      "file": "juggling-play.apng"
+    }
+  ],
+
+  "idleAnimations": [
+    {
+      "_comment": "Random animations during idle to show personality. Spark gets bored and yawns.",
+      "file": "idle-tired-bored.apng",
+      "duration": 5000
+    },
+    {
+      "_comment": "Playful mischievous moments",
+      "file": "idle-playful-mischievous.apng",
+      "duration": 4500
+    }
+  ],
+
+  "timings": {
+    "_comment": "All values in milliseconds. When mouse is idle, Spark starts getting tired; after 60s, falls asleep.",
+    "mouseIdleTimeout": 20000,
+    "mouseSleepTimeout": 60000
+  },
+
+  "hitBoxes": {
+    "_comment": "Clickable area in viewBox units. Default is required. Sleeping has smaller hitbox.",
+    "default": { "x": -1, "y": 5, "w": 17, "h": 12 },
+    "sleeping": { "x": -2, "y": 9, "w": 19, "h": 7 }
+  },
+  "sleepingHitboxFiles": ["sleeping.apng"],
+
+  "reactions": {
+    "_comment": "Click/drag interactions. Spark has playful, cheeky reactions.",
+    "drag": {
+      "_comment": "Spark enjoys being dragged and bounces along",
+      "file": "react-drag-playful.apng",
+      "fileLeft": "react-drag-left.apng",
+      "fileRight": "react-drag-right.apng"
+    },
+    "clickLeft": {
+      "_comment": "Double-click left: Spark grins and waves cheeky",
+      "file": "react-left-cheeky.apng",
+      "duration": 2500
+    },
+    "clickRight": {
+      "_comment": "Double-click right: Spark laughs and spins away",
+      "file": "react-right-cheeky.apng",
+      "duration": 2500
+    },
+    "double": {
+      "_comment": "4 rapid clicks: Spark flails in dizzy panic",
+      "files": ["react-flail.apng"],
+      "duration": 3500
+    }
+  },
+
+  "sounds": {
+    "_comment": "Map logical sound names to audio files. Spark has playful completion sounds.",
+    "complete": "spark-complete.mp3",
+    "confirm": "spark-confirm.mp3"
+  },
+
+  "miniMode": {
+    "_comment": "Spark supports mini mode — peeks at screen edge when minimized.",
+    "supported": true,
+    "states": {
+      "_comment": "8 required states for mini mode. Spark peeks playfully from corners.",
+      "mini-idle":        ["mini-idle-peek.apng"],
+      "mini-enter":       ["mini-enter-bounce.apng"],
+      "mini-enter-sleep": ["mini-sleep-cozy.apng"],
+      "mini-crabwalk":    ["mini-crabwalk.apng"],
+      "mini-peek":        ["mini-peek.apng"],
+      "mini-alert":       ["mini-alert-excited.apng"],
+      "mini-happy":       ["mini-celebrate.apng"],
+      "mini-sleep":       ["mini-sleep-cozy.apng"]
+    }
+  },
+
+  "objectScale": {
+    "_comment": "Fine-tune rendered size relative to viewBox. Spark is slightly larger than template default.",
+    "widthRatio": 1.95,
+    "heightRatio": 1.35,
+    "offsetX": -0.5,
+    "offsetY": -0.3
+  }
+}
