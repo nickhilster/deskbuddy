@@ -227,6 +227,18 @@ const {
 } = require("./bubble-policy");
 const loginItemHelpers = require("./login-item");
 const PREFS_PATH = path.join(app.getPath("userData"), "deskbuddy-prefs.json");
+const { migrateLegacyUserData } = require("./deskbuddy-migration");
+try {
+  const migrationResult = migrateLegacyUserData({
+    appDataDir: app.getPath("appData"),
+    newUserDataDir: app.getPath("userData"),
+  });
+  if (migrationResult.migrated) {
+    console.log("DeskBuddy: migrated settings from the legacy Clawd on Desk install; theme reset to Spark");
+  }
+} catch (err) {
+  console.error("DeskBuddy: legacy userData migration failed (continuing with fresh defaults):", err);
+}
 const _initialPrefsLoad = prefsModule.load(PREFS_PATH);
 
 // Lazy helpers — these run inside the action `effect` callbacks at click time,
