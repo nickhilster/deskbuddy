@@ -11,7 +11,9 @@
 // 2D layer, see styles.css) once the GLB has actually loaded successfully.
 
 import * as THREE from "../node_modules/three/build/three.module.js";
-import { GLTFLoader } from "../node_modules/three/examples/jsm/loaders/GLTFLoader.js";
+// GLTFLoader is vendored under src/vendor/, not imported from node_modules/three/examples/ —
+// see the comment at the top of that file for why.
+import { GLTFLoader } from "./vendor/three-addons/loaders/GLTFLoader.js";
 
 const petContainer = document.getElementById("pet-container");
 const canvas = document.getElementById("clawd3d-canvas");
