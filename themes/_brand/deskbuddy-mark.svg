@@ -1,0 +1,14 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="db-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="50%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#2dd4bf"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="48" fill="#0a0e14"/>
+  <circle cx="128" cy="128" r="86" fill="url(#db-gradient)"/>
+  <circle cx="100" cy="112" r="14" fill="#0a0e14"/>
+  <circle cx="156" cy="112" r="14" fill="#0a0e14"/>
+  <path d="M 96 156 Q 128 178 160 156" stroke="#0a0e14" stroke-width="8" fill="none" stroke-linecap="round"/>
+</svg>
