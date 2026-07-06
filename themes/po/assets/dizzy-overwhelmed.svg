@@ -29,8 +29,8 @@
     <ellipse cx="5" cy="2.8" rx="2.1" ry="1.8" fill="#2C2C2C"/>
     <ellipse cx="10" cy="2.8" rx="2.1" ry="1.8" fill="#2C2C2C"/>
 
-    <!-- Jade pants band (no shirt/sash — Po is bare-chested) -->
-    <rect x="1" y="8.5" width="12" height="3.5" rx="1.3" fill="#4C7A5E"/>
+    <!-- Black pants band (no shirt or sash; Po is bare-chested) -->
+    <rect x="1" y="8.5" width="12" height="3.5" rx="1.3" fill="#1C1C1C"/>
 
     <!-- Mouth: wavy dizzy line -->
     <path d="M 5.5 7 Q 6.5 6.3 7.5 7 Q 8.5 7.7 9.5 7" stroke="#1A1A1A" stroke-width="0.35" fill="none" stroke-linecap="round"/>
