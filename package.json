@@ -1,7 +1,7 @@
 {
-  "name": "clawd-on-desk",
+  "name": "deskbuddy",
   "version": "0.11.0",
-  "description": "A desktop pet that reacts to your Claude Code sessions in real-time.",
+  "description": "DeskBuddy — a desktop pet that reacts to your coding agent sessions in real-time.",
   "main": "src/main.js",
   "scripts": {
     "start": "node scripts/ensure-sidecar-binaries.js && node launch.js",
@@ -54,7 +54,7 @@
     "register-protocol:dev": "node launch.js --register-protocol"
   },
   "keywords": [
-    "clawd",
+    "deskbuddy",
     "desktop-pet",
     "electron",
     "claude-code"
@@ -63,19 +63,19 @@
   "license": "AGPL-3.0-only",
   "type": "commonjs",
   "build": {
-    "appId": "com.teambotics.clawd-on-desk",
-    "productName": "Clawd on Desk Teambotics",
+    "appId": "com.teambotics.deskbuddy",
+    "productName": "DeskBuddy",
     "protocols": [
       {
-        "name": "Clawd Import Protocol",
+        "name": "DeskBuddy Import Protocol",
         "schemes": [
-          "clawd"
+          "deskbuddy"
         ]
       }
     ],
     "mac": {
       "icon": "assets/icon.png",
-      "artifactName": "Clawd-on-Desk-Teambotics-${version}-${arch}.${ext}",
+      "artifactName": "DeskBuddy-${version}-${arch}.${ext}",
       "target": [
         {
           "target": "dmg",
@@ -93,7 +93,7 @@
     "win": {
       "icon": "assets/icon.ico",
       "signAndEditExecutable": false,
-      "artifactName": "Clawd-on-Desk-Teambotics-Setup-${version}-${arch}.${ext}",
+      "artifactName": "DeskBuddy-Setup-${version}-${arch}.${ext}",
       "target": [
         {
           "target": "nsis",
@@ -108,7 +108,7 @@
       "maintainer": "nickhilster <nickhilster@users.noreply.github.com>",
       "icon": "assets/icons",
       "category": "Utility",
-      "artifactName": "Clawd-on-Desk-Teambotics-${version}-${arch}.${ext}",
+      "artifactName": "DeskBuddy-${version}-${arch}.${ext}",
       "target": [
         {
           "target": "AppImage",
