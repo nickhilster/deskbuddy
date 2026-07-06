@@ -3,8 +3,8 @@ const http = require("http");
 const os = require("os");
 const path = require("path");
 
-const CLAWD_SERVER_ID = "clawd-on-desk";
-const CLAWD_SERVER_HEADER = "x-clawd-server";
+const CLAWD_SERVER_ID = "deskbuddy";
+const CLAWD_SERVER_HEADER = "x-deskbuddy-server";
 const DEFAULT_SERVER_PORT = 23333;
 const SERVER_PORT_COUNT = 5;
 const SERVER_PORTS = Array.from({ length: SERVER_PORT_COUNT }, (_, i) => DEFAULT_SERVER_PORT + i);
@@ -565,9 +565,9 @@ function isClawdOrElectronPath(value) {
   if (!norm) return false;
   // Reject the packaged Electron host. Match by basename so we don't false-flag
   // a legitimate Node living under a parent folder whose name happens to
-  // contain "Clawd" or "Electron".
+  // contain "DeskBuddy" or "Electron".
   const base = path.win32.basename(norm);
-  return base.includes("clawd on desk") || base === "electron.exe";
+  return base.includes("deskbuddy") || base === "electron.exe";
 }
 
 function validateWindowsNodeCandidate(value) {
@@ -625,7 +625,7 @@ function resolveWindowsNodeBinSync(options = {}) {
   };
 
   // 1. process.execPath / options.execPath when it's actually node[.exe].
-  //    In packaged Clawd builds this is `Clawd on Desk.exe`, so it falls
+  //    In packaged DeskBuddy builds this is `DeskBuddy.exe`, so it falls
   //    through; mostly useful for unit tests and non-Electron Node runs.
   const execHit = checkAccess(validateWindowsNodeCandidate(options.execPath || process.execPath));
   if (execHit) return execHit;

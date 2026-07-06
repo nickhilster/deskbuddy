@@ -8,7 +8,7 @@ const defaultCodexPetAdapter = require("./codex-pet-adapter");
 const defaultCodexPetImporter = require("./codex-pet-importer");
 
 const REGISTER_PROTOCOL_DEV_ARG = "--register-protocol";
-const CLAWD_PROTOCOL_SCHEME = "clawd";
+const CLAWD_PROTOCOL_SCHEME = "deskbuddy";
 
 function emptyCodexPetSyncSummary(overrides = {}) {
   return {
@@ -110,7 +110,7 @@ function createCodexPetMain(options = {}) {
 
   function getActiveThemeId() {
     const activeTheme = typeof options.getActiveTheme === "function" ? options.getActiveTheme() : null;
-    return activeTheme ? activeTheme._id : (settingsController.get("theme") || "clawd");
+    return activeTheme ? activeTheme._id : (settingsController.get("theme") || "spark");
   }
 
   function getDialogParent() {
@@ -239,16 +239,16 @@ function createCodexPetMain(options = {}) {
     }
 
     if (summaryHasActiveCodexPetOrphan(summary, activeId)) {
-      const result = await settingsController.applyCommand("setThemeSelection", { themeId: "clawd" });
+      const result = await settingsController.applyCommand("setThemeSelection", { themeId: "spark" });
       if (!result || result.status !== "ok") {
         return {
           status: "error",
-          message: (result && result.message) || "failed to switch active orphan Codex Pet theme back to clawd",
+          message: (result && result.message) || "failed to switch active orphan Codex Pet theme back to spark",
           summary,
         };
       }
       switchedToFallback = true;
-      const cleanup = syncThemes("clawd");
+      const cleanup = syncThemes("spark");
       summary = mergeCodexPetSyncSummaries(summary, cleanup);
       lastSyncSummary = summary;
       if (cleanup.error) {
@@ -317,7 +317,7 @@ function createCodexPetMain(options = {}) {
         return app.setAsDefaultProtocolClient(CLAWD_PROTOCOL_SCHEME, process.execPath, [appRoot]);
       }
     } catch (err) {
-      console.warn("Clawd: failed to register clawd:// protocol:", err && err.message);
+      console.warn("DeskBuddy: failed to register deskbuddy:// protocol:", err && err.message);
     }
     return false;
   }

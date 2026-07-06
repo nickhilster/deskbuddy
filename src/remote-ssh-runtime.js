@@ -69,8 +69,8 @@ const PROBE_CHILD_TIMEOUT_MS = 5000;
 const BACKOFF_SCHEDULE_MS = [5000, 15000, 45000, 120000, 300000];
 const UNKNOWN_STRIKES_LIMIT = 3;
 
-const CLAWD_SERVER_HEADER = "x-clawd-server";
-const CLAWD_SERVER_ID = "clawd-on-desk";
+const CLAWD_SERVER_HEADER = "x-deskbuddy-server";
+const CLAWD_SERVER_ID = "deskbuddy";
 
 // ── Detect ssh client ──
 //

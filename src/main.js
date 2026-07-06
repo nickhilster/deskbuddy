@@ -227,7 +227,19 @@ const {
   isAllBubblesHidden,
 } = require("./bubble-policy");
 const loginItemHelpers = require("./login-item");
-const PREFS_PATH = path.join(app.getPath("userData"), "clawd-prefs.json");
+const PREFS_PATH = path.join(app.getPath("userData"), "deskbuddy-prefs.json");
+const { migrateLegacyUserData } = require("./deskbuddy-migration");
+try {
+  const migrationResult = migrateLegacyUserData({
+    appDataDir: app.getPath("appData"),
+    newUserDataDir: app.getPath("userData"),
+  });
+  if (migrationResult.migrated) {
+    console.log("DeskBuddy: migrated settings from the legacy Clawd on Desk install; theme reset to Spark");
+  }
+} catch (err) {
+  console.error("DeskBuddy: legacy userData migration failed (continuing with fresh defaults):", err);
+}
 const _initialPrefsLoad = prefsModule.load(PREFS_PATH);
 
 // Lazy helpers — these run inside the action `effect` callbacks at click time,
@@ -509,7 +521,7 @@ function safeConsoleError(...args) {
   } catch (err) {
     try {
       const line = `${new Date().toISOString()} ${args.map((x) => String(x)).join(" ")}\n`;
-      fs.appendFileSync(path.join(app.getPath("userData"), "clawd-main.log"), line);
+      fs.appendFileSync(path.join(app.getPath("userData"), "deskbuddy-main.log"), line);
     } catch {}
   }
 }
@@ -616,14 +628,14 @@ codexPetMain = createCodexPetMain({
 });
 const REGISTER_PROTOCOL_DEV_ARG = codexPetMain.REGISTER_PROTOCOL_DEV_ARG;
 // Lenient load so a missing/corrupt user-selected theme can't brick boot.
-// If lenient fell back to "clawd" OR the variant fell back to "default",
+// If lenient fell back to "spark" OR the variant fell back to "default",
 // hydrate prefs to match so the store stays truth.
 //
 // Startup runs BEFORE the window is ready, so we call the runtime's initial
 // load path, not activateTheme (which requires ready windows) and not the
 // setThemeSelection command (which goes through activateTheme). The runtime
 // switch path via UI goes through setThemeSelection post-window-ready.
-let _requestedThemeId = _settingsController.get("theme") || "clawd";
+let _requestedThemeId = _settingsController.get("theme") || "spark";
 const _initialVariantMap = _settingsController.get("themeVariant") || {};
 let _requestedVariantId = _initialVariantMap[_requestedThemeId] || "default";
 const _initialThemeOverrides = _settingsController.get("themeOverrides") || {};
@@ -636,7 +648,7 @@ if (codexPetMain.summaryHasActiveOrphan(_startupCodexPetSyncSummary, _requestedT
   delete nextVariantMap[orphanThemeId];
   delete nextOverrides[orphanThemeId];
 
-  _requestedThemeId = "clawd";
+  _requestedThemeId = "spark";
   _requestedVariantId = nextVariantMap[_requestedThemeId] || "default";
   _requestedThemeOverrides = nextOverrides[_requestedThemeId] || null;
   const result = _settingsController.hydrate({
@@ -3063,7 +3075,7 @@ const _menuCtx = {
   getNearestWorkArea,
   reapplyMacVisibility,
   discoverThemes: () => themeLoader.discoverThemes(),
-  getActiveThemeId: () => themeRuntime.getActiveThemeId("clawd"),
+  getActiveThemeId: () => themeRuntime.getActiveThemeId("spark"),
   getActiveThemeCapabilities: () => themeRuntime.getActiveThemeCapabilities(),
   ensureUserThemesDir: () => themeLoader.ensureUserThemesDir(),
   openSettingsWindow: () => settingsWindowRuntime.open(),
@@ -3846,7 +3858,7 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   if (process.argv.includes(REGISTER_PROTOCOL_DEV_ARG)) {
     const protocolRegistered = codexPetMain.registerProtocolClient();
-    console.log(`Clawd: clawd:// dev protocol registration ${protocolRegistered ? "succeeded" : "failed"}`);
+    console.log(`DeskBuddy: deskbuddy:// dev protocol registration ${protocolRegistered ? "succeeded" : "failed"}`);
   }
   // Another instance is already running — quit silently
   app.quit();
@@ -3941,7 +3953,7 @@ if (!gotTheLock) {
 
     const protocolRegistered = codexPetMain.registerProtocolClient();
     if (process.argv.includes(REGISTER_PROTOCOL_DEV_ARG)) {
-      console.log(`Clawd: clawd:// dev protocol registration ${protocolRegistered ? "succeeded" : "failed"}`);
+      console.log(`DeskBuddy: deskbuddy:// dev protocol registration ${protocolRegistered ? "succeeded" : "failed"}`);
       app.quit();
       return;
     }

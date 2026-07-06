@@ -29,7 +29,7 @@ const {
 const { resolveNodeBin } = require("./server-config");
 
 const CODEWHALE_CONFIG_PATH = path.join(os.homedir(), ".codewhale", "config.toml");
-const MANAGED_MARKER = "managed by clawd-on-desk";
+const MANAGED_MARKER = "managed by deskbuddy";
 const HOOK_SCRIPT_MARKER = "codewhale-hook.js";
 const TOML_HEADER_RE = /^\s*\[[^\]]+\]/;
 

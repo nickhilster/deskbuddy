@@ -350,7 +350,7 @@ function registerSettingsIpc(options = {}) {
   handle("settings:list-themes", () => {
     try {
       const activeTheme = getActiveTheme();
-      const activeId = activeTheme ? activeTheme._id : "clawd";
+      const activeId = activeTheme ? activeTheme._id : "spark";
       return themeLoader.listThemesWithMetadata().map((theme) =>
         codexPetMain.decorateThemeMetadata({
           ...theme,
@@ -548,10 +548,11 @@ function registerSettingsIpc(options = {}) {
       }
       const nameParam = machineName ? `&name=${encodeURIComponent(machineName)}` : "";
       const pwaUrl = `http://${lanIp}:${port}/mobile/?host=${lanIp}&port=${port}&token=${tok}${nameParam}`;
-      // clawd://host:port/token — matches Clawd Mobile's ConnectionConfig.fromClawdUrl regex
-      // exactly (^clawd://([^:]+):(\d+)/([a-fA-F0-9]{16,})$). No browser fallback: if the
-      // native app isn't installed, scanning this link dead-ends instead of opening the PWA.
-      const nativeUrl = `clawd://${lanIp}:${port}/${tok}`;
+      // deskbuddy://host:port/token — must match Clawd Mobile's URL parser exactly once that
+      // app adopts the new scheme (was clawd://, ^clawd://([^:]+):(\d+)/([a-fA-F0-9]{16,})$).
+      // No browser fallback: if the native app isn't installed, scanning this link dead-ends
+      // instead of opening the PWA.
+      const nativeUrl = `deskbuddy://${lanIp}:${port}/${tok}`;
       let preferredClient = "pwa";
       try {
         if (settingsController.get("mobilePreferredClient") === "native") preferredClient = "native";

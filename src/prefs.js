@@ -210,7 +210,7 @@ const SCHEMA = {
   mobilePreviewEnabled: { type: "boolean", default: false },
   // Which client the pairing QR/link should target: the browser-based PWA
   // (works everywhere, no install) or the native Clawd Mobile Android app
-  // (clawd:// deep link — only opens if the app is already installed, no
+  // (deskbuddy:// deep link — only opens if the app is already installed, no
   // browser fallback if it isn't).
   mobilePreferredClient: { type: "string", default: "pwa", enum: ["pwa", "native"] },
   // When true, prevent the OS from sleeping while any agent task is in
@@ -258,7 +258,7 @@ const SCHEMA = {
     normalize: normalizeShortcuts,
   },
   // Theme
-  theme: { type: "string", default: "clawd" },
+  theme: { type: "string", default: "spark" },
   // Phase 2/3 placeholders — schema reserves the keys so future migrations don't need v2.
   agents: {
     type: "object",
