@@ -30,13 +30,13 @@ function countHookBlocks(text) {
 }
 
 function countManagedMarkers(text) {
-  return (text.match(/managed by clawd-on-desk/g) || []).length;
+  return (text.match(/managed by deskbuddy/g) || []).length;
 }
 
 function legacyManagedBlock(event) {
   return [
     "",
-    "# managed by clawd-on-desk",
+    "# managed by deskbuddy",
     "[[hooks.hooks]]",
     `event = "${event}"`,
     `command = '''"node" "/old/clawd/hooks/codewhale-hook.js" "${event}"'''`,
@@ -101,7 +101,7 @@ describe("CodeWhale hook installer", () => {
       "enabled = true",
       "",
       "[[hooks.hooks]]",
-      "# managed by clawd-on-desk",
+      "# managed by deskbuddy",
       "event = \"session_start\"",
       `command = '''"${existingNode}" "/old/clawd/hooks/codewhale-hook.js" "session_start"'''`,
       "background = true",
@@ -266,7 +266,7 @@ describe("CodeWhale hook installer", () => {
 
     assert.strictEqual(hookSections.length, 1);
     assert.strictEqual(__test.sectionHasMarker(hookSections[0]), true);
-    assert.strictEqual(sections.find((section) => section.header === "hooks").lines.includes("# managed by clawd-on-desk"), false);
+    assert.strictEqual(sections.find((section) => section.header === "hooks").lines.includes("# managed by deskbuddy"), false);
   });
 
   it("classifies markerless codewhale-hook.js commands as legacy managed hooks", () => {
@@ -287,7 +287,7 @@ describe("CodeWhale hook installer", () => {
         "enabled = true",
         "",
         "[[hooks.hooks]]",
-        "# managed by clawd-on-desk",
+        "# managed by deskbuddy",
         'event = "session_start"',
         `command = '''"node" "/old/clawd/hooks/codewhale-hook.js" "session_start"'''`,
         "",

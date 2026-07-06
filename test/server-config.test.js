@@ -25,7 +25,7 @@ describe("server-config helpers", () => {
     const runtimeDir = path.join(tmpHome, ".clawd");
     fs.mkdirSync(runtimeDir, { recursive: true });
     const runtimePath = path.join(runtimeDir, "runtime.json");
-    fs.writeFileSync(runtimePath, JSON.stringify({ app: "clawd-on-desk", port: 23333 }));
+    fs.writeFileSync(runtimePath, JSON.stringify({ app: "deskbuddy", port: 23333 }));
 
     assert.strictEqual(serverConfig.clearRuntimeConfig(runtimePath), true);
     assert.strictEqual(fs.existsSync(runtimePath), false);
@@ -58,7 +58,7 @@ describe("server-config helpers", () => {
       }, {
         httpGet(_options, onResponse) {
           const res = {
-            headers: { "x-clawd-server": "clawd-on-desk" },
+            headers: { "x-deskbuddy-server": "deskbuddy" },
             setEncoding() {},
             on(event, handler) {
               if (event === "data") handler("");

@@ -93,7 +93,7 @@ describe("openclaw plugin installer", () => {
     const config = readJson(configPath);
     assert.strictEqual(config.theme, "dark");
     assert.deepStrictEqual(config.plugins.load.paths, [pluginDir]);
-    assert.deepStrictEqual(config.plugins.entries["clawd-on-desk"], {
+    assert.deepStrictEqual(config.plugins.entries["deskbuddy"], {
       enabled: true,
       hooks: { allowConversationAccess: false },
     });
@@ -108,7 +108,7 @@ describe("openclaw plugin installer", () => {
       plugins: {
         load: { paths: [pluginDir] },
         entries: {
-          "clawd-on-desk": {
+          "deskbuddy": {
             enabled: true,
             hooks: { allowConversationAccess: false },
           },
@@ -136,7 +136,7 @@ describe("openclaw plugin installer", () => {
     writeJson(configPath, {
       plugins: {
         load: { paths: [stalePath] },
-        entries: { "clawd-on-desk": { enabled: false } },
+        entries: { "deskbuddy": { enabled: false } },
       },
     });
 
@@ -150,7 +150,7 @@ describe("openclaw plugin installer", () => {
     assert.strictEqual(result.updated, true);
     const config = readJson(configPath);
     assert.deepStrictEqual(config.plugins.load.paths, [pluginDir]);
-    assert.strictEqual(config.plugins.entries["clawd-on-desk"].enabled, true);
+    assert.strictEqual(config.plugins.entries["deskbuddy"].enabled, true);
   });
 
   it("falls back instead of editing configs with include directives", () => {
@@ -211,7 +211,7 @@ describe("openclaw plugin installer", () => {
     writeJson(configPath, {
       plugins: {
         load: { paths: [pluginDir, "C:/other/plugin"] },
-        entries: { "clawd-on-desk": { enabled: true } },
+        entries: { "deskbuddy": { enabled: true } },
       },
     });
 
@@ -225,7 +225,7 @@ describe("openclaw plugin installer", () => {
     assert.strictEqual(result.removed, true);
     const config = readJson(configPath);
     assert.deepStrictEqual(config.plugins.load.paths, ["C:/other/plugin"]);
-    assert.strictEqual(config.plugins.entries["clawd-on-desk"], undefined);
+    assert.strictEqual(config.plugins.entries["deskbuddy"], undefined);
   });
 });
 
