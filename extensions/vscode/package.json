@@ -1,16 +1,24 @@
 {
   "name": "clawd-terminal-focus",
   "displayName": "Clawd Terminal Focus",
-  "description": "Enables Clawd desktop pet to focus the correct terminal tab via URI",
-  "version": "0.1.1",
+  "description": "Enables Clawd desktop pet to focus the correct terminal tab via URI, and hosts the DeskBuddy dashboard",
+  "version": "0.2.0",
   "publisher": "clawd",
   "engines": {
     "vscode": "^1.70.0"
   },
   "activationEvents": [
     "onStartupFinished",
-    "onUri"
+    "onUri",
+    "onCommand:deskbuddy.openDashboard"
   ],
   "main": "./extension.js",
-  "contributes": {}
+  "contributes": {
+    "commands": [
+      {
+        "command": "deskbuddy.openDashboard",
+        "title": "DeskBuddy: Open Dashboard"
+      }
+    ]
+  }
 }
