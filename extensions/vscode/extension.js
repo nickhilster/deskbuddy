@@ -1,5 +1,7 @@
 const vscode = require("vscode");
 const http = require("http");
+const fs = require("fs");
+const path = require("path");
 
 // Port range for Clawd terminal-focus extension instances.
 // Each editor window gets its own extension host → each needs a unique port.
@@ -110,6 +112,18 @@ async function showDeskBuddyDashboard(context) {
   dashboardPanel.webview.html = buildDashboardHtml(dashboardPanel.webview, context.extensionUri, lastKnownBridgePort);
 
   startBridgePortWatcher();
+}
+
+function buildDashboardHtml(webview, extensionUri, port) {
+  const htmlPath = path.join(extensionUri.fsPath, "webview.html");
+  const cssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview.css"));
+  const jsUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, "webview.js"));
+  const template = fs.readFileSync(htmlPath, "utf8");
+  return template
+    .replace(/__CSP_SOURCE__/g, webview.cspSource)
+    .replace("__CSS_URI__", cssUri.toString())
+    .replace("__JS_URI__", jsUri.toString())
+    .replace("__BRIDGE_PORT__", port ? String(port) : "null");
 }
 
 function startBridgePortWatcher() {

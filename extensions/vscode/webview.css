@@ -1,0 +1,48 @@
+body {
+  font-family: var(--vscode-font-family, sans-serif);
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  padding: 12px;
+}
+.session-row {
+  border: 1px solid var(--vscode-widget-border, #444);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.session-row-highlight {
+  border-color: var(--vscode-focusBorder, #007acc);
+}
+.session-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.session-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--vscode-badge-background, #444);
+  color: var(--vscode-badge-foreground, #fff);
+  margin-bottom: 6px;
+}
+.usage {
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.todo {
+  font-size: 13px;
+  padding: 2px 0;
+}
+.todo-done { text-decoration: line-through; opacity: 0.6; }
+.todo-active { font-weight: 600; }
+.empty { opacity: 0.6; font-style: italic; }
+.actions { margin-top: 8px; }
+.actions button { margin-right: 6px; }
+#status-banner { font-size: 12px; opacity: 0.7; margin-bottom: 10px; }
