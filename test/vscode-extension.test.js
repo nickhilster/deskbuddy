@@ -41,3 +41,16 @@ test("dashboard command is contributed and its files are installed", () => {
   assert.match(main, /filesToCopy = \[[^\]]*"webview\.js"[^\]]*\]/s);
   assert.match(main, /filesToCopy = \[[^\]]*"webview\.css"[^\]]*\]/s);
 });
+
+test("extension.js scaffolds the dashboard panel and port discovery", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "extensions", "vscode", "extension.js"),
+    "utf8"
+  );
+
+  assert.match(source, /VSCODE_BRIDGE_PORT_BASE = 23470/);
+  assert.match(source, /VSCODE_BRIDGE_PORT_RANGE = 5/);
+  assert.match(source, /deskbuddy\.openDashboard/);
+  assert.match(source, /createWebviewPanel/);
+  assert.match(source, /retainContextWhenHidden:\s*true/);
+});
