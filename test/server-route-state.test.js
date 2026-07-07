@@ -157,6 +157,7 @@ describe("server-route-state POST", () => {
         contextUsage: null,
         antigravityQuota: null,
         claudeQuota: null,
+        todos: null,
         assistantLastOutput: null,
         assistantLastOutputTruncated: false,
         toolName: "Read",
@@ -337,6 +338,37 @@ describe("server-route-state POST", () => {
 
     assert.strictEqual(res.statusCode, 200);
     assert.strictEqual(res.calls.updateSession[0][3].claudeQuota, null);
+  });
+
+  it("passes valid todos to updateSession", async () => {
+    const res = await callStatePost(JSON.stringify({
+      state: "working",
+      session_id: "sid",
+      event: "PostToolUse",
+      tool_name: "TodoWrite",
+      todos: [
+        { content: "Write the plan", status: "completed" },
+        { content: "Implement it", status: "in_progress", activeForm: "Implementing it" },
+      ],
+    }));
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.deepStrictEqual(res.calls.updateSession[0][3].todos, [
+      { content: "Write the plan", status: "completed" },
+      { content: "Implement it", status: "in_progress", activeForm: "Implementing it" },
+    ]);
+  });
+
+  it("drops invalid todos without rejecting state", async () => {
+    const res = await callStatePost(JSON.stringify({
+      state: "working",
+      session_id: "sid",
+      event: "PostToolUse",
+      todos: "not-an-array",
+    }));
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.calls.updateSession[0][3].todos, null);
   });
 
   // #590 B2 — metadata_only POSTs (statusline refreshes) bypass the
