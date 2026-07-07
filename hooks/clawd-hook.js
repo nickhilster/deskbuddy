@@ -327,6 +327,12 @@ const EVENT_TO_STATE = {
   WorktreeCreate: "carrying",
 };
 
+function extractTodosFromToolInput(toolInput) {
+  return toolInput && typeof toolInput === "object" && Array.isArray(toolInput.todos)
+    ? toolInput.todos
+    : null;
+}
+
 function isTaskToolStart(event, payload) {
   // Claude Code may report subagent launches as PreToolUse(Task) without a
   // matching SubagentStart. Keep PostToolUse(Task) as a normal working update:
@@ -370,6 +376,10 @@ function buildStateBody(event, payload, resolve) {
     payload.tool_input && typeof payload.tool_input === "object" ? payload.tool_input : null
   );
   if (toolName) body.tool_name = toolName;
+  if (toolName === "TodoWrite") {
+    const todos = extractTodosFromToolInput(payload.tool_input);
+    if (todos) body.todos = todos;
+  }
   if (toolUseId) body.tool_use_id = toolUseId;
   if (toolInputFingerprint) body.tool_input_fingerprint = toolInputFingerprint;
   if (event !== "Stop" && typeof payload.transcript_path === "string" && payload.transcript_path) {
@@ -522,4 +532,5 @@ module.exports = {
   extractApiErrorFromEntries,
   extractLastAssistantTextFromEntries,
   readTranscriptTailEntries,
+  extractTodosFromToolInput,
 };

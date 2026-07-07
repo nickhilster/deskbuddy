@@ -236,6 +236,34 @@ describe("buildStateBody", () => {
     assert.ok(!("pid_chain" in body));
   });
 
+  it("includes todos on the body when the tool call is TodoWrite", () => {
+    const body = buildStateBody("PostToolUse", {
+      session_id: "s",
+      tool_name: "TodoWrite",
+      tool_input: {
+        todos: [
+          { content: "Write the plan", status: "completed" },
+          { content: "Implement it", status: "in_progress", activeForm: "Implementing it" },
+        ],
+      },
+    }, mockResolve);
+
+    assert.deepStrictEqual(body.todos, [
+      { content: "Write the plan", status: "completed" },
+      { content: "Implement it", status: "in_progress", activeForm: "Implementing it" },
+    ]);
+  });
+
+  it("omits todos for tool calls other than TodoWrite", () => {
+    const body = buildStateBody("PostToolUse", {
+      session_id: "s",
+      tool_name: "Bash",
+      tool_input: { command: "ls" },
+    }, mockResolve);
+
+    assert.strictEqual(body.todos, undefined);
+  });
+
   it("includes foreground WT HWND only on foreground-safe events", () => {
     const resolveWithWtHwnd = () => ({
       stablePid: 1,
