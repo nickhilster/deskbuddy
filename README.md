@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/tray-icon.png" width="128" alt="Clawd">
+  <img src="assets/tray-icon.png" width="128" alt="DeskBuddy">
 </p>
 <h1 align="center">DeskBuddy</h1>
 <p align="center">
@@ -144,7 +144,7 @@ Clawd adapts to multi-monitor setups: proportional sizing uses the display Clawd
 
 For normal use, download the latest prebuilt installer from **[GitHub Releases](https://github.com/nickhilster/deskbuddy/releases/latest)**:
 
-- **Windows**: `Clawd-on-Desk-Setup-<version>-x64.exe` or `Clawd-on-Desk-Setup-<version>-arm64.exe`
+- **Windows**: `DeskBuddy-Setup-<version>-x64.exe` or `DeskBuddy-Setup-<version>-arm64.exe`
 - **macOS**: `.dmg`
 - **Linux**: `.AppImage` or `.deb`
 
