@@ -28,23 +28,23 @@ fun PermissionDialog(
     onSkip: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize().background(ClawdBackgroundDark),
+        modifier = Modifier.fillMaxSize().background(DeskBuddyBackgroundDark),
         contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier.fillMaxWidth().padding(24.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = ClawdSurfaceDark)
+            colors = CardDefaults.cardColors(containerColor = DeskBuddySurfaceDark)
         ) {
             Column(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(icon, null, tint = ClawdAccent, modifier = Modifier.size(40.dp))
+                Icon(icon, null, tint = DeskBuddyAccent, modifier = Modifier.size(40.dp))
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = ClawdTextDark)
+                Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, color = DeskBuddyTextDark)
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(description, fontSize = 13.sp, color = ClawdFaintDark, lineHeight = 20.sp)
+                Text(description, fontSize = 13.sp, color = DeskBuddyFaintDark, lineHeight = 20.sp)
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -55,13 +55,13 @@ fun PermissionDialog(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text(stringResource(R.string.action_skip), color = ClawdMutedDark)
+                        Text(stringResource(R.string.action_skip), color = DeskBuddyMutedDark)
                     }
                     Button(
                         onClick = onConfirm,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ClawdAccent,
+                            containerColor = DeskBuddyAccent,
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(10.dp)

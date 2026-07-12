@@ -83,7 +83,7 @@ class StatusNotifier(private val context: Context, private val prefsStore: Prefs
         val name = sessions.entries
             .maxByOrNull { it.value.updatedAt ?: 0L }
             ?.let { resolveName(it.key, it.value) }
-            ?: "Clawd"
+            ?: "DeskBuddy"
 
         Log.d("StatusNotifier", "displayState=$displayState prev=$prevState name=$name")
 

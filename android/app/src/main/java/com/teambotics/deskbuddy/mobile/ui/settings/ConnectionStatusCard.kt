@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.teambotics.deskbuddy.mobile.R
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 import com.teambotics.deskbuddy.mobile.ws.StreamingClient
 
@@ -28,17 +28,17 @@ internal fun ConnectionStatusCard(
     onManual: () -> Unit
 ) {
     val clipboard = LocalClipboardManager.current
-    val borderColor = if (isConnected) ClawdGreenBorder else ClawdBorderDark
-    val dotColor = if (isConnected) ClawdGreenBright else ClawdFaintDark
+    val borderColor = if (isConnected) DeskBuddyGreenBorder else DeskBuddyBorderDark
+    val dotColor = if (isConnected) DeskBuddyGreenBright else DeskBuddyFaintDark
     val statusText = if (isConnected) stringResource(R.string.status_connected) else stringResource(R.string.status_not_connected)
-    val statusColor = if (isConnected) ClawdGreenBright else ClawdFaintDark
+    val statusColor = if (isConnected) DeskBuddyGreenBright else DeskBuddyFaintDark
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 4.dp),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = ClawdSurfaceDark),
+        colors = CardDefaults.cardColors(containerColor = DeskBuddySurfaceDark),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, borderColor)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -75,23 +75,23 @@ internal fun ConnectionStatusCard(
                 ) {
                     OutlinedButton(
                         onClick = onScan,
-                        border = androidx.compose.foundation.BorderStroke(0.5.dp, ClawdBorderDark),
+                        border = androidx.compose.foundation.BorderStroke(0.5.dp, DeskBuddyBorderDark),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(ClawdIcons.QrCode, null, modifier = Modifier.size(16.dp), tint = ClawdMutedDark)
+                        Icon(DeskBuddyIcons.QrCode, null, modifier = Modifier.size(16.dp), tint = DeskBuddyMutedDark)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.settings_scan_open), color = ClawdMutedDark, fontSize = 12.sp)
+                        Text(stringResource(R.string.settings_scan_open), color = DeskBuddyMutedDark, fontSize = 12.sp)
                     }
                     OutlinedButton(
                         onClick = onManual,
-                        border = androidx.compose.foundation.BorderStroke(0.5.dp, ClawdBorderDark),
+                        border = androidx.compose.foundation.BorderStroke(0.5.dp, DeskBuddyBorderDark),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(ClawdIcons.DeviceDesktop, null, modifier = Modifier.size(16.dp), tint = ClawdMutedDark)
+                        Icon(DeskBuddyIcons.DeviceDesktop, null, modifier = Modifier.size(16.dp), tint = DeskBuddyMutedDark)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.settings_manual_open), color = ClawdMutedDark, fontSize = 12.sp)
+                        Text(stringResource(R.string.settings_manual_open), color = DeskBuddyMutedDark, fontSize = 12.sp)
                     }
                 }
             }
@@ -107,19 +107,19 @@ private fun CopyableRow(label: String, value: String, onCopy: () -> Unit) {
             .padding(vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, fontSize = 12.sp, color = ClawdFaintDark, modifier = Modifier.width(60.dp))
+        Text(label, fontSize = 12.sp, color = DeskBuddyFaintDark, modifier = Modifier.width(60.dp))
         Text(
             value,
             fontSize = 13.sp,
-            color = ClawdTextDark,
+            color = DeskBuddyTextDark,
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.weight(1f)
         )
         IconButton(onClick = onCopy, modifier = Modifier.size(28.dp)) {
             Icon(
-                ClawdIcons.Checks,
+                DeskBuddyIcons.Checks,
                 stringResource(R.string.settings_copy),
-                tint = ClawdMutedDark,
+                tint = DeskBuddyMutedDark,
                 modifier = Modifier.size(14.dp)
             )
         }

@@ -22,7 +22,7 @@ internal fun NotificationSection(prefsStore: PrefsStore) {
     Text(
         stringResource(R.string.settings_notification_desc),
         fontSize = 12.sp,
-        color = ClawdFaintDark,
+        color = DeskBuddyFaintDark,
         modifier = Modifier.padding(bottom = 12.dp)
     )
 
@@ -55,8 +55,8 @@ internal fun NotifyToggle(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(label, fontSize = 13.sp, color = if (enabled) ClawdTextDark else ClawdFaintDark)
-            Text(desc, fontSize = 11.sp, color = ClawdFaintDark)
+            Text(label, fontSize = 13.sp, color = if (enabled) DeskBuddyTextDark else DeskBuddyFaintDark)
+            Text(desc, fontSize = 11.sp, color = DeskBuddyFaintDark)
         }
         Switch(
             checked = checked,
@@ -64,9 +64,9 @@ internal fun NotifyToggle(
             enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = ClawdAccent,
-                uncheckedThumbColor = ClawdFaintDark,
-                uncheckedTrackColor = ClawdSurfaceAltDark
+                checkedTrackColor = DeskBuddyAccent,
+                uncheckedThumbColor = DeskBuddyFaintDark,
+                uncheckedTrackColor = DeskBuddySurfaceAltDark
             )
         )
     }

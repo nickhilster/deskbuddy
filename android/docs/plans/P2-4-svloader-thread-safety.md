@@ -91,7 +91,7 @@ object SvgLoader {
 
     /**
      * Initialize with application context.
-     * Must be called from ClawdApp.onCreate() before any SVG operations.
+     * Must be called from DeskBuddyApp.onCreate() before any SVG operations.
      */
     fun init(context: Context) {
         appContext = context.applicationContext
@@ -103,7 +103,7 @@ object SvgLoader {
      */
     private fun requireContext(): Context {
         return appContext ?: throw IllegalStateException(
-            "SvgLoader.init(context) must be called from ClawdApp.onCreate()"
+            "SvgLoader.init(context) must be called from DeskBuddyApp.onCreate()"
         )
     }
 
@@ -138,6 +138,6 @@ fun resetForTesting() {
 
 - [ ] `assetCache` 和 `missingCache` 线程安全（`synchronized` 或 `ConcurrentHashMap`）
 - [ ] 未初始化时调用 `assetExists` 抛出明确异常
-- [ ] `ClawdApp.onCreate()` 中 `SvgLoader.init()` 调用保持不变
+- [ ] `DeskBuddyApp.onCreate()` 中 `SvgLoader.init()` 调用保持不变
 - [ ] LRU 淘汰逻辑保留（可选，如改为无淘汰需注释说明）
 - [ ] SvgLoaderLookupTest / SvgLoaderTest 通过

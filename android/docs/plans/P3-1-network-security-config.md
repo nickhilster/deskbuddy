@@ -23,14 +23,14 @@ android:usesCleartextTraffic="true"
 ```xml
 <!-- AndroidManifest.xml -->
 <application
-    android:name=".ClawdApp"
+    android:name=".DeskBuddyApp"
     android:allowBackup="false"
     android:icon="@mipmap/ic_launcher"
     android:label="@string/app_name"
     android:supportsRtl="true"
     <!-- 移除: android:usesCleartextTraffic="true" -->
     android:networkSecurityConfig="@xml/network_security_config"
-    android:theme="@style/Theme.ClawdMobile">
+    android:theme="@style/Theme.DeskBuddyMobile">
 ```
 
 ### Step 2: 配置 network_security_config

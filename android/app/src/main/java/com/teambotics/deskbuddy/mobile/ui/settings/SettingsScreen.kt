@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.teambotics.deskbuddy.mobile.R
 import com.teambotics.deskbuddy.mobile.data.PrefsStore
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 import com.teambotics.deskbuddy.mobile.ws.StreamingClient
 import com.teambotics.deskbuddy.mobile.ws.ConnectionState
@@ -31,7 +31,7 @@ fun SettingsScreen(
     val isConnected = connectionState == ConnectionState.CONNECTED
 
     Scaffold(
-        containerColor = ClawdBackgroundDark,
+        containerColor = DeskBuddyBackgroundDark,
         topBar = {
             SettingsTopBar(onBack = { navController.popBackStack() })
         }
@@ -55,7 +55,7 @@ fun SettingsScreen(
             // Accordion sections
             AccordionSection(
                 title = stringResource(R.string.settings_language),
-                icon = ClawdIcons.Activity,
+                icon = DeskBuddyIcons.Activity,
                 defaultExpanded = false
             ) {
                 LanguageSection(prefsStore = prefsStore)
@@ -63,7 +63,7 @@ fun SettingsScreen(
 
             AccordionSection(
                 title = stringResource(R.string.settings_notification),
-                icon = ClawdIcons.Bell,
+                icon = DeskBuddyIcons.Bell,
                 defaultExpanded = false
             ) {
                 NotificationSection(prefsStore = prefsStore)
@@ -71,7 +71,7 @@ fun SettingsScreen(
 
             AccordionSection(
                 title = stringResource(R.string.settings_pet),
-                icon = ClawdIcons.Pet,
+                icon = DeskBuddyIcons.Pet,
                 defaultExpanded = true
             ) {
                 FloatingPetSection(prefsStore = prefsStore, snackbarHostState = snackbarHostState)
@@ -79,7 +79,7 @@ fun SettingsScreen(
 
             AccordionSection(
                 title = stringResource(R.string.settings_relay),
-                icon = ClawdIcons.Activity,
+                icon = DeskBuddyIcons.Activity,
                 defaultExpanded = false
             ) {
                 RelaySettings(prefsStore = prefsStore, streamingClient = streamingClient)
@@ -87,7 +87,7 @@ fun SettingsScreen(
 
             AccordionSection(
                 title = stringResource(R.string.settings_about),
-                icon = ClawdIcons.Activity,
+                icon = DeskBuddyIcons.Activity,
                 defaultExpanded = false
             ) {
                 AboutSection()
@@ -95,7 +95,7 @@ fun SettingsScreen(
 
             AccordionSection(
                 title = stringResource(R.string.settings_debug_log),
-                icon = ClawdIcons.Activity,
+                icon = DeskBuddyIcons.Activity,
                 defaultExpanded = false
             ) {
                 DebugLogSection()
@@ -117,9 +117,9 @@ private fun SettingsTopBar(onBack: () -> Unit) {
     ) {
         IconButton(onClick = onBack) {
             Icon(
-                ClawdIcons.ChevronRight,
+                DeskBuddyIcons.ChevronRight,
                 stringResource(R.string.settings_back),
-                tint = ClawdMutedDark,
+                tint = DeskBuddyMutedDark,
                 modifier = Modifier.size(20.dp).graphicsLayer(rotationZ = 180f)
             )
         }
@@ -127,7 +127,7 @@ private fun SettingsTopBar(onBack: () -> Unit) {
             stringResource(R.string.settings_title),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            color = ClawdTextDark
+            color = DeskBuddyTextDark
         )
     }
 }

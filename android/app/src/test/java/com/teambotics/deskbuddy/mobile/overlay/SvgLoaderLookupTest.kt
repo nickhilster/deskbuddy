@@ -126,7 +126,7 @@ class SvgLoaderLookupTest {
 
     @Test
     fun `calico non-idle files are APNG`() {
-        // debugger has no calico-specific file, falls back to clawd .svg
+        // debugger has no calico-specific file, falls back to deskbuddy .svg
         val apngStates = allStates.filter { it != "idle" && it != "debugger" }
         for (state in apngStates) {
             val result = SvgLoader.resolveSvgAsset(state, 1, "calico")

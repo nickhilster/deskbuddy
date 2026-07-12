@@ -120,8 +120,8 @@ fun `elicitation request shows elicitation notification`() = runTest {
 ## Mock 策略
 
 ```kotlin
-// Mock ClawdWebSocket
-class MockClawdWebSocket : ClawdWebSocket(mockk(relaxed = true)) {
+// Mock DeskBuddyWebSocket
+class MockDeskBuddyWebSocket : DeskBuddyWebSocket(mockk(relaxed = true)) {
     val sentResponses = mutableListOf<Triple<String, String, Int?>>()
     override fun sendPermissionResponse(requestId: String, behavior: String, suggestionIndex: Int?) {
         sentResponses.add(Triple(requestId, behavior, suggestionIndex))

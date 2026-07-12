@@ -15,23 +15,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.teambotics.deskbuddy.mobile.R
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 
 @Composable
 internal fun BottomNav(selectedTab: Int, onTabSelected: (Int) -> Unit, modifier: Modifier = Modifier) {
     val tabs = listOf(
-        Triple(ClawdIcons.LayoutList, stringResource(R.string.sessions_tab_sessions), 0),
-        Triple(ClawdIcons.DeviceDesktop, stringResource(R.string.sessions_tab_devices), 1),
-        Triple(ClawdIcons.Settings, stringResource(R.string.sessions_tab_settings), 2)
+        Triple(DeskBuddyIcons.LayoutList, stringResource(R.string.sessions_tab_sessions), 0),
+        Triple(DeskBuddyIcons.DeviceDesktop, stringResource(R.string.sessions_tab_devices), 1),
+        Triple(DeskBuddyIcons.Settings, stringResource(R.string.sessions_tab_settings), 2)
     )
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 16.dp)
-            .border(0.5.dp, ClawdBorderDark, RoundedCornerShape(14.dp))
-            .background(ClawdSurfaceDark.copy(alpha = 0.95f), RoundedCornerShape(14.dp))
+            .border(0.5.dp, DeskBuddyBorderDark, RoundedCornerShape(14.dp))
+            .background(DeskBuddySurfaceDark.copy(alpha = 0.95f), RoundedCornerShape(14.dp))
             .padding(vertical = 10.dp, horizontal = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -48,14 +48,14 @@ internal fun BottomNav(selectedTab: Int, onTabSelected: (Int) -> Unit, modifier:
                 Icon(
                     icon,
                     label,
-                    tint = if (isActive) ClawdAccent else ClawdFaintDark,
+                    tint = if (isActive) DeskBuddyAccent else DeskBuddyFaintDark,
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
                     label,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (isActive) ClawdAccent else ClawdFaintDark,
+                    color = if (isActive) DeskBuddyAccent else DeskBuddyFaintDark,
                     letterSpacing = 0.2.sp
                 )
             }

@@ -58,9 +58,9 @@
     <string name="notify_approval_text">Claude 请求执行权限</string>
 
     <!-- Notification messages (NotificationHelper) -->
-    <string name="notify_permission_title">🦀 %s 需要你来拍板！</string>
+    <string name="notify_permission_title">%s 需要你来拍板！</string>
     <string name="notify_permission_body">需要您的确认</string>
-    <string name="notify_elicitation_title">🦀 %s 需要你做选择</string>
+    <string name="notify_elicitation_title">%s 需要你做选择</string>
     <string name="notify_elicitation_body">请选择一个选项</string>
     <string name="action_allow">允许</string>
     <string name="action_deny">拒绝</string>
@@ -155,7 +155,7 @@
     <string name="settings_pet_enable">启用桌宠</string>
     <string name="settings_pet_overlay_granted">需要悬浮窗权限（已授予）</string>
     <string name="settings_pet_overlay_needed">需要悬浮窗权限（未授予）</string>
-    <string name="settings_pet_desc">在屏幕上显示一个可爱的桌宠小螃蟹。</string>
+    <string name="settings_pet_desc">在屏幕上显示 DeskBuddy 桌宠。</string>
     <string name="settings_notify_master">通知总开关</string>
     <string name="settings_notify_master_desc">启用后 App 可发送通知</string>
     <string name="settings_notify_approval">权限审批通知</string>

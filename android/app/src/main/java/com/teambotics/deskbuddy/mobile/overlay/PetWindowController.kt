@@ -93,7 +93,7 @@ class PetWindowController(
     /**
      * Snap the pet to the nearest screen edge, accounting for content insets.
      * Uses [FloatingPetView.getContentRect] which handles both fixed bounds
-     * (Clawd/Cloudling) and dynamic visualInsets (Calico).
+     * (DeskBuddy/Cloudling) and dynamic visualInsets (Calico).
      */
     fun snapToEdge() {
         val petView = getPetView() ?: return

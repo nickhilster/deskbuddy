@@ -23,7 +23,7 @@ internal fun LanguageSection(prefsStore: PrefsStore) {
     Text(
         stringResource(R.string.settings_language_desc),
         fontSize = 12.sp,
-        color = ClawdFaintDark,
+        color = DeskBuddyFaintDark,
         modifier = Modifier.padding(bottom = 12.dp)
     )
 
@@ -49,7 +49,7 @@ internal fun LanguageSection(prefsStore: PrefsStore) {
                 },
                 label = { Text(label, fontSize = 13.sp) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = ClawdAccent,
+                    selectedContainerColor = DeskBuddyAccent,
                     selectedLabelColor = Color.White
                 )
             )

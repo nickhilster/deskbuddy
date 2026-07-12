@@ -13,10 +13,10 @@ import kotlinx.coroutines.channels.Channel
 class DeskBuddyApp : Application() {
 
     companion object {
-        const val CHANNEL_APPROVAL = "clawd_approval"
-        const val CHANNEL_STATUS = "clawd_status"
-        const val CHANNEL_ALERT = "clawd_alert"
-        const val CHANNEL_SERVICE = "clawd_service"
+        const val CHANNEL_APPROVAL = "deskbuddy_approval"
+        const val CHANNEL_STATUS = "deskbuddy_status"
+        const val CHANNEL_ALERT = "deskbuddy_alert"
+        const val CHANNEL_SERVICE = "deskbuddy_service"
 
         /** Channel for notification → Activity approval request routing.
          *  Replaces MainActivity companion object statics to avoid thread-safety issues and ViewModel leaks. */

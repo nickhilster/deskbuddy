@@ -213,7 +213,7 @@ class SessionTest {
 
     @Test
     fun `SessionData with resolvedSvg`() {
-        val data = SessionData(resolvedSvg = "clawd-working.svg")
-        assertEquals("clawd-working.svg", data.resolvedSvg)
+        val data = SessionData(resolvedSvg = "deskbuddy-working.svg")
+        assertEquals("deskbuddy-working.svg", data.resolvedSvg)
     }
 }

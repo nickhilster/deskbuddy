@@ -30,9 +30,9 @@ http://192.168.1.5:3000/mobile/stream?token=abcd1234efgh5678
 |------|------|------|
 | `data/ConnectionConfig.kt` | 23-26 | `streamUrl()` 将 token 拼入 URL |
 | `data/ConnectionConfig.kt` | 34-38 | `streamUrlMasked()` 同样包含 token（掩码版） |
-| `ws/ClawdWebSocket.kt` | 108-110 | SSE 请求已通过 `authHeader()` 发送 Bearer token（✅ 正确） |
+| `ws/DeskBuddyWebSocket.kt` | 108-110 | SSE 请求已通过 `authHeader()` 发送 Bearer token（✅ 正确） |
 
-**关键发现**: `ClawdWebSocket.doConnect()` 已经在请求头中添加了 `Authorization: Bearer $token`，所以 URL 中的 token 是**冗余的**。
+**关键发现**: `DeskBuddyWebSocket.doConnect()` 已经在请求头中添加了 `Authorization: Bearer $token`，所以 URL 中的 token 是**冗余的**。
 
 ## 修复方案
 

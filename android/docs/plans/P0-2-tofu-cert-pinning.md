@@ -40,7 +40,7 @@ if (!config.isLan) {
 
 **现有流程**:
 1. 用户扫描 QR 或手动输入 → `ConnectionConfig` 创建
-2. `WebSocketService.start(config)` → `ClawdWebSocket.connect(config)`
+2. `WebSocketService.start(config)` → `DeskBuddyWebSocket.connect(config)`
 3. `HttpClientProvider.getClient(config)` → 如果非 LAN 且无 fingerprint，**静默跳过** pinning
 
 ## 修复方案: Trust-On-First-Use (TOFU)
@@ -73,10 +73,10 @@ object CertificateVerifier {
 }
 ```
 
-### Step 2: 修改 `ClawdWebSocket.onOpen` 添加 fingerprint 提取
+### Step 2: 修改 `DeskBuddyWebSocket.onOpen` 添加 fingerprint 提取
 
 ```kotlin
-// ClawdWebSocket.kt — onOpen 回调中
+// DeskBuddyWebSocket.kt — onOpen 回调中
 override fun onOpen(eventSource: EventSource, response: Response) {
     // 非 LAN 且无已保存 fingerprint → 提取并通知 UI
     val cfg = config
@@ -94,7 +94,7 @@ override fun onOpen(eventSource: EventSource, response: Response) {
 ### Step 3: 新增 `SharedFlow<CertFingerprintInfo>`
 
 ```kotlin
-// ClawdWebSocket.kt
+// DeskBuddyWebSocket.kt
 data class CertFingerprintInfo(val host: String, val fingerprint: String)
 
 private val _certFingerprintPending = MutableSharedFlow<CertFingerprintInfo>(extraBufferCapacity = 1)

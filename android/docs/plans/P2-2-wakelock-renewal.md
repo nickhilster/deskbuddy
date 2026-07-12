@@ -11,7 +11,7 @@
 
 ```kotlin
 // WebSocketService.kt:193
-wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clawd:ws").apply {
+wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "deskbuddy:ws").apply {
     setReferenceCounted(false)
     acquire(60 * 60 * 1000L) // 1 hour timeout safety net
 }
@@ -63,7 +63,7 @@ companion object {
 将 WakeLock 超时设为更长（如 8 小时），仅在连接成功时续期：
 
 ```kotlin
-wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clawd:ws").apply {
+wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "deskbuddy:ws").apply {
     acquire(8 * 60 * 60 * 1000L)  // 8 hours
 }
 ```

@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 
 @Composable
@@ -34,8 +34,8 @@ internal fun AccordionSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 4.dp)
-            .border(0.5.dp, ClawdBorderDark, RoundedCornerShape(14.dp))
-            .background(ClawdSurfaceDark, RoundedCornerShape(14.dp))
+            .border(0.5.dp, DeskBuddyBorderDark, RoundedCornerShape(14.dp))
+            .background(DeskBuddySurfaceDark, RoundedCornerShape(14.dp))
     ) {
         // Header
         Row(
@@ -45,12 +45,12 @@ internal fun AccordionSection(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(icon, null, tint = ClawdAccent, modifier = Modifier.size(18.dp))
+            Icon(icon, null, tint = DeskBuddyAccent, modifier = Modifier.size(18.dp))
             Text(
                 title,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ClawdTextDark,
+                color = DeskBuddyTextDark,
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 10.dp)
@@ -59,9 +59,9 @@ internal fun AccordionSection(
                 if (expanded) 90f else 0f, label = "chevron"
             )
             Icon(
-                ClawdIcons.ChevronRight,
+                DeskBuddyIcons.ChevronRight,
                 null,
-                tint = ClawdFaintDark,
+                tint = DeskBuddyFaintDark,
                 modifier = Modifier
                     .size(16.dp)
                     .graphicsLayer(rotationZ = rotation)
@@ -80,7 +80,7 @@ internal fun AccordionSection(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                         .height(0.5.dp)
-                        .background(ClawdBorderDark)
+                        .background(DeskBuddyBorderDark)
                 )
                 Column(modifier = Modifier.padding(16.dp)) {
                     content()

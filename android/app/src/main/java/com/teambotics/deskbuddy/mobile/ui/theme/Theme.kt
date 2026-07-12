@@ -19,45 +19,45 @@ private fun findActivity(context: android.content.Context): Activity? {
 }
 
 private val DarkColorScheme = darkColorScheme(
-    primary = ClawdAccent,
+    primary = DeskBuddyAccent,
     onPrimary = Color.White,
-    primaryContainer = ClawdAccentDark,
+    primaryContainer = DeskBuddyAccentDark,
     onPrimaryContainer = Color.White,
-    secondary = ClawdAccentLight,
+    secondary = DeskBuddyAccentLight,
     onSecondary = Color.White,
-    background = ClawdBackgroundDark,
-    onBackground = ClawdTextDark,
-    surface = ClawdSurfaceDark,
-    onSurface = ClawdTextDark,
-    surfaceVariant = ClawdSurfaceAltDark,
-    onSurfaceVariant = ClawdMutedDark,
-    error = ClawdError,
+    background = DeskBuddyBackgroundDark,
+    onBackground = DeskBuddyTextDark,
+    surface = DeskBuddySurfaceDark,
+    onSurface = DeskBuddyTextDark,
+    surfaceVariant = DeskBuddySurfaceAltDark,
+    onSurfaceVariant = DeskBuddyMutedDark,
+    error = DeskBuddyError,
     onError = Color.White,
-    outline = ClawdBorderDark,
+    outline = DeskBuddyBorderDark,
     outlineVariant = Color(0xFF333340),
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = ClawdAccent,
+    primary = DeskBuddyAccent,
     onPrimary = Color.White,
-    primaryContainer = ClawdAccentLight,
-    onPrimaryContainer = ClawdAccentDark,
-    secondary = ClawdAccentDark,
+    primaryContainer = DeskBuddyAccentLight,
+    onPrimaryContainer = DeskBuddyAccentDark,
+    secondary = DeskBuddyAccentDark,
     onSecondary = Color.White,
-    background = ClawdBackground,
-    onBackground = ClawdText,
-    surface = ClawdSurface,
-    onSurface = ClawdText,
-    surfaceVariant = ClawdSurfaceAlt,
-    onSurfaceVariant = ClawdMuted,
-    error = ClawdError,
+    background = DeskBuddyBackground,
+    onBackground = DeskBuddyText,
+    surface = DeskBuddySurface,
+    onSurface = DeskBuddyText,
+    surfaceVariant = DeskBuddySurfaceAlt,
+    onSurfaceVariant = DeskBuddyMuted,
+    error = DeskBuddyError,
     onError = Color.White,
-    outline = ClawdBorder,
+    outline = DeskBuddyBorder,
     outlineVariant = Color(0xFFE0E0E0),
 )
 
 @Composable
-fun ClawdMobileTheme(
+fun DeskBuddyMobileTheme(
     content: @Composable () -> Unit
 ) {
     val view = LocalView.current
@@ -75,7 +75,7 @@ fun ClawdMobileTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = ClawdTypography,
+        typography = DeskBuddyTypography,
         content = content
     )
 }

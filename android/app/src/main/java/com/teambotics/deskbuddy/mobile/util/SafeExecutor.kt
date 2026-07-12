@@ -11,7 +11,7 @@ import android.util.Log
  */
 object SafeExecutor {
     /** Non-critical path: allow skip, log warning. */
-    inline fun <T> tryOrNull(tag: String = "Clawd", block: () -> T): T? {
+    inline fun <T> tryOrNull(tag: String = "DeskBuddy", block: () -> T): T? {
         return try { block() } catch (e: Exception) {
             Log.w(tag, "Non-critical: ${e.message}")
             null
@@ -19,7 +19,7 @@ object SafeExecutor {
     }
 
     /** Network operations: log full stack trace. */
-    inline fun <T> tryOrLog(tag: String = "Clawd", block: () -> T): T? {
+    inline fun <T> tryOrLog(tag: String = "DeskBuddy", block: () -> T): T? {
         return try { block() } catch (e: Exception) {
             Log.e(tag, "Network error", e)
             null
@@ -27,7 +27,7 @@ object SafeExecutor {
     }
 
     /** Critical path: log error + optional callback. */
-    inline fun <T> tryOrReport(tag: String = "Clawd", noinline onError: ((Exception) -> Unit)? = null, block: () -> T): T? {
+    inline fun <T> tryOrReport(tag: String = "DeskBuddy", noinline onError: ((Exception) -> Unit)? = null, block: () -> T): T? {
         return try { block() } catch (e: Exception) {
             Log.e(tag, "Critical error", e)
             onError?.invoke(e)

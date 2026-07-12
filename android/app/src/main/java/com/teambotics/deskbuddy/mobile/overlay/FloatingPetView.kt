@@ -89,7 +89,7 @@ class FloatingPetView @JvmOverloads constructor(
     /**
      * Calculate the screen rect of the actual visible content (excluding transparent padding).
      *
-     * For Clawd/Cloudling: uses pre-computed fixed content bounds from SvgLoader,
+     * For DeskBuddy/Cloudling: uses pre-computed fixed content bounds from SvgLoader,
      * scaled to window pixels with proper `preserveAspectRatio="xMidYMid meet"` handling.
      *
      * For other characters (e.g. Calico): falls back to dynamic visualInsets
@@ -98,7 +98,7 @@ class FloatingPetView @JvmOverloads constructor(
      * Falls back to [windowRect] if no bounds are available.
      */
     fun getContentRect(windowRect: Rect): Rect {
-        // 1. Try fixed content bounds (Clawd/Cloudling)
+        // 1. Try fixed content bounds (DeskBuddy/Cloudling)
         SvgLoader.getFixedContentBounds(character)?.let { bounds ->
             return getContentRectFromBounds(windowRect, bounds)
         }

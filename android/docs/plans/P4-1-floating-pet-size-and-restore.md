@@ -38,7 +38,7 @@ Slider(
 
 ### 修复方案
 
-**文件**: `android/app/src/main/java/com/clawd/mobile/ui/settings/PetSettings.kt`
+**文件**: `android/app/src/main/java/com/deskbuddy/mobile/ui/settings/PetSettings.kt`
 
 ```kotlin
 Slider(
@@ -108,7 +108,7 @@ internal fun FloatingPetSection(...) {
 
 将自动启动逻辑提升到 `MainActivity` 中，在 app 启动时无条件检查并恢复悬浮窗。
 
-**文件**: `android/app/src/main/java/com/clawd/mobile/MainActivity.kt`
+**文件**: `android/app/src/main/java/com/deskbuddy/mobile/MainActivity.kt`
 
 在 `setupContent()` 方法（或 `onCreate` 最后）添加：
 

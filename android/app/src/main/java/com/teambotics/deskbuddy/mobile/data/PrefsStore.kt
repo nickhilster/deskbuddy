@@ -27,8 +27,8 @@ class PrefsStore private constructor(context: Context) {
         private const val KEY_CLICK_THROUGH = "pet_click_through"
         private const val KEY_SLEEP_TIMEOUT = "pet_sleep_timeout_sec"
         private const val KEY_LANGUAGE = "app_language"
-        private const val PREFS_ENCRYPTED = "clawd_prefs_encrypted"
-        private const val PREFS_LEGACY = "clawd_prefs"
+        private const val PREFS_ENCRYPTED = "deskbuddy_prefs_encrypted"
+        private const val PREFS_LEGACY = "deskbuddy_prefs"
         private const val KEY_MIGRATED = "_migrated_v1"
 
         @Volatile

@@ -21,8 +21,8 @@
   └── P3-6  SettingsScreen Section 拆分        [M] [低风险]
 
 阶段 2：核心拆分（架构基础）
-  ├── P3-1  ClawdWebSocket 拆分为 3 个类       [L] [中风险]
-  └── P3-2  重命名 → ClawdSseClient            [S] [低风险]  ← P3-1 完成后
+  ├── P3-1  DeskBuddyWebSocket 拆分为 3 个类       [L] [中风险]
+  └── P3-2  重命名 → DeskBuddySseClient            [S] [低风险]  ← P3-1 完成后
 
 阶段 3：依赖注入 + 接口解耦（需充分测试）
   ├── P3-3  引入 Koin 依赖注入                 [L] [高风险]
@@ -42,12 +42,12 @@
 |---|------|------|------|--------|------|------|
 | P3-5 | MainActivity 权限流程拆分 | M-05 | `MainActivity.kt` | M | 低 | 无 |
 | P3-6 | SettingsScreen Section 拆分 | M-06 | `ui/settings/` | M | 低 | 无 |
-| P3-1 | ClawdWebSocket 拆分 | M-10 | `ws/` | L | 中 | 无 |
-| P3-2 | 重命名 ClawdWebSocket → ClawdSseClient | M-04 | 全局 | S | 低 | P3-1 |
+| P3-1 | DeskBuddyWebSocket 拆分 | M-10 | `ws/` | L | 中 | 无 |
+| P3-2 | 重命名 DeskBuddyWebSocket → DeskBuddySseClient | M-04 | 全局 | S | 低 | P3-1 |
 | P3-3 | 引入依赖注入（Koin） | M-03 | 全局 | L | 高 | P3-1 |
 | P3-4 | SessionProvider 接口解耦 | M-11 | `ws/`、`overlay/` | M | 中 | P3-1 |
 | P3-9 | WebSocketService 改用 bindService | L-12 | `WebSocketService.kt`、`NavGraph.kt` | L | 高 | P3-3 |
-| P3-7 | LAN HTTPS 自签证书支持 | C-01 | `ConnectionConfig.kt`、`ClawdWebSocket.kt` | L | 高 | P3-1 |
+| P3-7 | LAN HTTPS 自签证书支持 | C-01 | `ConnectionConfig.kt`、`DeskBuddyWebSocket.kt` | L | 高 | P3-1 |
 | P3-8 | WebView 渲染优化 | M-14 | `overlay/` | L | 高 | 无 |
 
 ---
@@ -166,24 +166,24 @@ ui/settings/
 
 > 架构基础。P3-1 是后续 P3-2/3/4/7 的前置依赖，需确保每步编译通过 + 功能正常。
 
-### P3-1：ClawdWebSocket 拆分
+### P3-1：DeskBuddyWebSocket 拆分
 
-**问题**：`ClawdWebSocket`（429 行）承担 6 项职责，是最大的 SRP 违反者。
+**问题**：`DeskBuddyWebSocket`（429 行）承担 6 项职责，是最大的 SRP 违反者。
 
 **目标架构**：
 
 ```
 ws/
-├── ClawdSseClient.kt         # SSE 连接管理（connect/disconnect/reconnect）
+├── DeskBuddySseClient.kt         # SSE 连接管理（connect/disconnect/reconnect）
 ├── MessageParser.kt           # JSON 消息解析（handleMessage 逻辑）
 ├── ApprovalSender.kt          # 审批 HTTP POST（sendPermissionResponse/sendElicitationResponse）
 └── ConnectionState.kt         # 不变
 ```
 
-#### ClawdSseClient（SSE 连接管理）
+#### DeskBuddySseClient（SSE 连接管理）
 
 ```kotlin
-class ClawdSseClient(
+class DeskBuddySseClient(
     private val prefsStore: PrefsStore,
     private val parser: MessageParser,
     private val approvalSender: ApprovalSender
@@ -249,9 +249,9 @@ class ApprovalSender(
 ```
 
 **迁移策略**：
-1. 先创建 `MessageParser` 和 `ApprovalSender`，从 `ClawdWebSocket` 中提取方法
-2. `ClawdWebSocket` 改为委托模式（内部持有 parser 和 sender）
-3. 确认功能正常后，将 `ClawdWebSocket` 重命名为 `ClawdSseClient`
+1. 先创建 `MessageParser` 和 `ApprovalSender`，从 `DeskBuddyWebSocket` 中提取方法
+2. `DeskBuddyWebSocket` 改为委托模式（内部持有 parser 和 sender）
+3. 确认功能正常后，将 `DeskBuddyWebSocket` 重命名为 `DeskBuddySseClient`
 4. 每步都保持编译通过 + 功能正常
 
 **验证**：
@@ -262,14 +262,14 @@ class ApprovalSender(
 
 ---
 
-### P3-2：重命名 ClawdWebSocket → ClawdSseClient
+### P3-2：重命名 DeskBuddyWebSocket → DeskBuddySseClient
 
 **问题**：类名暗示 WebSocket，实际用 SSE。
 
 **前置**：P3-1 完成后执行。
 
 **涉及文件**：
-- `ws/ClawdWebSocket.kt` → `ws/ClawdSseClient.kt`
+- `ws/DeskBuddyWebSocket.kt` → `ws/DeskBuddySseClient.kt`
 - `service/WebSocketService.kt`（引用）
 - `overlay/PetStateManager.kt`（引用）
 - `overlay/PetBubbleManager.kt`（引用）
@@ -279,7 +279,7 @@ class ApprovalSender(
 - `ui/settings/SettingsScreen.kt`（引用）
 
 **验证**：
-- 全局搜索无残留的 `ClawdWebSocket` 引用
+- 全局搜索无残留的 `DeskBuddyWebSocket` 引用
 - 编译通过
 
 ---
@@ -306,7 +306,7 @@ val appModule = module {
     single { HttpClientProvider }
     single { MessageParser() }
     single { ApprovalSender(get(), get()) }
-    single { ClawdSseClient(get(), get(), get()) }
+    single { DeskBuddySseClient(get(), get(), get()) }
 
     viewModel { ApprovalViewModel(get(), get()) }
 }
@@ -319,11 +319,11 @@ val serviceModule = module {
 
 **Application 初始化**：
 ```kotlin
-class ClawdApp : Application() {
+class DeskBuddyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         startKoin {
-            androidContext(this@ClawdApp)
+            androidContext(this@DeskBuddyApp)
             modules(appModule, serviceModule)
         }
         // ...
@@ -340,7 +340,7 @@ val approvalViewModel: ApprovalViewModel = viewModel(factory = ApprovalViewModel
 
 // NavGraph.kt — 之后
 val prefsStore = koinInject<PrefsStore>()
-val ws = koinInject<ClawdSseClient>()
+val ws = koinInject<DeskBuddySseClient>()
 val approvalViewModel: ApprovalViewModel = koinViewModel()
 ```
 
@@ -366,9 +366,9 @@ interface SessionProvider {
 }
 ```
 
-**ClawdSseClient 实现接口**：
+**DeskBuddySseClient 实现接口**：
 ```kotlin
-class ClawdSseClient(...) : SessionProvider {
+class DeskBuddySseClient(...) : SessionProvider {
     override val sessions: StateFlow<Map<String, SessionData>> = _sessions
     override val connectionState: StateFlow<ConnectionState> = _connectionState
     // ...
@@ -425,15 +425,15 @@ class WebSocketService : Service() {
 
     inner class LocalBinder : Binder() {
         fun getService(): WebSocketService = this@WebSocketService
-        fun getWebSocket(): ClawdSseClient? = webSocket
+        fun getWebSocket(): DeskBuddySseClient? = webSocket
     }
 
     override fun onBind(intent: Intent): IBinder = binder
 
     // 移除 companion object 中的 instance
     companion object {
-        const val ACTION_CONNECT = "com.clawd.mobile.CONNECT"
-        const val ACTION_DISCONNECT = "com.clawd.mobile.DISCONNECT"
+        const val ACTION_CONNECT = "com.deskbuddy.mobile.CONNECT"
+        const val ACTION_DISCONNECT = "com.deskbuddy.mobile.DISCONNECT"
         // start/stop 保留为静态方法
     }
 }
@@ -587,8 +587,8 @@ fun loadSvg(webView: WebView, assetPath: String, ...) {
   P3-6  SettingsScreen 拆分 ────────────────────┤
                                                 │
 阶段 2（核心拆分）                                │
-  P3-1  ClawdWebSocket 拆分 ───────────────────┐│
-    ├── P3-2  重命名 → ClawdSseClient          ││
+  P3-1  DeskBuddyWebSocket 拆分 ───────────────────┐│
+    ├── P3-2  重命名 → DeskBuddySseClient          ││
     ├── P3-3  Koin DI ─────────────────────┐   ││
     │     └── P3-9  bindService            │   ││
     ├── P3-4  SessionProvider 接口解耦      │   ││
@@ -608,8 +608,8 @@ fun loadSvg(webView: WebView, assetPath: String, ...) {
 
 ## 验收标准
 
-- [ ] ClawdWebSocket 拆分为 3 个类，每个 < 200 行
-- [ ] 类名 ClawdSseClient 全局替换
+- [ ] DeskBuddyWebSocket 拆分为 3 个类，每个 < 200 行
+- [ ] 类名 DeskBuddySseClient 全局替换
 - [ ] Koin 依赖注入框架工作正常
 - [ ] SessionProvider 接口解耦静态依赖链
 - [ ] MainActivity < 100 行，权限逻辑独立

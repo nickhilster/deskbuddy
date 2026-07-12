@@ -1,16 +1,16 @@
 # P2-3: sessions Map 高频 GC 压力优化
 
 > **优先级**: P2 — 性能  
-> **影响范围**: `ws/ClawdWebSocket.kt`  
+> **影响范围**: `ws/DeskBuddyWebSocket.kt`  
 > **预估工时**: 1h  
-> **启动提示词**: `执行 P2-2: 优化 ClawdWebSocket 中 sessions Map 的高频拷贝问题，减少 GC 压力，使用 MutableMap in-place 更新替代每次创建新 Map`
+> **启动提示词**: `执行 P2-2: 优化 DeskBuddyWebSocket 中 sessions Map 的高频拷贝问题，减少 GC 压力，使用 MutableMap in-place 更新替代每次创建新 Map`
 
 ---
 
 ## 问题描述
 
 ```kotlin
-// ClawdWebSocket.kt:226
+// DeskBuddyWebSocket.kt:226
 _sessions.value = _sessions.value.toMutableMap().apply {
     if (data.isVisible) put(sid, data) else remove(sid)
 }
@@ -25,7 +25,7 @@ _sessions.value = _sessions.value.toMutableMap().apply {
 ### 方案: 使用 ConcurrentHashMap + 结构性变更通知
 
 ```kotlin
-// ClawdWebSocket.kt
+// DeskBuddyWebSocket.kt
 private val _sessionsMap = ConcurrentHashMap<String, SessionData>()
 private val _sessions = MutableStateFlow<Map<String, SessionData>>(emptyMap())
 

@@ -24,12 +24,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import dagger.hilt.android.AndroidEntryPoint
 import com.teambotics.deskbuddy.mobile.ui.components.PermissionDialog
 import com.teambotics.deskbuddy.mobile.R
 import com.teambotics.deskbuddy.mobile.ui.theme.*
-import com.teambotics.deskbuddy.mobile.ui.navigation.ClawdNavGraph
+import com.teambotics.deskbuddy.mobile.ui.navigation.DeskBuddyNavGraph
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -158,9 +158,9 @@ class MainActivity : ComponentActivity() {
     private fun showCurrentPermission() {
         val request = permissionQueue.getOrNull(currentPermissionIndex) ?: return
         setContent {
-            ClawdMobileTheme {
+            DeskBuddyMobileTheme {
                 PermissionDialog(
-                    icon = ClawdIcons.Bell,
+                    icon = DeskBuddyIcons.Bell,
                     title = request.title,
                     description = request.description,
                     onConfirm = { permissionLauncher.launch(request.permission) },
@@ -180,8 +180,8 @@ class MainActivity : ComponentActivity() {
 
     private fun setupContent() {
         setContent {
-            ClawdMobileTheme {
-                ClawdNavGraph()
+            DeskBuddyMobileTheme {
+                DeskBuddyNavGraph()
             }
         }
     }
@@ -193,9 +193,9 @@ class MainActivity : ComponentActivity() {
             return
         }
         setContent {
-            ClawdMobileTheme {
+            DeskBuddyMobileTheme {
                 PermissionDialog(
-                    icon = ClawdIcons.Bell,
+                    icon = DeskBuddyIcons.Bell,
                     title = stringResource(R.string.perm_battery_title),
                     description = stringResource(R.string.perm_battery_desc),
                     onConfirm = {
@@ -216,9 +216,9 @@ class MainActivity : ComponentActivity() {
             return
         }
         setContent {
-            ClawdMobileTheme {
+            DeskBuddyMobileTheme {
                 PermissionDialog(
-                    icon = ClawdIcons.Bell,
+                    icon = DeskBuddyIcons.Bell,
                     title = stringResource(R.string.perm_overlay_title),
                     description = stringResource(R.string.perm_overlay_desc),
                     onConfirm = {

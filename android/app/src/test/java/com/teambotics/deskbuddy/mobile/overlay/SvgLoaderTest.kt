@@ -133,15 +133,15 @@ class SvgLoaderTest {
         assertEquals("svg/clawd/clawd-working-building.svg", result)
     }
 
-    // ── resolveSvgAsset: unknown character falls back to clawd ─────────
+    // ── resolveSvgAsset: unknown character falls back to clawd mapping ─────
 
     @Test
-    fun `unknown character falls back to clawd`() {
+    fun `unknown character falls back to clawd mapping`() {
         val result = SvgLoader.resolveSvgAsset("idle", 0, "unknown")
         assertEquals("svg/unknown/clawd-idle-follow.svg", result)
     }
 
-    // ── resolveSvgAsset: all clawd states have mappings ────────────────
+    // ── resolveSvgAsset: all clawd states have mappings ────────────────────
 
     @Test
     fun `all 16 clawd states resolve to non-null paths`() {

@@ -1,15 +1,15 @@
 # DeskBuddy Mobile — Android 伴侣应用
 
-[![Android Build](https://github.com/Bynlk/clawd-on-mobile/actions/workflows/android.yml/badge.svg)](https://github.com/Bynlk/clawd-on-mobile/actions/workflows/android.yml)
+[![Android Build](https://github.com/Bynlk/deskbuddy-mobile/actions/workflows/android.yml/badge.svg)](https://github.com/Bynlk/deskbuddy-mobile/actions/workflows/android.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](../LICENSE)
 [![Android 8.0+](https://img.shields.io/badge/Android-8.0%2B-green.svg)](https://developer.android.com/about/versions/oreo)
 [![API 26+](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://developer.android.com/studio/releases/platforms#android-8.0)
 
-> **基于 [rullerzhou-afk/clawd-on-desk](https://github.com/rullerzhou-afk/clawd-on-desk) 桌面端的社区 Android 移植版。** 原项目由 [@rullerzhou-afk](https://github.com/rullerzhou-afk)（鹿鹿）创建，本 Android 端由 [Bynlk](https://github.com/Bynlk) 开发维护。
+> **基于 [rullerzhou-afk/deskbuddy](https://github.com/rullerzhou-afk/deskbuddy) 桌面端的社区 Android 移植版。** 原项目由 [@rullerzhou-afk](https://github.com/rullerzhou-afk)（鹿鹿）创建，本 Android 端由 [Bynlk](https://github.com/Bynlk) 开发维护。
 
 通过局域网连接 DeskBuddy 桌面端，远程监控 AI 编码会话状态，随时审批权限请求，手机变身桌面宠物遥控器。
 
-> **需要配合桌面端使用** — 前往 [Releases](https://github.com/Bynlk/clawd-on-desk/releases) 下载 `app-release.apk`。
+> **需要配合桌面端使用** — 前往 [Releases](https://github.com/Bynlk/deskbuddy/releases) 下载 `app-release.apk`。
 
 ---
 
@@ -186,7 +186,7 @@ sealed class PetState(val priority: Int, val themeKey: String) {
 
 ### 多任务场景
 
-当可见会话 ≥ 2 时，**服务器端**自动设置 `displayState` 为 `juggling`（Clawd）或 `conducting`（Calico/Cloudling）。手机端直接消费，无需本地映射。
+当可见会话 ≥ 2 时，**服务器端**自动设置 `displayState` 为 `juggling`（DeskBuddy）或 `conducting`（Calico/Cloudling）。手机端直接消费，无需本地映射。
 
 ### SVG 资源解析：`SvgLoader.resolveSvgAsset()`
 
@@ -201,7 +201,7 @@ sessionCount >= 1 → typing (单任务)
 
 ### 各角色 SVG 资源矩阵
 
-| 动画 | Clawd | Calico | Cloudling | 格式 |
+| 动画 | DeskBuddy | Calico | Cloudling | 格式 |
 |------|:-----:|:------:|:---------:|------|
 | idle | ✅ | ✅ | ✅ | SVG |
 | idle_look | ✅ | ❌ | ❌ | SVG |
@@ -240,13 +240,13 @@ sessionCount >= 1 → typing (单任务)
                     ├──────────┬──────────┬──────────────┬────────────────┤
                     │ yawnMs   │collapseMs│ wakeMs       │ deepSleepMs    │
                     ├──────────┼──────────┼──────────────┼────────────────┤
-                    │ Clawd    │ 3,000ms  │    0ms (跳过)│   1,500ms      │ 600,000ms │
+                    │ DeskBuddy    │ 3,000ms  │    0ms (跳过)│   1,500ms      │ 600,000ms │
                     │ Calico   │ 8,000ms  │ 5,200ms      │   5,800ms      │ 600,000ms │
                     │ Cloudling│ 9,030ms  │ 4,700ms      │   3,650ms      │ 600,000ms │
                     └──────────┴──────────┴──────────────┴────────────────┘
 ```
 
-**Clawd 的特殊性**：`collapseMs = 0`，Clawd 跳过 Collapsing 阶段，直接从 Yawning 进入 Sleeping——因为 Clawd 的 `yawning` SVG 本身已经包含了"倒下"的动画。
+**DeskBuddy 的特殊性**：`collapseMs = 0`，DeskBuddy 跳过 Collapsing 阶段，直接从 Yawning 进入 Sleeping——因为 DeskBuddy 的 `yawning` SVG 本身已经包含了"倒下"的动画。
 
 ### 异步防诈尸唤醒守卫（`gifGeneration`）
 
@@ -341,9 +341,9 @@ Deep Link: deskbuddy://<host>:<port>/<token>
 ```
 android/
 ├── app/src/main/
-│   ├── java/com/clawd/mobile/
+│   ├── java/com/deskbuddy/mobile/
 │   │   ├── MainActivity.kt              # 入口 Activity + 权限流 + Deep Link
-│   │   ├── ClawdApp.kt                  # Application + 通知渠道
+│   │   ├── DeskBuddyApp.kt                  # Application + 通知渠道
 │   │   │
 │   │   ├── data/                        # 数据层
 │   │   │   ├── Session.kt               # SessionData 模型
@@ -393,13 +393,13 @@ android/
 │   │       ├── settings/SettingsScreen.kt # 设置页
 │   │       ├── approval/ApprovalViewModel.kt # 审批请求生命周期管理
 │   │       ├── components/              # 共享组件
-│   │       │   ├── ClawdIcons.kt        # 24 个自绘矢量图标
+│   │       │   ├── DeskBuddyIcons.kt        # 24 个自绘矢量图标
 │   │       │   └── PermissionDialog.kt  # 权限请求对话框
 │   │       └── theme/                   # Material 3 主题
 │   │
 │   ├── assets/
 │   │   ├── svg/                         # SVG/APNG 动画资源
-│   │   │   ├── clawd/                   # Clawd 动画（30+ 文件）
+│   │   │   ├── deskbuddy/                   # DeskBuddy 动画（30+ 文件）
 │   │   │   ├── calico/                  # Calico 动画（20+ 文件）
 │   │   │   └── cloudling/               # Cloudling 动画（20+ 文件）
 │   │   └── html/                        # WebView HTML 模板
@@ -478,7 +478,7 @@ cd android
 # 构建 release APK（需要环境变量）
 KEYSTORE_FILE=release-keystore.jks \
 STORE_PASSWORD=xxx \
-KEY_ALIAS=clawd \
+KEY_ALIAS=deskbuddy \
 KEY_PASSWORD=xxx \
 ./gradlew assembleRelease
 
@@ -540,7 +540,7 @@ KEY_PASSWORD=xxx \
 
 | 级别 | 项 | 说明 |
 |------|---|------|
-| ~~**S**~~ | ~~ClawdWebSocket.kt 命名误导~~ | ✅ 已迁移到 WebSocket + 重命名为 StreamingClient |
+| ~~**S**~~ | ~~DeskBuddyWebSocket.kt 命名误导~~ | ✅ 已迁移到 WebSocket + 重命名为 StreamingClient |
 | ~~**A**~~ | ~~安全: Token URL 泄露~~ | ✅ Token 已移至 Authorization header |
 | ~~**A**~~ | ~~安全: 非 LAN 无 TOFU pinning~~ | ✅ 已实现 TOFU 证书固定 |
 | ~~**A**~~ | ~~ApprovalReceiver 协程泄漏~~ | ✅ 已迁移到 WorkManager |
@@ -555,6 +555,6 @@ KEY_PASSWORD=xxx \
 - **代码**: [AGPL-3.0](../LICENSE)
 - **美术素材**: 版权保留（All Rights Reserved）
 
-**Clawd** 角色是 [Anthropic](https://www.anthropic.com) 的财产。这是一个非官方的粉丝项目，与 Anthropic 无关，也未获得 Anthropic 的认可。
+**DeskBuddy** 角色是 [Anthropic](https://www.anthropic.com) 的财产。这是一个非官方的粉丝项目，与 Anthropic 无关，也未获得 Anthropic 的认可。
 
-Android 端基于 [rullerzhou-afk/clawd-on-desk](https://github.com/rullerzhou-afk/clawd-on-desk) 桌面端开发，原项目由 [@rullerzhou-afk](https://github.com/rullerzhou-afk)（鹿鹿）创建。
+Android 端基于 [rullerzhou-afk/deskbuddy](https://github.com/rullerzhou-afk/deskbuddy) 桌面端开发，原项目由 [@rullerzhou-afk](https://github.com/rullerzhou-afk)（鹿鹿）创建。

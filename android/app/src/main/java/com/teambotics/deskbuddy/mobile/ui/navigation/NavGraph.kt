@@ -23,7 +23,7 @@ import com.teambotics.deskbuddy.mobile.ui.manual.ManualScreen
 import com.teambotics.deskbuddy.mobile.ui.settings.SettingsScreen
 
 @Composable
-fun ClawdNavGraph() {
+fun DeskBuddyNavGraph() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val prefsStore = remember { PrefsStore.getInstance(context) }

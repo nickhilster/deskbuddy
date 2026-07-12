@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.teambotics.deskbuddy.mobile.R
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 
 @Composable
@@ -30,13 +30,13 @@ internal fun AboutSection() {
         stringResource(R.string.about_subtitle),
         fontSize = 14.sp,
         fontWeight = FontWeight.Medium,
-        color = ClawdTextDark,
+        color = DeskBuddyTextDark,
         modifier = Modifier.padding(bottom = 4.dp)
     )
     Text(
         "A mobile companion for your AI coding journey.",
         fontSize = 12.sp,
-        color = ClawdFaintDark,
+        color = DeskBuddyFaintDark,
         modifier = Modifier.padding(bottom = 12.dp)
     )
 
@@ -46,27 +46,27 @@ internal fun AboutSection() {
         android.util.Log.w("Settings", "BuildConfig access failed", e)
         "?"
     }
-    AboutRow(stringResource(R.string.about_version), "v$versionName", ClawdIcons.Activity)
-    AboutRow(stringResource(R.string.about_repo), "https://github.com/nickhilster/deskbuddy", ClawdIcons.Folder)
-    AboutRow(stringResource(R.string.about_fork), "https://github.com/Bynlk/clawd-on-desk", ClawdIcons.Folder)
-    AboutRow(stringResource(R.string.about_license), "AGPL-3.0 · © 2026 Ruller_Lulu", ClawdIcons.Shield)
-    AboutRow(stringResource(R.string.about_author), stringResource(R.string.about_author_name), ClawdIcons.Robot)
-    AboutRow(stringResource(R.string.about_maintainer), "@rullerzhou-afk, @nickhilster, @YOIMIYA66", ClawdIcons.Pencil)
-    AboutRow(stringResource(R.string.about_mobile_maintainer), "@Bynlk", ClawdIcons.Pencil)
+    AboutRow(stringResource(R.string.about_version), "v$versionName", DeskBuddyIcons.Activity)
+    AboutRow(stringResource(R.string.about_repo), "https://github.com/nickhilster/deskbuddy", DeskBuddyIcons.Folder)
+    AboutRow(stringResource(R.string.about_fork), "https://github.com/rullerzhou-afk/clawd-on-desk", DeskBuddyIcons.Folder)
+    AboutRow(stringResource(R.string.about_license), "AGPL-3.0 · © 2026 Ruller_Lulu", DeskBuddyIcons.Shield)
+    AboutRow(stringResource(R.string.about_author), stringResource(R.string.about_author_name), DeskBuddyIcons.Robot)
+    AboutRow(stringResource(R.string.about_maintainer), "@rullerzhou-afk, @nickhilster, @YOIMIYA66", DeskBuddyIcons.Pencil)
+    AboutRow(stringResource(R.string.about_mobile_maintainer), "@Bynlk", DeskBuddyIcons.Pencil)
 
     Spacer(modifier = Modifier.height(12.dp))
     OutlinedButton(
         onClick = {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Bynlk/clawd-on-desk/releases/latest"))
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/nickhilster/deskbuddy/releases/latest"))
             context.startActivity(intent)
         },
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, ClawdBorderDark),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, DeskBuddyBorderDark),
         shape = RoundedCornerShape(10.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Icon(ClawdIcons.Refresh, null, modifier = Modifier.size(16.dp), tint = ClawdMutedDark)
+        Icon(DeskBuddyIcons.Refresh, null, modifier = Modifier.size(16.dp), tint = DeskBuddyMutedDark)
         Spacer(modifier = Modifier.width(6.dp))
-        Text(stringResource(R.string.about_check_update), color = ClawdMutedDark)
+        Text(stringResource(R.string.about_check_update), color = DeskBuddyMutedDark)
     }
 }
 
@@ -80,10 +80,10 @@ private fun AboutRow(label: String, value: String, icon: androidx.compose.ui.gra
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = ClawdFaintDark, modifier = Modifier.size(14.dp))
+        Icon(icon, null, tint = DeskBuddyFaintDark, modifier = Modifier.size(14.dp))
         Spacer(modifier = Modifier.width(8.dp))
-        Text(label, fontSize = 12.sp, color = ClawdFaintDark, modifier = Modifier.width(80.dp))
-        Text(value, fontSize = 12.sp, color = ClawdTextDark, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
-        Icon(ClawdIcons.Checks, null, tint = ClawdFaintDark.copy(alpha = 0.5f), modifier = Modifier.size(12.dp))
+        Text(label, fontSize = 12.sp, color = DeskBuddyFaintDark, modifier = Modifier.width(80.dp))
+        Text(value, fontSize = 12.sp, color = DeskBuddyTextDark, fontFamily = FontFamily.Monospace, modifier = Modifier.weight(1f))
+        Icon(DeskBuddyIcons.Checks, null, tint = DeskBuddyFaintDark.copy(alpha = 0.5f), modifier = Modifier.size(12.dp))
     }
 }

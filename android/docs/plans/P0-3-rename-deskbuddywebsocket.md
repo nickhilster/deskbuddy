@@ -1,18 +1,18 @@
-# P0-3: 重命名 ClawdWebSocket → SseClient
+# P0-3: 重命名 DeskBuddyWebSocket → SseClient
 
 > **优先级**: P0 — 命名误导  
 > **影响范围**: 全项目引用  
 > **预估工时**: 30min  
-> **启动提示词**: `执行 P0-3: 将 ClawdWebSocket 重命名为 SseClient，同步更新所有引用、日志 TAG、文件名`
+> **启动提示词**: `执行 P0-3: 将 DeskBuddyWebSocket 重命名为 SseClient，同步更新所有引用、日志 TAG、文件名`
 
 ---
 
 ## 问题描述
 
-`ClawdWebSocket` 类名暗示使用 WebSocket 协议，但实际使用的是 OkHttp SSE（`EventSource`）：
+`DeskBuddyWebSocket` 类名暗示使用 WebSocket 协议，但实际使用的是 OkHttp SSE（`EventSource`）：
 
 ```kotlin
-// ClawdWebSocket.kt — 实际是 SSE client
+// DeskBuddyWebSocket.kt — 实际是 SSE client
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
@@ -24,31 +24,31 @@ import okhttp3.sse.EventSources
 
 | 文件 | 需要修改的内容 |
 |------|---------------|
-| `ws/ClawdWebSocket.kt` | 文件重命名为 `SseClient.kt`，类名 `ClawdWebSocket` → `SseClient` |
+| `ws/DeskBuddyWebSocket.kt` | 文件重命名为 `SseClient.kt`，类名 `DeskBuddyWebSocket` → `SseClient` |
 | `ws/ConnectionState.kt` | 无变更（已独立） |
-| `service/WebSocketService.kt` | 所有 `ClawdWebSocket` 引用 → `SseClient` |
-| `ui/navigation/NavGraph.kt` | `ClawdWebSocket` 类型声明 |
+| `service/WebSocketService.kt` | 所有 `DeskBuddyWebSocket` 引用 → `SseClient` |
+| `ui/navigation/NavGraph.kt` | `DeskBuddyWebSocket` 类型声明 |
 | `ui/approval/ApprovalViewModel.kt` | 构造函数参数类型 |
 | `overlay/PetStateManager.kt` | `waitForWebSocket()` 返回类型 |
 | `overlay/PetBubbleManager.kt` | 若有引用 |
 | `overlay/FloatingPetService.kt` | 若有引用 |
-| `test/ws/ClawdWebSocketParsingTest.kt` | 文件重命名 + 类名 |
+| `test/ws/DeskBuddyWebSocketParsingTest.kt` | 文件重命名 + 类名 |
 
 ## 修复方案
 
 ### Step 1: 重命名文件
 
 ```
-ws/ClawdWebSocket.kt     → ws/SseClient.kt
-ws/ClawdWebSocketTest.kt → ws/SseClientParsingTest.kt
+ws/DeskBuddyWebSocket.kt     → ws/SseClient.kt
+ws/DeskBuddyWebSocketTest.kt → ws/SseClientParsingTest.kt
 ```
 
 ### Step 2: 全局替换
 
 ```
-ClawdWebSocket       → SseClient
-TAG = "ClawdWebSocket" → TAG = "SseClient"
-"ClawdWebSocket"     → "SseClient"  (日志字符串)
+DeskBuddyWebSocket       → SseClient
+TAG = "DeskBuddyWebSocket" → TAG = "SseClient"
+"DeskBuddyWebSocket"     → "SseClient"  (日志字符串)
 ```
 
 ### Step 3: 更新注释中的协议描述
@@ -74,7 +74,7 @@ TAG = "ClawdWebSocket" → TAG = "SseClient"
 
 ```kotlin
 /**
- * Foreground service managing the SSE connection to Clawd server.
+ * Foreground service managing the SSE connection to DeskBuddy server.
  * Named WebSocketService for historical reasons; actual transport is SSE (Server-Sent Events).
  */
 ```
@@ -82,7 +82,7 @@ TAG = "ClawdWebSocket" → TAG = "SseClient"
 ## 验收标准
 
 - [ ] 文件名 `SseClient.kt`，类名 `SseClient`
-- [ ] 全项目无 `ClawdWebSocket` 字符串残留
+- [ ] 全项目无 `DeskBuddyWebSocket` 字符串残留
 - [ ] 日志 TAG 更新为 `SseClient`
 - [ ] 测试文件同步重命名
 - [ ] 编译通过，功能不变

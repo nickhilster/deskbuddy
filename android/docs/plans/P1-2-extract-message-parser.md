@@ -1,15 +1,15 @@
-# P1-2: 从 ClawdWebSocket 抽取 MessageParser
+# P1-2: 从 DeskBuddyWebSocket 抽取 MessageParser
 
 > **优先级**: P1 — 职责过重  
-> **影响范围**: `ws/ClawdWebSocket.kt`  
+> **影响范围**: `ws/DeskBuddyWebSocket.kt`  
 > **预估工时**: 1.5h  
-> **启动提示词**: `执行 P1-2: 从 ClawdWebSocket.handleMessage 中抽取 MessageParser 类，将 8 种消息类型的解析逻辑独立封装`
+> **启动提示词**: `执行 P1-2: 从 DeskBuddyWebSocket.handleMessage 中抽取 MessageParser 类，将 8 种消息类型的解析逻辑独立封装`
 
 ---
 
 ## 问题描述
 
-`ClawdWebSocket.handleMessage()` 承担了 8 种 SSE 消息类型的解析，共 ~170 行：
+`DeskBuddyWebSocket.handleMessage()` 承担了 8 种 SSE 消息类型的解析，共 ~170 行：
 
 ```
 ping / connected / clear_sessions / snapshot / state / tool_output / session_deleted / permission_request
@@ -21,9 +21,9 @@ ping / connected / clear_sessions / snapshot / state / tool_output / session_del
 
 | 文件 | 修改内容 |
 |------|---------|
-| `ws/ClawdWebSocket.kt` | 移除 `handleMessage` 中的解析逻辑，委托给 `MessageParser` |
+| `ws/DeskBuddyWebSocket.kt` | 移除 `handleMessage` 中的解析逻辑，委托给 `MessageParser` |
 | `ws/MessageParser.kt` | **新建** — 消息解析器 |
-| `test/ws/ClawdWebSocketParsingTest.kt` | 迁移到 `MessageParserTest.kt` |
+| `test/ws/DeskBuddyWebSocketParsingTest.kt` | 迁移到 `MessageParserTest.kt` |
 
 ## 修复方案
 
@@ -99,10 +99,10 @@ class MessageParser {
 }
 ```
 
-### Step 3: 简化 ClawdWebSocket.handleMessage
+### Step 3: 简化 DeskBuddyWebSocket.handleMessage
 
 ```kotlin
-// ClawdWebSocket.kt — 简化后
+// DeskBuddyWebSocket.kt — 简化后
 private val messageParser = MessageParser()
 
 private fun handleMessage(rawText: String) {
@@ -143,12 +143,12 @@ private fun handleMessage(rawText: String) {
 
 ### Step 4: 迁移测试
 
-将 `ClawdWebSocketParsingTest` 中的 JSON 解析测试迁移到 `MessageParserTest`，可以直接测试 `MessageParser.parse()` 而不需要 mock WebSocket。
+将 `DeskBuddyWebSocketParsingTest` 中的 JSON 解析测试迁移到 `MessageParserTest`，可以直接测试 `MessageParser.parse()` 而不需要 mock WebSocket。
 
 ## 验收标准
 
 - [ ] `MessageParser` 可独立实例化和测试
-- [ ] `ClawdWebSocket.handleMessage()` 仅负责状态更新，无 JSON 解析
+- [ ] `DeskBuddyWebSocket.handleMessage()` 仅负责状态更新，无 JSON 解析
 - [ ] 8 种消息类型的解析逻辑都在 `MessageParser` 中
 - [ ] `MessageParserTest` 覆盖所有消息类型（含边界条件）
 - [ ] 编译通过，功能不变

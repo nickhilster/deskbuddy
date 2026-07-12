@@ -22,7 +22,7 @@ import com.teambotics.deskbuddy.mobile.R
 import com.teambotics.deskbuddy.mobile.data.PrefsStore
 import com.teambotics.deskbuddy.mobile.data.Session
 import com.teambotics.deskbuddy.mobile.ui.approval.ApprovalViewModel
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 import com.teambotics.deskbuddy.mobile.ws.ConnectionState
 import com.teambotics.deskbuddy.mobile.ws.SessionMerger
@@ -100,7 +100,7 @@ fun SessionsScreen(
     }
 
     Scaffold(
-        containerColor = ClawdBackgroundDark
+        containerColor = DeskBuddyBackgroundDark
     ) { padding ->
         Column(
             modifier = Modifier
@@ -120,11 +120,11 @@ fun SessionsScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(32.dp),
-                            color = ClawdAccent,
+                            color = DeskBuddyAccent,
                             strokeWidth = 3.dp
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text(stringResource(R.string.status_syncing), fontSize = 14.sp, color = ClawdFaintDark)
+                        Text(stringResource(R.string.status_syncing), fontSize = 14.sp, color = DeskBuddyFaintDark)
                     }
                 }
             } else if ((connectionState == ConnectionState.DISCONNECTED || connectionState == ConnectionState.CIRCUIT_OPEN) && sessions.isEmpty()) {
@@ -174,7 +174,7 @@ fun SessionsScreen(
                     selectedTab = 0
                 },
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                containerColor = ClawdSurfaceDark,
+                containerColor = DeskBuddySurfaceDark,
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
             ) {
                 DevicesSheet(
@@ -197,7 +197,7 @@ fun SessionsScreen(
                     currentRequest.requestId?.let { approvalViewModel.dismissRequest(it) }
                 },
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                containerColor = ClawdSurfaceDark,
+                containerColor = DeskBuddySurfaceDark,
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
             ) {
                 ApprovalSheet(
@@ -227,17 +227,17 @@ private fun FixedTopBar(isConnected: Boolean, connectionState: ConnectionState =
     ) {
         // Brand
         Text(
-            text = "CLAWD",
+            text = "DESKBUDDY",
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium,
-            color = ClawdAccent,
+            color = DeskBuddyAccent,
             letterSpacing = 0.6.sp
         )
         Text(
             text = " Mobile",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = ClawdTextDark
+            color = DeskBuddyTextDark
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -247,13 +247,13 @@ private fun FixedTopBar(isConnected: Boolean, connectionState: ConnectionState =
             modifier = Modifier
                 .size(7.dp)
                 .clip(CircleShape)
-                .background(if (isConnected) ClawdGreenBright else ClawdFaintDark)
+                .background(if (isConnected) DeskBuddyGreenBright else DeskBuddyFaintDark)
         )
         Text(
             text = if (isConnected) stringResource(R.string.status_connected) else stringResource(R.string.status_not_connected),
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium,
-            color = if (isConnected) ClawdGreenBright else ClawdFaintDark,
+            color = if (isConnected) DeskBuddyGreenBright else DeskBuddyFaintDark,
             modifier = Modifier.padding(start = 6.dp)
         )
         if (!isConnected && connectionState != ConnectionState.RECONNECTING && onRetry != null) {
@@ -262,9 +262,9 @@ private fun FixedTopBar(isConnected: Boolean, connectionState: ConnectionState =
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
-                    ClawdIcons.Refresh, null,
+                    DeskBuddyIcons.Refresh, null,
                     modifier = Modifier.size(16.dp),
-                    tint = ClawdAccent
+                    tint = DeskBuddyAccent
                 )
             }
         }
@@ -279,7 +279,7 @@ private fun SectionLabel(title: String, count: Int) {
         text = "$title · $count",
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
-        color = ClawdMuted,
+        color = DeskBuddyMuted,
         letterSpacing = 0.5.sp,
         modifier = Modifier
             .fillMaxWidth()
@@ -308,13 +308,13 @@ private fun DevicesSheet(
     ) {
         // Header
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(ClawdIcons.DeviceDesktop, null, tint = ClawdAccent, modifier = Modifier.size(20.dp))
+            Icon(DeskBuddyIcons.DeviceDesktop, null, tint = DeskBuddyAccent, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 stringResource(R.string.sessions_tab_devices),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = ClawdTextDark
+                color = DeskBuddyTextDark
             )
         }
 
@@ -324,7 +324,7 @@ private fun DevicesSheet(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            color = ClawdSurfaceAltDark
+            color = DeskBuddySurfaceAltDark
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 // Status
@@ -340,27 +340,27 @@ private fun DevicesSheet(
                         ConnectionState.CIRCUIT_OPEN -> stringResource(R.string.status_circuit_open)
                     },
                     valueColor = when (connectionState) {
-                        ConnectionState.CONNECTED -> ClawdGreenBright
-                        ConnectionState.AUTH_FAILED, ConnectionState.DISCONNECTED, ConnectionState.CIRCUIT_OPEN -> ClawdError
-                        else -> ClawdFaintDark
+                        ConnectionState.CONNECTED -> DeskBuddyGreenBright
+                        ConnectionState.AUTH_FAILED, ConnectionState.DISCONNECTED, ConnectionState.CIRCUIT_OPEN -> DeskBuddyError
+                        else -> DeskBuddyFaintDark
                     }
                 )
 
                 if (host != null) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = ClawdBorderDark)
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = DeskBuddyBorderDark)
                     DeviceInfoRow(
                         label = stringResource(R.string.sessions_device_address),
                         value = if (port != null) "$host:$port" else host
                     )
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = ClawdBorderDark)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = DeskBuddyBorderDark)
                 DeviceInfoRow(
                     label = stringResource(R.string.sessions_device_sessions),
                     value = "$sessionCount"
                 )
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = ClawdBorderDark)
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = DeskBuddyBorderDark)
                 DeviceInfoRow(
                     label = stringResource(R.string.sessions_device_transport),
                     value = "WebSocket"
@@ -374,12 +374,12 @@ private fun DevicesSheet(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            color = ClawdSurfaceAltDark
+            color = DeskBuddySurfaceAltDark
         ) {
             Text(
                 stringResource(R.string.sessions_relay_title),
                 fontSize = 12.sp,
-                color = ClawdFaintDark,
+                color = DeskBuddyFaintDark,
                 modifier = Modifier.padding(16.dp)
             )
         }
@@ -390,7 +390,7 @@ private fun DevicesSheet(
             onClick = onClose,
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = ClawdAccent,
+                containerColor = DeskBuddyAccent,
                 contentColor = Color.White
             ),
             shape = RoundedCornerShape(10.dp)
@@ -404,14 +404,14 @@ private fun DevicesSheet(
 private fun DeviceInfoRow(
     label: String,
     value: String,
-    valueColor: Color = ClawdTextDark
+    valueColor: Color = DeskBuddyTextDark
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, fontSize = 13.sp, color = ClawdMutedDark)
+        Text(label, fontSize = 13.sp, color = DeskBuddyMutedDark)
         Text(value, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = valueColor)
     }
 }
@@ -421,24 +421,24 @@ private fun DeviceInfoRow(
 @Composable
 private fun EmptyState(onScan: () -> Unit, onManual: () -> Unit) {
     Box(
-        modifier = Modifier.fillMaxSize().background(ClawdBackgroundDark),
+        modifier = Modifier.fillMaxSize().background(DeskBuddyBackgroundDark),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
-                ClawdIcons.Paw, null,
+                DeskBuddyIcons.Paw, null,
                 modifier = Modifier.size(64.dp),
-                tint = ClawdFaintDark
+                tint = DeskBuddyFaintDark
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text(stringResource(R.string.sessions_empty_title), fontSize = 15.sp, color = ClawdMutedDark)
+            Text(stringResource(R.string.sessions_empty_title), fontSize = 15.sp, color = DeskBuddyMutedDark)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(stringResource(R.string.sessions_empty_subtitle), fontSize = 12.sp, color = ClawdFaintDark)
+            Text(stringResource(R.string.sessions_empty_subtitle), fontSize = 12.sp, color = DeskBuddyFaintDark)
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = onScan,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ClawdAccent,
+                    containerColor = DeskBuddyAccent,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(10.dp)

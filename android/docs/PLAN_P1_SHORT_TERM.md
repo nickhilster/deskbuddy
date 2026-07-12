@@ -21,9 +21,9 @@
 | P1-2 | ApprovalViewModel 请求去重 | M-12 | `ApprovalViewModel.kt` | S | 无 |
 | P1-3 | 深链 host 验证 | M-02 | `ConnectionConfig.kt` | S | 无 |
 | P1-4 | 移除 Glide/mlkitBarcode 残留 | L-03, L-04 | `proguard-rules.pro`、`libs.versions.toml` | S | 无 |
-| P1-5 | 统一 OkHttpClient 创建 | TD-12 | `ClawdWebSocket.kt`、`HttpClientProvider.kt` | M | P0-3 |
-| P1-6 | Token 迁移到 Authorization header | H-04 | `ConnectionConfig.kt`、`ClawdWebSocket.kt` | M | P1-5 |
-| P1-7 | 非 LAN 证书固定入口 | H-05 | `ClawdWebSocket.kt`、`HttpClientProvider.kt` | M | P1-5 |
+| P1-5 | 统一 OkHttpClient 创建 | TD-12 | `DeskBuddyWebSocket.kt`、`HttpClientProvider.kt` | M | P0-3 |
+| P1-6 | Token 迁移到 Authorization header | H-04 | `ConnectionConfig.kt`、`DeskBuddyWebSocket.kt` | M | P1-5 |
+| P1-7 | 非 LAN 证书固定入口 | H-05 | `DeskBuddyWebSocket.kt`、`HttpClientProvider.kt` | M | P1-5 |
 
 ---
 
@@ -115,11 +115,11 @@ private fun handleNewRequest(request: PermissionRequestData) {
 
 ## P1-3：深链 host 验证
 
-**问题**：`fromClawdUrl()` 的 host 捕获组接受任意字符串，可被恶意利用。
+**问题**：`fromDeskBuddyUrl()` 的 host 捕获组接受任意字符串，可被恶意利用。
 
 **当前代码**：
 ```kotlin
-fun fromClawdUrl(url: String): ConnectionConfig? {
+fun fromDeskBuddyUrl(url: String): ConnectionConfig? {
     val regex = Regex("^deskbuddy://([^:]+):(\\d+)/([a-f0-9]{16,})$")
     val match = regex.matchEntire(url) ?: return null
     return ConnectionConfig(
@@ -132,7 +132,7 @@ fun fromClawdUrl(url: String): ConnectionConfig? {
 
 **修改方案**：
 ```kotlin
-fun fromClawdUrl(url: String): ConnectionConfig? {
+fun fromDeskBuddyUrl(url: String): ConnectionConfig? {
     val regex = Regex("^deskbuddy://([^:]+):(\\d+)/([a-f0-9]{16,})$")
     val match = regex.matchEntire(url) ?: return null
     val host = match.groupValues[1]
@@ -213,11 +213,11 @@ private fun isValidHost(host: String): Boolean {
 
 ## P1-5：统一 OkHttpClient 创建
 
-**问题**：`ClawdWebSocket` 有自己的 `_client`，`HttpClientProvider` 也有 `_client`，两处独立创建。
+**问题**：`DeskBuddyWebSocket` 有自己的 `_client`，`HttpClientProvider` 也有 `_client`，两处独立创建。
 
 **修改方案**：
 
-1. `ClawdWebSocket` 移除自己的 `_client` / `_clientConfig`，改用 `HttpClientProvider`
+1. `DeskBuddyWebSocket` 移除自己的 `_client` / `_clientConfig`，改用 `HttpClientProvider`
 2. `HttpClientProvider` 增加 SSE 专用的长超时配置
 
 ```kotlin
@@ -236,7 +236,7 @@ object HttpClientProvider {
 ```
 
 ```kotlin
-// ClawdWebSocket.kt — 移除 _client/_clientConfig，改用 HttpClientProvider
+// DeskBuddyWebSocket.kt — 移除 _client/_clientConfig，改用 HttpClientProvider
 private val client: OkHttpClient
     get() = HttpClientProvider.getSseClient(config ?: return HttpClientProvider.getClient(ConnectionConfig("", 0, "")))
 ```
@@ -271,7 +271,7 @@ fun authHeader(): String = "Bearer $token"
 ```
 
 ```kotlin
-// ClawdWebSocket.kt — doConnect 中添加 header
+// DeskBuddyWebSocket.kt — doConnect 中添加 header
 val request = Request.Builder()
     .url(cfg.streamUrl())
     .addHeader("Authorization", cfg.authHeader())
@@ -279,7 +279,7 @@ val request = Request.Builder()
 ```
 
 ```kotlin
-// ApprovalReceiver.kt / ClawdWebSocket.kt — POST 请求添加 header
+// ApprovalReceiver.kt / DeskBuddyWebSocket.kt — POST 请求添加 header
 val request = Request.Builder()
     .url(cfg.approveUrl())
     .addHeader("Authorization", cfg.authHeader())

@@ -33,7 +33,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 
 /**
- * Foreground service managing the WebSocket connection to Clawd server.
+ * Foreground service managing the WebSocket connection to DeskBuddy server.
  *
  * ## Lifecycle
  * - Started via [WsConnectionService.start] with [ACTION_CONNECT] or [ACTION_DISCONNECT].
@@ -64,7 +64,7 @@ import kotlinx.coroutines.flow.*
 class WsConnectionService : Service() {
 
     companion object {
-        const val CHANNEL_SERVICE = "clawd_service"
+        const val CHANNEL_SERVICE = "deskbuddy_service"
         const val NOTIFICATION_ID = 9999
         const val ACTION_CONNECT = "com.teambotics.deskbuddy.mobile.CONNECT"
         const val ACTION_DISCONNECT = "com.teambotics.deskbuddy.mobile.DISCONNECT"
@@ -336,7 +336,7 @@ class WsConnectionService : Service() {
         // WiFi lock 始终获取 — LAN 连接需要它，relay 连接可能走蜂窝但不影响
         if (wifiLock == null) {
             val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL, "clawd:ws").apply {
+            wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL, "deskbuddy:ws").apply {
                 setReferenceCounted(false)
                 acquire()
             }
@@ -413,7 +413,7 @@ class WsConnectionService : Service() {
     private fun acquireWakeLock() {
         if (wakeLock == null) {
             val pm = applicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clawd:ws").apply {
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "deskbuddy:ws").apply {
                 setReferenceCounted(false)
             }
         }

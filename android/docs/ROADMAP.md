@@ -1,4 +1,4 @@
-# Clawd Android 端改进路线图
+# DeskBuddy Android 端改进路线图
 
 > 基于 2026-06-02 系统性评估（AUDIT_REPORT.md）
 > 综合评分：75/100 → 目标 85/100
@@ -86,7 +86,7 @@
 
 | 任务 | 关联 | 工作量 | 风险 | 依赖 |
 |------|------|--------|------|------|
-| ClawdWebSocket 拆分 | M-10 | L | 中 | 无 |
+| DeskBuddyWebSocket 拆分 | M-10 | L | 中 | 无 |
 | 引入依赖注入（Koin） | M-03 | L | 高 | P3-1 |
 | SessionProvider 接口解耦 | M-11 | M | 中 | P3-1 |
 | MainActivity 权限流程拆分 | M-05 | M | 低 | 无 |
@@ -109,7 +109,7 @@ P0-3 (HttpClientProvider synchronized)
         ├── P1-6 (Token → Auth Header)
         └── P1-7 (证书固定入口)
 
-P3-1 (ClawdWebSocket 拆分)
+P3-1 (DeskBuddyWebSocket 拆分)
   ├── P3-2 (重命名)
   ├── P3-3 (Koin DI)
   │     └── P3-9 (bindService)
@@ -160,6 +160,6 @@ P2-1~P2-10 (质量改进)
 | 综合评分 | 75/100 | 85/100 | 下次审计 |
 | 安全评分 | 72/100 | 85/100 | 无 Critical/High 问题 |
 | 测试覆盖率 | ~2% | > 70% | `./gradlew test` + 覆盖率报告 |
-| 核心类行数 | ClawdWebSocket 429行 | < 200行/类 | 代码统计 |
+| 核心类行数 | DeskBuddyWebSocket 429行 | < 200行/类 | 代码统计 |
 | 静态耦合点 | 3 处 getWebSocket() | 0 处 | 代码审查 |
 | 依赖残留 | Glide + mlkitBarcode | 0 | 版本目录审查 |

@@ -1,6 +1,6 @@
 {
   "states": {
-    "clawd": {
+    "deskbuddy": {
       "idle": "clawd-idle-follow.svg",
       "yawning": "clawd-idle-yawn.svg",
       "dozing": "clawd-idle-doze.svg",
@@ -54,7 +54,7 @@
     }
   },
   "workingTiers": {
-    "clawd": [
+    "deskbuddy": [
       { "minSessions": 3, "file": "clawd-working-building.svg" },
       { "minSessions": 2, "file": "clawd-headphones-groove.svg" },
       { "minSessions": 1, "file": "clawd-working-typing.svg" }
@@ -71,7 +71,7 @@
     ]
   },
   "jugglingTiers": {
-    "clawd": [
+    "deskbuddy": [
       { "minSessions": 2, "file": "clawd-working-juggling.svg" },
       { "minSessions": 1, "file": "clawd-headphones-groove.svg" }
     ],
@@ -85,7 +85,7 @@
     ]
   },
   "idleAnimations": {
-    "clawd": [
+    "deskbuddy": [
       "clawd-idle-look.svg",
       "clawd-idle-bubble.svg",
       "clawd-idle-reading.svg"
@@ -98,7 +98,7 @@
     ]
   },
   "viewBoxes": {
-    "clawd": { "width": 45, "height": 45 },
+    "deskbuddy": { "width": 45, "height": 45 },
     "cloudling": { "width": 88, "height": 72 },
     "calico": { "width": 266, "height": 200 }
   }

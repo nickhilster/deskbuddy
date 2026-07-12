@@ -28,7 +28,7 @@ class PetTimerManagerTest {
     @Before
     fun setUp() {
         manager = mockk(relaxed = true)
-        every { manager.character } returns "clawd"
+        every { manager.character } returns "deskbuddy"
 
         emittedStates = mutableListOf()
         emittedCommands = mutableListOf()
@@ -95,21 +95,21 @@ class PetTimerManagerTest {
     // ── 3. Sleep sequence: 4-stage flow (Yawning → Dozing → Collapsing → Sleeping) ──
 
     @Test
-    fun `sleep sequence emits all 4 stages for clawd`() = runTest {
+    fun `sleep sequence emits all 4 stages for deskbuddy`() = runTest {
         every { manager.getCurrentState() } returns PetState.Idle
 
         timerManager.startSleepSequence(this)
         runCurrent()
         assertEquals(PetState.Yawning, emittedStates.last().first)
 
-        val cfg = PetStateManager.SLEEP_TIMINGS["clawd"]!!
+        val cfg = PetStateManager.SLEEP_TIMINGS["deskbuddy"]!!
         advanceTimeBy(cfg.yawnMs)
         runCurrent()
         assertEquals(PetState.Dozing, emittedStates.last().first)
 
         advanceTimeBy(cfg.dozingMs)
         runCurrent()
-        // clawd collapseMs is 0 → uses 2s fallback
+        // deskbuddy collapseMs is 0 → uses 2s fallback
         assertEquals(PetState.Collapsing, emittedStates.last().first)
 
         advanceTimeBy(2_000L)
@@ -153,14 +153,14 @@ class PetTimerManagerTest {
 
     @Test
     fun `playWakingAndRestore emits Waking then target state`() = runTest {
-        every { SvgLoader.hasSvgForState(PetState.Waking, "clawd") } returns true
+        every { SvgLoader.hasSvgForState(PetState.Waking, "deskbuddy") } returns true
         every { manager.setLastNonIdleState(any()) } just Runs
 
         timerManager.playWakingAndRestore(PetState.Working, this)
         runCurrent()
         assertEquals(PetState.Waking, emittedStates.last().first)
 
-        val cfg = PetStateManager.SLEEP_TIMINGS["clawd"]!!
+        val cfg = PetStateManager.SLEEP_TIMINGS["deskbuddy"]!!
         advanceTimeBy(cfg.wakeMs)
         runCurrent()
         assertEquals(PetState.Working, emittedStates.last().first)
@@ -169,7 +169,7 @@ class PetTimerManagerTest {
 
     @Test
     fun `playWakingAndRestore skips Waking animation when no SVG`() = runTest {
-        every { SvgLoader.hasSvgForState(PetState.Waking, "clawd") } returns false
+        every { SvgLoader.hasSvgForState(PetState.Waking, "deskbuddy") } returns false
         every { manager.setLastNonIdleState(any()) } just Runs
 
         timerManager.playWakingAndRestore(PetState.Thinking, this)
@@ -222,7 +222,7 @@ class PetTimerManagerTest {
 
     @Test
     fun `stale waking restore is cancelled by newer waking`() = runTest {
-        every { SvgLoader.hasSvgForState(PetState.Waking, "clawd") } returns true
+        every { SvgLoader.hasSvgForState(PetState.Waking, "deskbuddy") } returns true
         every { manager.setLastNonIdleState(any()) } just Runs
 
         timerManager.playWakingAndRestore(PetState.Working, this)
@@ -230,7 +230,7 @@ class PetTimerManagerTest {
         advanceTimeBy(500)
         timerManager.playWakingAndRestore(PetState.Thinking, this)
 
-        val cfg = PetStateManager.SLEEP_TIMINGS["clawd"]!!
+        val cfg = PetStateManager.SLEEP_TIMINGS["deskbuddy"]!!
         advanceTimeBy(cfg.wakeMs)
         runCurrent()
 

@@ -93,7 +93,7 @@ class PrefsStoreTest {
             every { clear() } returns this
             every { apply() } just Runs
         }
-        every { context.getSharedPreferences("clawd_prefs", Context.MODE_PRIVATE) } returns legacyPrefs
+        every { context.getSharedPreferences("deskbuddy_prefs", Context.MODE_PRIVATE) } returns legacyPrefs
 
         // Mock MasterKey
         mockkConstructor(MasterKey.Builder::class)
@@ -337,7 +337,7 @@ class PrefsStoreTest {
         every { legacyPrefs.edit() } returns legacyEditor
         every { legacyEditor.clear() } returns legacyEditor
         every { legacyEditor.apply() } just Runs
-        every { context.getSharedPreferences("clawd_prefs", Context.MODE_PRIVATE) } returns legacyPrefs
+        every { context.getSharedPreferences("deskbuddy_prefs", Context.MODE_PRIVATE) } returns legacyPrefs
 
         val store = createPrefsStore()
 
@@ -361,7 +361,7 @@ class PrefsStoreTest {
 
         val legacyPrefs = mockk<SharedPreferences>(relaxed = true)
         every { legacyPrefs.all } returns mapOf("some_key" to "some_value")
-        every { context.getSharedPreferences("clawd_prefs", Context.MODE_PRIVATE) } returns legacyPrefs
+        every { context.getSharedPreferences("deskbuddy_prefs", Context.MODE_PRIVATE) } returns legacyPrefs
 
         createPrefsStore()
 

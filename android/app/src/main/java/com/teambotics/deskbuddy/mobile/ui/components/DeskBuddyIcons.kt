@@ -10,10 +10,10 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 /**
- * Stroke-based line-art icons for Clawd states, matching the PWA SVG icons.
+ * Stroke-based line-art icons for DeskBuddy states, matching the PWA SVG icons.
  * All icons: 24dp x 24dp, 2dp stroke, round caps/joins.
  */
-object ClawdIcons {
+object DeskBuddyIcons {
 
     private val strokeColor = SolidColor(Color.Black) // alpha=1.0 required for Icon tint (BlendMode.SrcIn)
 

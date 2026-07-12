@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.teambotics.deskbuddy.mobile.data.RecentEvent
 import com.teambotics.deskbuddy.mobile.data.Session
-import com.teambotics.deskbuddy.mobile.ui.theme.ClawdFaintDark
+import com.teambotics.deskbuddy.mobile.ui.theme.DeskBuddyFaintDark
 
 internal val EVENT_STATE_COLORS = mapOf(
     "error" to Color(0xFFEF4444),
@@ -51,13 +51,13 @@ internal fun EventTimeline(events: List<RecentEvent>) {
                 Text(
                     Session.eventLabel(event.event, LocalContext.current),
                     fontSize = 11.sp,
-                    color = ClawdFaintDark,
+                    color = DeskBuddyFaintDark,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
                     formatAgo(event.at, LocalContext.current),
                     fontSize = 11.sp,
-                    color = ClawdFaintDark
+                    color = DeskBuddyFaintDark
                 )
             }
         }

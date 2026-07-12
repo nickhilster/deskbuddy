@@ -21,7 +21,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * Manages [WsConnectionService] lifecycle, client acquisition, TOFU certificate
  * handling, notification updates, and auto-reconnect.
  *
- * Extracted from [ClawdNavGraph] so the composable only owns routing.
+ * Extracted from [DeskBuddyNavGraph] so the composable only owns routing.
  */
 class ServiceManager(
     private val context: android.content.Context,

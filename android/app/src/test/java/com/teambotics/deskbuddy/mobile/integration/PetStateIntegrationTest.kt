@@ -205,24 +205,24 @@ class PetStateIntegrationTest {
         val command = PetStateManager.StateCommand.StateChanged(
             PetState.Working,
             sessionCount = 1,
-            resolvedSvg = "clawd-working-1.svg"
+            resolvedSvg = "deskbuddy-working-1.svg"
         )
-        assertEquals("clawd-working-1.svg", command.resolvedSvg)
+        assertEquals("deskbuddy-working-1.svg", command.resolvedSvg)
     }
 
     @Test
     fun `SvgLoad command carries asset path`() {
         val command = PetStateManager.StateCommand.SvgLoad(
-            assetPath = "svg/clawd/clawd-idle.svg",
+            assetPath = "svg/deskbuddy/deskbuddy-idle.svg",
             force = true
         )
-        assertEquals("svg/clawd/clawd-idle.svg", command.assetPath)
+        assertEquals("svg/deskbuddy/deskbuddy-idle.svg", command.assetPath)
         assertTrue(command.force)
     }
 
     @Test
     fun `ReactionSvg command carries asset path`() {
-        val command = PetStateManager.StateCommand.ReactionSvg("svg/clawd/clawd-happy.svg")
-        assertEquals("svg/clawd/clawd-happy.svg", command.assetPath)
+        val command = PetStateManager.StateCommand.ReactionSvg("svg/deskbuddy/deskbuddy-happy.svg")
+        assertEquals("svg/deskbuddy/deskbuddy-happy.svg", command.assetPath)
     }
 }

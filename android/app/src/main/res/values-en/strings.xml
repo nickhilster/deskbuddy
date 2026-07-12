@@ -58,9 +58,9 @@
     <string name="notify_approval_text">Claude requests execution permission</string>
 
     <!-- Notification messages (NotificationHelper) -->
-    <string name="notify_permission_title">🦀 %s needs your decision!</string>
+    <string name="notify_permission_title">%s needs your decision!</string>
     <string name="notify_permission_body">Confirmation required</string>
-    <string name="notify_elicitation_title">🦀 %s needs you to choose</string>
+    <string name="notify_elicitation_title">%s needs you to choose</string>
     <string name="notify_elicitation_body">Please select an option</string>
     <string name="action_allow">Allow</string>
     <string name="action_deny">Deny</string>
@@ -155,7 +155,7 @@
     <string name="settings_pet_enable">Enable Pet</string>
     <string name="settings_pet_overlay_granted">Overlay permission (granted)</string>
     <string name="settings_pet_overlay_needed">Overlay permission (not granted)</string>
-    <string name="settings_pet_desc">Show a cute crab pet on your screen.</string>
+    <string name="settings_pet_desc">Show the DeskBuddy pet on your screen.</string>
     <string name="settings_notify_master">Master Notification Toggle</string>
     <string name="settings_notify_master_desc">Allow the app to send notifications</string>
     <string name="settings_notify_approval">Approval Notifications</string>

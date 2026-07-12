@@ -33,7 +33,7 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
     Text(
         stringResource(R.string.settings_pet_desc),
         fontSize = 12.sp,
-        color = ClawdFaintDark,
+        color = DeskBuddyFaintDark,
         modifier = Modifier.padding(bottom = 12.dp)
     )
 
@@ -45,11 +45,11 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.settings_pet_enable), fontSize = 13.sp, color = ClawdTextDark)
+            Text(stringResource(R.string.settings_pet_enable), fontSize = 13.sp, color = DeskBuddyTextDark)
             Text(
                 if (hasOverlayPermission) stringResource(R.string.settings_pet_overlay_granted) else stringResource(R.string.settings_pet_overlay_needed),
                 fontSize = 11.sp,
-                color = if (hasOverlayPermission) ClawdGreenBright else ClawdFaintDark
+                color = if (hasOverlayPermission) DeskBuddyGreenBright else DeskBuddyFaintDark
             )
         }
         Switch(
@@ -77,9 +77,9 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
             },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = ClawdAccent,
-                uncheckedThumbColor = ClawdFaintDark,
-                uncheckedTrackColor = ClawdSurfaceAltDark
+                checkedTrackColor = DeskBuddyAccent,
+                uncheckedThumbColor = DeskBuddyFaintDark,
+                uncheckedTrackColor = DeskBuddySurfaceAltDark
             )
         )
     }
@@ -100,11 +100,11 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
                         scope.launch { sb.showSnackbar(context.getString(R.string.toast_recentered), duration = SnackbarDuration.Short) }
                     }
                 },
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, ClawdBorderDark),
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, DeskBuddyBorderDark),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text(stringResource(R.string.settings_pet_recenter), color = ClawdFaintDark, fontSize = 12.sp)
+                Text(stringResource(R.string.settings_pet_recenter), color = DeskBuddyFaintDark, fontSize = 12.sp)
             }
             OutlinedButton(
                 onClick = {
@@ -118,11 +118,11 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
                         scope.launch { sb.showSnackbar(context.getString(R.string.toast_disconnected), duration = SnackbarDuration.Short) }
                     }
                 },
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, ClawdBorderDark),
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, DeskBuddyBorderDark),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text(stringResource(R.string.settings_disconnect), color = ClawdFaintDark, fontSize = 12.sp)
+                Text(stringResource(R.string.settings_disconnect), color = DeskBuddyFaintDark, fontSize = 12.sp)
             }
         }
     }
@@ -130,7 +130,7 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
     // Size slider
     if (enabled) {
         Spacer(modifier = Modifier.height(12.dp))
-        Text(stringResource(R.string.settings_pet_size), fontSize = 13.sp, color = ClawdTextDark)
+        Text(stringResource(R.string.settings_pet_size), fontSize = 13.sp, color = DeskBuddyTextDark)
         Spacer(modifier = Modifier.height(4.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -149,15 +149,15 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
                 },
                 valueRange = 32f..128f,
                 modifier = Modifier.weight(1f),
-                colors = SliderDefaults.colors(thumbColor = ClawdAccent, activeTrackColor = ClawdAccent)
+                colors = SliderDefaults.colors(thumbColor = DeskBuddyAccent, activeTrackColor = DeskBuddyAccent)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("$sizeDp dp", fontSize = 12.sp, color = ClawdFaintDark, modifier = Modifier.width(48.dp))
+            Text("$sizeDp dp", fontSize = 12.sp, color = DeskBuddyFaintDark, modifier = Modifier.width(48.dp))
         }
 
         // Character selector
         Spacer(modifier = Modifier.height(8.dp))
-        Text(stringResource(R.string.settings_pet_character), fontSize = 13.sp, color = ClawdTextDark)
+        Text(stringResource(R.string.settings_pet_character), fontSize = 13.sp, color = DeskBuddyTextDark)
         Spacer(modifier = Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("clawd" to "Clawd", "calico" to "Calico", "cloudling" to "Cloudling").forEach { (key, label) ->
@@ -174,7 +174,7 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
                     },
                     label = { Text(label, fontSize = 12.sp) },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = ClawdAccent,
+                        selectedContainerColor = DeskBuddyAccent,
                         selectedLabelColor = Color.White
                     )
                 )
@@ -195,7 +195,7 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
 
         // Sleep timeout
         Spacer(modifier = Modifier.height(14.dp))
-        Text(stringResource(R.string.settings_pet_sleep_timeout), fontSize = 13.sp, color = ClawdTextDark)
+        Text(stringResource(R.string.settings_pet_sleep_timeout), fontSize = 13.sp, color = DeskBuddyTextDark)
         Spacer(modifier = Modifier.height(6.dp))
         var sleepSec by remember { mutableIntStateOf(prefsStore.getSleepTimeoutSec()) }
         val options = listOf(30, 60, 300, 0)
@@ -223,7 +223,7 @@ internal fun FloatingPetSection(prefsStore: PrefsStore, snackbarHostState: Snack
                     },
                     label = { Text(labels[i], fontSize = 11.sp) },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = ClawdAccent,
+                        selectedContainerColor = DeskBuddyAccent,
                         selectedLabelColor = Color.White
                     )
                 )

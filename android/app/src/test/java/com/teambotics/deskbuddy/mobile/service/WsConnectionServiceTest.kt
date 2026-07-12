@@ -19,7 +19,7 @@ class WsConnectionServiceTest {
 
     @Test
     fun `channel constant is defined`() {
-        assertEquals("clawd_service", WsConnectionService.CHANNEL_SERVICE)
+        assertEquals("deskbuddy_service", WsConnectionService.CHANNEL_SERVICE)
     }
 
     @Test

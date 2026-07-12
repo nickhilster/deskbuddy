@@ -82,7 +82,7 @@ class PetStateConfigTest {
     }
 
     @Test
-    fun `clawd has three click reactions`() {
+    fun `deskbuddy has three click reactions`() {
         assertEquals(3, PetStateConfig.CLICK_REACTIONS["clawd"]?.size)
     }
 
@@ -95,7 +95,7 @@ class PetStateConfigTest {
     }
 
     @Test
-    fun `clawd drag reaction is not null`() {
+    fun `deskbuddy drag reaction is not null`() {
         assertNotNull(PetStateConfig.DRAG_REACTIONS["clawd"])
     }
 
@@ -118,7 +118,7 @@ class PetStateConfigTest {
     }
 
     @Test
-    fun `clawd notification reaction is svg`() {
+    fun `deskbuddy notification reaction is svg`() {
         assertTrue(PetStateConfig.NOTIFICATION_REACTIONS["clawd"]?.endsWith(".svg") == true)
     }
 
@@ -133,7 +133,7 @@ class PetStateConfigTest {
     }
 
     @Test
-    fun `clawd sleep config has zero collapse`() {
+    fun `deskbuddy sleep config has zero collapse`() {
         val cfg = PetStateConfig.SLEEP_TIMINGS["clawd"]!!
         assertEquals(0L, cfg.collapseMs)
     }

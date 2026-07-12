@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import com.teambotics.deskbuddy.mobile.R
 import com.teambotics.deskbuddy.mobile.data.ElicitationQuestion
 import com.teambotics.deskbuddy.mobile.data.PermissionRequestData
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 
 @Composable
@@ -53,7 +53,7 @@ internal fun ApprovalSheet(
                 sessionName,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = ClawdTextDark,
+                color = DeskBuddyTextDark,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
@@ -64,17 +64,17 @@ internal fun ApprovalSheet(
             modifier = Modifier.padding(bottom = 12.dp)
         ) {
             Icon(
-                ClawdIcons.Shield, null,
+                DeskBuddyIcons.Shield, null,
                 modifier = Modifier.size(20.dp),
-                tint = ClawdAccent
+                tint = DeskBuddyAccent
             )
             Text(
                 request.agentId ?: "Agent",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ClawdMutedDark,
+                color = DeskBuddyMutedDark,
                 modifier = Modifier
-                    .background(ClawdSurfaceAltDark, RoundedCornerShape(4.dp))
+                    .background(DeskBuddySurfaceAltDark, RoundedCornerShape(4.dp))
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -82,7 +82,7 @@ internal fun ApprovalSheet(
                 if (isElicitation) stringResource(R.string.sessions_action_choice) else stringResource(R.string.sessions_action_permission),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = ClawdAccentLight
+                color = DeskBuddyAccentLight
             )
         }
 
@@ -95,13 +95,13 @@ internal fun ApprovalSheet(
                     .height(3.dp)
                     .padding(bottom = 8.dp)
                     .clip(RoundedCornerShape(2.dp)),
-                color = if (remainingSeconds <= 10) ClawdError else ClawdAccent,
-                trackColor = ClawdSurfaceAltDark,
+                color = if (remainingSeconds <= 10) DeskBuddyError else DeskBuddyAccent,
+                trackColor = DeskBuddySurfaceAltDark,
             )
             Text(
                 "${remainingSeconds}s",
                 fontSize = 11.sp,
-                color = if (remainingSeconds <= 10) ClawdError else ClawdFaintDark,
+                color = if (remainingSeconds <= 10) DeskBuddyError else DeskBuddyFaintDark,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
@@ -121,8 +121,8 @@ internal fun ApprovalSheet(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.padding(bottom = 8.dp)
                 ) {
-                    Icon(ClawdIcons.Tool, null, modifier = Modifier.size(14.dp), tint = ClawdSubtleDark)
-                    Text(request.toolName, fontSize = 14.sp, color = ClawdTextDark)
+                    Icon(DeskBuddyIcons.Tool, null, modifier = Modifier.size(14.dp), tint = DeskBuddySubtleDark)
+                    Text(request.toolName, fontSize = 14.sp, color = DeskBuddyTextDark)
                 }
             }
 
@@ -130,14 +130,14 @@ internal fun ApprovalSheet(
                 Text(
                     request.toolInputSummary,
                     fontSize = 12.sp,
-                    color = ClawdTextDark,
+                    color = DeskBuddyTextDark,
                     fontFamily = FontFamily.Monospace,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            color = ClawdSurfaceAltDark,
+                            color = DeskBuddySurfaceAltDark,
                             shape = RoundedCornerShape(8.dp)
                         )
                         .padding(8.dp)
@@ -161,13 +161,13 @@ internal fun ApprovalSheet(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = when {
                                 isAutoAccept -> Color(0xFF52525B).copy(alpha = 0.15f)
-                                isAllow -> ClawdGreenBright.copy(alpha = 0.15f)
-                                else -> ClawdError.copy(alpha = 0.15f)
+                                isAllow -> DeskBuddyGreenBright.copy(alpha = 0.15f)
+                                else -> DeskBuddyError.copy(alpha = 0.15f)
                             },
                             contentColor = when {
                                 isAutoAccept -> Color(0xFF71717A)
-                                isAllow -> ClawdGreenBright
-                                else -> ClawdError
+                                isAllow -> DeskBuddyGreenBright
+                                else -> DeskBuddyError
                             }
                         ),
                         shape = RoundedCornerShape(10.dp)
@@ -188,8 +188,8 @@ internal fun ApprovalSheet(
                     onClick = { onDeny(requestId) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ClawdError.copy(alpha = 0.15f),
-                        contentColor = ClawdError
+                        containerColor = DeskBuddyError.copy(alpha = 0.15f),
+                        contentColor = DeskBuddyError
                     ),
                     shape = RoundedCornerShape(10.dp)
                 ) {
@@ -199,8 +199,8 @@ internal fun ApprovalSheet(
                     onClick = { onApprove(requestId) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ClawdGreenBright.copy(alpha = 0.15f),
-                        contentColor = ClawdGreenBright
+                        containerColor = DeskBuddyGreenBright.copy(alpha = 0.15f),
+                        contentColor = DeskBuddyGreenBright
                     ),
                     shape = RoundedCornerShape(10.dp)
                 ) {
@@ -249,7 +249,7 @@ private fun ElicitationContent(
             stringResource(R.string.elicitation_question_of, activeStep + 1, totalSteps),
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = ClawdMutedDark,
+            color = DeskBuddyMutedDark,
             modifier = Modifier.padding(bottom = 8.dp)
         )
     }
@@ -260,7 +260,7 @@ private fun ElicitationContent(
             question.header,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            color = ClawdMutedDark,
+            color = DeskBuddyMutedDark,
             modifier = Modifier.padding(bottom = 2.dp)
         )
     }
@@ -268,7 +268,7 @@ private fun ElicitationContent(
         question.question,
         fontSize = 15.sp,
         fontWeight = FontWeight.Bold,
-        color = ClawdTextDark,
+        color = DeskBuddyTextDark,
         modifier = Modifier.padding(bottom = 4.dp)
     )
 
@@ -277,7 +277,7 @@ private fun ElicitationContent(
         if (question.multiSelect) stringResource(R.string.elicitation_choose_multiple)
         else stringResource(R.string.elicitation_choose_one),
         fontSize = 12.sp,
-        color = ClawdFaintDark,
+        color = DeskBuddyFaintDark,
         modifier = Modifier.padding(bottom = 12.dp)
     )
 
@@ -285,7 +285,7 @@ private fun ElicitationContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ClawdSurfaceAltDark, RoundedCornerShape(10.dp))
+            .background(DeskBuddySurfaceAltDark, RoundedCornerShape(10.dp))
             .padding(4.dp)
     ) {
         question.options.forEachIndexed { index, option ->
@@ -335,15 +335,15 @@ private fun ElicitationContent(
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 4.dp),
                 placeholder = {
-                    Text(stringResource(R.string.elicitation_other), fontSize = 13.sp, color = ClawdFaintDark)
+                    Text(stringResource(R.string.elicitation_other), fontSize = 13.sp, color = DeskBuddyFaintDark)
                 },
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = ClawdTextDark,
-                    unfocusedTextColor = ClawdTextDark,
-                    focusedBorderColor = ClawdAccent,
-                    unfocusedBorderColor = ClawdSubtleDark,
-                    cursorColor = ClawdAccent,
+                    focusedTextColor = DeskBuddyTextDark,
+                    unfocusedTextColor = DeskBuddyTextDark,
+                    focusedBorderColor = DeskBuddyAccent,
+                    unfocusedBorderColor = DeskBuddySubtleDark,
+                    cursorColor = DeskBuddyAccent,
                 ),
                 shape = RoundedCornerShape(8.dp),
             )
@@ -361,7 +361,7 @@ private fun ElicitationContent(
         if (totalSteps > 1 && activeStep > 0) {
             OutlinedButton(
                 onClick = { activeStep-- },
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = ClawdMutedDark),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = DeskBuddyMutedDark),
                 shape = RoundedCornerShape(10.dp),
             ) {
                 Text(stringResource(R.string.elicitation_previous), modifier = Modifier.padding(vertical = 4.dp))
@@ -384,9 +384,9 @@ private fun ElicitationContent(
             },
             enabled = canProceed,
             colors = ButtonDefaults.buttonColors(
-                containerColor = ClawdAccent,
+                containerColor = DeskBuddyAccent,
                 contentColor = Color.White,
-                disabledContainerColor = ClawdAccent.copy(alpha = 0.3f),
+                disabledContainerColor = DeskBuddyAccent.copy(alpha = 0.3f),
                 disabledContentColor = Color.White.copy(alpha = 0.5f),
             ),
             shape = RoundedCornerShape(10.dp)
@@ -420,8 +420,8 @@ private fun OptionRow(
                 checked = isSelected,
                 onCheckedChange = { onClick() },
                 colors = CheckboxDefaults.colors(
-                    checkedColor = ClawdAccent,
-                    uncheckedColor = ClawdSubtleDark,
+                    checkedColor = DeskBuddyAccent,
+                    uncheckedColor = DeskBuddySubtleDark,
                 )
             )
         } else {
@@ -429,16 +429,16 @@ private fun OptionRow(
                 selected = isSelected,
                 onClick = onClick,
                 colors = RadioButtonDefaults.colors(
-                    selectedColor = ClawdAccent,
-                    unselectedColor = ClawdSubtleDark,
+                    selectedColor = DeskBuddyAccent,
+                    unselectedColor = DeskBuddySubtleDark,
                 )
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
         Column {
-            Text(label, fontSize = 14.sp, color = ClawdTextDark)
+            Text(label, fontSize = 14.sp, color = DeskBuddyTextDark)
             if (!description.isNullOrBlank()) {
-                Text(description, fontSize = 12.sp, color = ClawdFaintDark)
+                Text(description, fontSize = 12.sp, color = DeskBuddyFaintDark)
             }
         }
     }

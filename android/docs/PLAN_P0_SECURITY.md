@@ -30,7 +30,7 @@
 
 **当前代码**：
 ```kotlin
-wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clawd:ws").apply {
+wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "deskbuddy:ws").apply {
     setReferenceCounted(false)
     acquire()
 }
@@ -38,7 +38,7 @@ wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clawd:ws").apply {
 
 **修改方案**：
 ```kotlin
-wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clawd:ws").apply {
+wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "deskbuddy:ws").apply {
     setReferenceCounted(false)
     acquire(60 * 60 * 1000L) // 1 小时超时安全网
 }
@@ -46,7 +46,7 @@ wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "clawd:ws").apply {
 
 **同样修改 wifiLock**：
 ```kotlin
-wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL, "clawd:ws").apply {
+wifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL, "deskbuddy:ws").apply {
     setReferenceCounted(false)
     acquire(60 * 60 * 1000L)
 }
@@ -174,7 +174,7 @@ fun getClient(config: ConnectionConfig): OkHttpClient {
 **修改方案**：
 ```xml
 <application
-    android:name=".ClawdApp"
+    android:name=".DeskBuddyApp"
     android:allowBackup="false"
     ...
 ```

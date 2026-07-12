@@ -3,7 +3,7 @@
 > **优先级**: P3 — 架构改进  
 > **影响范围**: 数据访问层  
 > **预估工时**: 3h  
-> **启动提示词**: `执行 P3-2: 抽取 SessionRepository 统一数据访问，封装 ClawdWebSocket.sessions 和 PrefsStore 的 session 相关操作`
+> **启动提示词**: `执行 P3-2: 抽取 SessionRepository 统一数据访问，封装 DeskBuddyWebSocket.sessions 和 PrefsStore 的 session 相关操作`
 
 ---
 
@@ -15,7 +15,7 @@
 |------|---------|------|
 | Session 列表 | `WebSocketService.getWebSocket()?.sessions` | 多处静态访问 |
 | Session 名称 | `prefsStore.getSessionName(id)` | NavGraph, ApprovalViewModel |
-| 连接配置 | `prefsStore.loadConfig()` / `saveConfig()` | ClawdWebSocket, ApprovalReceiver |
+| 连接配置 | `prefsStore.loadConfig()` / `saveConfig()` | DeskBuddyWebSocket, ApprovalReceiver |
 | 通知设置 | `prefsStore.isNotifyEnabled()` 等 | StatusNotifier |
 
 没有统一的数据访问层，导致：

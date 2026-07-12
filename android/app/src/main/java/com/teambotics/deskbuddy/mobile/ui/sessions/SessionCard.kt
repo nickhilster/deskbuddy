@@ -27,7 +27,7 @@ import com.teambotics.deskbuddy.mobile.R
 import com.teambotics.deskbuddy.mobile.data.PrefsStore
 import com.teambotics.deskbuddy.mobile.data.Session
 import com.teambotics.deskbuddy.mobile.data.parseHexColor
-import com.teambotics.deskbuddy.mobile.ui.components.ClawdIcons
+import com.teambotics.deskbuddy.mobile.ui.components.DeskBuddyIcons
 import com.teambotics.deskbuddy.mobile.ui.theme.*
 
 @Composable
@@ -49,8 +49,8 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
 
     // All visual state from desktop — mobile overrides for better labels
     val chipText = data.chipText
-    val chipColor = parseHexColor(data.chipColor) ?: ClawdMutedDark
-    val dotColor = parseHexColor(data.dotColor) ?: ClawdSubtleDark
+    val chipColor = parseHexColor(data.chipColor) ?: DeskBuddyMutedDark
+    val dotColor = parseHexColor(data.dotColor) ?: DeskBuddySubtleDark
 
     // Mobile override: dotColor
     val mappedDotColor = when {
@@ -75,8 +75,8 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = ClawdSurfaceDark),
-        border = BorderStroke(0.5.dp, ClawdBorderDark)
+        colors = CardDefaults.cardColors(containerColor = DeskBuddySurfaceDark),
+        border = BorderStroke(0.5.dp, DeskBuddyBorderDark)
     ) {
         Column(modifier = Modifier.padding(14.dp, 12.dp, 14.dp, 10.dp)) {
             // Header row: [status-dot] [title] [chip] [elapsed] — matches PC HUD
@@ -96,7 +96,7 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                     text = displayName,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = ClawdTextDark,
+                    color = DeskBuddyTextDark,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
@@ -121,14 +121,14 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                 Text(
                     text = formatAgo(data.updatedAt, LocalContext.current),
                     fontSize = 11.sp,
-                    color = ClawdFaintDark,
+                    color = DeskBuddyFaintDark,
                     modifier = Modifier.padding(start = 6.dp)
                 )
                 // Rename icon
                 Icon(
-                    ClawdIcons.Pencil,
+                    DeskBuddyIcons.Pencil,
                     stringResource(R.string.sessions_rename),
-                    tint = ClawdFaintDark,
+                    tint = DeskBuddyFaintDark,
                     modifier = Modifier
                         .padding(start = 4.dp)
                         .size(13.dp)
@@ -141,20 +141,20 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                 var editName by remember { mutableStateOf(customName) }
                 AlertDialog(
                     onDismissRequest = { showRenameDialog = false },
-                    containerColor = ClawdSurfaceDark,
-                    title = { Text(stringResource(R.string.sessions_rename_title), color = ClawdTextDark) },
+                    containerColor = DeskBuddySurfaceDark,
+                    title = { Text(stringResource(R.string.sessions_rename_title), color = DeskBuddyTextDark) },
                     text = {
                         OutlinedTextField(
                             value = editName,
                             onValueChange = { editName = it },
-                            placeholder = { Text(data.displayTitle ?: data.agentId ?: "", color = ClawdFaintDark) },
+                            placeholder = { Text(data.displayTitle ?: data.agentId ?: "", color = DeskBuddyFaintDark) },
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = ClawdTextDark,
-                                unfocusedTextColor = ClawdTextDark,
-                                focusedBorderColor = ClawdAccent,
-                                unfocusedBorderColor = ClawdBorderDark,
-                                cursorColor = ClawdAccent,
+                                focusedTextColor = DeskBuddyTextDark,
+                                unfocusedTextColor = DeskBuddyTextDark,
+                                focusedBorderColor = DeskBuddyAccent,
+                                unfocusedBorderColor = DeskBuddyBorderDark,
+                                cursorColor = DeskBuddyAccent,
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -169,12 +169,12 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                             }
                             showRenameDialog = false
                         }) {
-                            Text(stringResource(R.string.sessions_save), color = ClawdAccent)
+                            Text(stringResource(R.string.sessions_save), color = DeskBuddyAccent)
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showRenameDialog = false }) {
-                            Text(stringResource(R.string.sessions_cancel), color = ClawdMutedDark)
+                            Text(stringResource(R.string.sessions_cancel), color = DeskBuddyMutedDark)
                         }
                     }
                 )
@@ -187,23 +187,23 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
             ) {
                 if (data.agentId != null) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Icon(ClawdIcons.Robot, null, tint = ClawdFaintDark, modifier = Modifier.size(11.dp))
+                        Icon(DeskBuddyIcons.Robot, null, tint = DeskBuddyFaintDark, modifier = Modifier.size(11.dp))
                         Text(
                             "Agent",
                             fontSize = 11.sp,
-                            color = ClawdFaintDark
+                            color = DeskBuddyFaintDark
                         )
                     }
                 }
                 if (!data.cwd.isNullOrBlank()) {
                     // Divider
-                    Box(modifier = Modifier.size(1.dp, 10.dp).background(ClawdDividerDark))
+                    Box(modifier = Modifier.size(1.dp, 10.dp).background(DeskBuddyDividerDark))
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                        Icon(ClawdIcons.Folder, null, tint = ClawdFaintDark, modifier = Modifier.size(11.dp))
+                        Icon(DeskBuddyIcons.Folder, null, tint = DeskBuddyFaintDark, modifier = Modifier.size(11.dp))
                         Text(
                             shortPath(data.cwd),
                             fontSize = 11.sp,
-                            color = ClawdFaintDark,
+                            color = DeskBuddyFaintDark,
                             fontFamily = FontFamily.Monospace,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -218,7 +218,7 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                 Text(
                     text = lastOut.output,
                     fontSize = 12.sp,
-                    color = ClawdMutedDark,
+                    color = DeskBuddyMutedDark,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 16.sp,
@@ -232,7 +232,7 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                     .fillMaxWidth()
                     .padding(top = 10.dp)
                     .height(0.5.dp)
-                    .background(ClawdBorderDark)
+                    .background(DeskBuddyBorderDark)
             )
 
             // Footer: events label + count + chevron
@@ -245,16 +245,16 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(ClawdIcons.Activity, null, tint = ClawdFaintDark, modifier = Modifier.size(12.dp))
-                    Text(stringResource(R.string.sessions_recent_events), fontSize = 11.sp, color = ClawdFaintDark)
+                    Icon(DeskBuddyIcons.Activity, null, tint = DeskBuddyFaintDark, modifier = Modifier.size(12.dp))
+                    Text(stringResource(R.string.sessions_recent_events), fontSize = 11.sp, color = DeskBuddyFaintDark)
                     if (hasEvents) {
                         Text(
                             text = "${data.recentEvents.size}",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = ClawdMutedDark,
+                            color = DeskBuddyMutedDark,
                             modifier = Modifier
-                                .border(0.5.dp, ClawdBorderDark, RoundedCornerShape(5.dp))
+                                .border(0.5.dp, DeskBuddyBorderDark, RoundedCornerShape(5.dp))
                                 .background(Color(0xFF232330), RoundedCornerShape(5.dp))
                                 .padding(horizontal = 7.dp, vertical = 2.dp)
                         )
@@ -262,7 +262,7 @@ internal fun SessionCard(session: Session, prefsStore: PrefsStore, modifier: Mod
                 }
                 if (hasEvents) {
                     Icon(
-                        ClawdIcons.ChevronRight,
+                        DeskBuddyIcons.ChevronRight,
                         null,
                         tint = Color(0xFF3E3E46),
                         modifier = Modifier.size(14.dp)

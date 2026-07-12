@@ -38,7 +38,7 @@
 **当前代码**：
 ```kotlin
 // PetStateManager.kt:444-449
-private suspend fun waitForWebSocket(): ClawdWebSocket {
+private suspend fun waitForWebSocket(): DeskBuddyWebSocket {
     while (true) {
         WebSocketService.getWebSocket()?.let { return it }
         delay(WS_POLL_INTERVAL_MS)  // 3 秒轮询
@@ -63,17 +63,17 @@ repeat(50) { // 100ms × 50 = 5 秒轮询
 // WebSocketService.kt
 companion object {
     // 新增
-    private val _webSocketReady = Channel<ClawdWebSocket>(Channel.CONFLATED)
-    val webSocketReady: Flow<ClawdWebSocket> = _webSocketReady.receiveAsFlow()
+    private val _webSocketReady = Channel<DeskBuddyWebSocket>(Channel.CONFLATED)
+    val webSocketReady: Flow<DeskBuddyWebSocket> = _webSocketReady.receiveAsFlow()
 
     // 保留 getWebSocket() 用于同步快照访问
-    fun getWebSocket(): ClawdWebSocket? = instance?.webSocket
+    fun getWebSocket(): DeskBuddyWebSocket? = instance?.webSocket
 }
 
 override fun onCreate() {
     super.onCreate()
     instance = this
-    webSocket = ClawdWebSocket(prefsStore)
+    webSocket = DeskBuddyWebSocket(prefsStore)
     _webSocketReady.trySend(webSocket!!)  // 通知就绪
 }
 ```
@@ -81,7 +81,7 @@ override fun onCreate() {
 2. `PetStateManager.waitForWebSocket()` 改用事件：
 
 ```kotlin
-private suspend fun waitForWebSocket(): ClawdWebSocket {
+private suspend fun waitForWebSocket(): DeskBuddyWebSocket {
     // 先检查快照
     WebSocketService.getWebSocket()?.let { return it }
     // 等待事件
@@ -381,22 +381,22 @@ Log.d("PetState", "emitState: ${bestState.themeKey}")
 
 ```kotlin
 // theme/Color.kt — 新增
-val ClawdBubbleBg = Color(0xFF1E1E2E)
-val ClawdBubbleText = Color(0xFFE0E0E0)
-val ClawdBubbleMuted = Color(0xFF888888)
-val ClawdBubbleButtonBg = Color(0xFF2A2A3E)
-val ClawdBubbleDivider = Color(0x33FFFFFF)
+val DeskBuddyBubbleBg = Color(0xFF1E1E2E)
+val DeskBuddyBubbleText = Color(0xFFE0E0E0)
+val DeskBuddyBubbleMuted = Color(0xFF888888)
+val DeskBuddyBubbleButtonBg = Color(0xFF2A2A3E)
+val DeskBuddyBubbleDivider = Color(0x33FFFFFF)
 ```
 
 `PetBubbleView.kt` 改用这些常量（注意 PetBubbleView 是传统 View，需要用 `colorInt` 转换）：
 
 ```kotlin
 // PetBubbleView.kt
-import com.clawd.mobile.ui.theme.ClawdBubbleBg
+import com.deskbuddy.mobile.ui.theme.DeskBuddyBubbleBg
 // ...
 
 val bg = GradientDrawable().apply {
-    setColor(ClawdBubbleBg.toArgb())  // Compose Color → Android int
+    setColor(DeskBuddyBubbleBg.toArgb())  // Compose Color → Android int
     cornerRadius = 14 * dp
 }
 ```
@@ -413,7 +413,7 @@ val bg = GradientDrawable().apply {
 **新增测试文件**：
 
 ```
-app/src/test/java/com/clawd/mobile/
+app/src/test/java/com/deskbuddy/mobile/
 ├── data/
 │   └── ConnectionConfigTest.kt          # 已有，扩展
 ├── overlay/

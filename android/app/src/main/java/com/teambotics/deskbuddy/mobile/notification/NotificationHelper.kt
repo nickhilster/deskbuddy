@@ -15,8 +15,8 @@ import kotlinx.serialization.json.Json
 
 object NotificationHelper {
 
-    const val CHANNEL_STATUS = "clawd_status"
-    const val CHANNEL_ALERT = "clawd_alert"
+    const val CHANNEL_STATUS = "deskbuddy_status"
+    const val CHANNEL_ALERT = "deskbuddy_alert"
 
     fun showApprovalNotification(context: Context, request: PermissionRequestData, sessionName: String? = null) {
         val requestId = request.requestId ?: return
