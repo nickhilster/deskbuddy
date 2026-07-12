@@ -1278,4 +1278,50 @@ function createSettingsAnimationOverridesMain(options = {}) {
         themeCount: commandResult.importedThemeCount || 0,
       };
     }
-    return commandResult || { status: "error", message: "import failed"
+    return commandResult || { status: "error", message: "import failed" };
+  }
+
+  function cleanup() {
+    clearPreviewTimer();
+    pendingPostReloadTasks = [];
+    bumpPreviewPosterGeneration();
+    destroyAnimationPreviewPosterWindow();
+  }
+
+  return {
+    buildAnimationOverrideData,
+    buildAnimationOverrideSections,
+    listAnimationOverrideAssets,
+    buildAnimationAssetPreview,
+    buildAnimationAssetProbe,
+    previewAnimationOverride,
+    previewReaction,
+    openThemeAssetsDir,
+    exportAnimationOverrides,
+    importAnimationOverrides,
+    runPendingPostReloadTasks,
+    clearPreviewTimer,
+    bumpPreviewPosterGeneration,
+    maybeDestroyIdlePreviewPosterWindow,
+    destroyAnimationPreviewPosterWindow,
+    cleanup,
+  };
+}
+
+createSettingsAnimationOverridesMain.registerSettingsAnimationOverridesIpc = registerSettingsAnimationOverridesIpc;
+
+createSettingsAnimationOverridesMain.__test = {
+  ANIMATION_OVERRIDE_PREVIEW_POSTER_VERSION,
+  ANIMATION_OVERRIDE_PREVIEW_POSTER_CACHE_MAX,
+  ANIMATION_OVERRIDE_PREVIEW_POSTER_TIMEOUT_MS,
+  PREVIEW_HOLD_MIN_MS,
+  PREVIEW_HOLD_MAX_MS,
+  TRUSTED_SCRIPTED_PREVIEW_HOLD_MAX_MS,
+  isTrustedScriptedAnimationFile,
+  isObjectChannelSvgAnimationFile,
+  needsScriptedAnimationPreviewPoster,
+  getTrustedScriptedAnimationCycleMs,
+  buildAnimationPreviewPosterDescriptor,
+};
+
+module.exports = createSettingsAnimationOverridesMain;
