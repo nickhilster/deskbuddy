@@ -7,6 +7,7 @@ const {
   buildLatestLocalCodexProcessIds,
   isSupersededLocalCodexProcessSession,
 } = require("./state-session-dedupe");
+const { buildSessionContextBrief } = require("./session-context-brief");
 const { readCodexThreadName } = require("../hooks/codex-session-index");
 const { normalizeQuotaGroup } = require("../hooks/quota-bucket");
 const { ANTIGRAVITY_QUOTA_FIELDS } = require("../hooks/antigravity-context-usage");
@@ -188,6 +189,7 @@ function buildSessionSnapshotEntry(id, session, sessionAliases = {}, options = {
     ? options.getAgentIconUrl
     : () => null;
   const state = (session && session.state) || "idle";
+  const contextBrief = buildSessionContextBrief({ session, badge, latestEvent, state });
   const hiddenFromHud = shouldAutoClearDetachedSession(session, badge, options)
     || isSupersededLocalCodexProcessSession(id, session, options.latestLocalCodexProcessIds);
   const focusTarget = session && !session.headless && state !== "sleeping" && !hiddenFromHud
@@ -206,6 +208,14 @@ function buildSessionSnapshotEntry(id, session, sessionAliases = {}, options = {
     sessionTitle: getEffectiveSessionTitle(id, session, options),
     displayTitle: sessionDisplayTitle(id, session, sessionAliases, options),
     cwd: (session && session.cwd) || "",
+    contextBrief,
+    contextSummaryStatus: contextBrief.status,
+    repoName: contextBrief.repoName,
+    repoPath: contextBrief.repoPath,
+    branch: contextBrief.branch,
+    lastPromptExcerpt: contextBrief.lastPromptExcerpt,
+    latestOutputExcerpt: contextBrief.latestOutputExcerpt,
+    nextHumanAction: contextBrief.nextHumanAction,
     updatedAt: sessionUpdatedAt(session),
     // Quota/context freshness (statusline metadata POSTs, which do not bump
     // updatedAt). Excluded from sessionSnapshotSignature, like updatedAt.
@@ -343,6 +353,14 @@ function sessionSnapshotSignature(snapshot) {
       sessionTitle: entry.sessionTitle,
       displayTitle: entry.displayTitle,
       cwd: entry.cwd,
+      contextBrief: entry.contextBrief,
+      contextSummaryStatus: entry.contextSummaryStatus,
+      repoName: entry.repoName,
+      repoPath: entry.repoPath,
+      branch: entry.branch,
+      lastPromptExcerpt: entry.lastPromptExcerpt,
+      latestOutputExcerpt: entry.latestOutputExcerpt,
+      nextHumanAction: entry.nextHumanAction,
       agentId: entry.agentId,
       sourcePid: entry.sourcePid,
       wtHwnd: entry.wtHwnd,
