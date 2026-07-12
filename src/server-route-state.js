@@ -97,6 +97,34 @@ function normalizeClaudeQuota(value) {
   return normalizeQuotaGroup(value, CLAUDE_QUOTA_FIELDS);
 }
 
+const TODO_STATUSES = new Set(["pending", "in_progress", "completed"]);
+const TODOS_MAX = 50;
+const TODO_TEXT_MAX = 200;
+
+function normalizeTodoText(value) {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  if (!text) return null;
+  return text.length > TODO_TEXT_MAX ? text.slice(0, TODO_TEXT_MAX) : text;
+}
+
+function normalizeTodos(value) {
+  if (!Array.isArray(value)) return null;
+  const out = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const content = normalizeTodoText(item.content);
+    if (!content) continue;
+    const status = TODO_STATUSES.has(item.status) ? item.status : "pending";
+    const entry = { content, status };
+    const activeForm = normalizeTodoText(item.activeForm);
+    if (activeForm) entry.activeForm = activeForm;
+    out.push(entry);
+    if (out.length >= TODOS_MAX) break;
+  }
+  return out.length ? out : null;
+}
+
 function sendStateHealthResponse(res, options) {
   const body = JSON.stringify({ ok: true, app: DESKBUDDY_SERVER_ID, port: options.getHookServerPort() });
   res.writeHead(200, {
@@ -196,6 +224,7 @@ function handleStatePost(req, res, options) {
       const contextUsage = normalizeContextUsage(data.context_usage);
       const antigravityQuota = normalizeAntigravityQuota(data.antigravity_quota);
       const claudeQuota = normalizeClaudeQuota(data.claude_quota);
+      const todos = normalizeTodos(data.todos);
       const assistantLastOutput = normalizeAssistantLastOutput(data.assistant_last_output);
       const assistantLastOutputTruncated = data.assistant_last_output_truncated === true;
       const transcriptPath = normalizeTranscriptPath(data.transcript_path);
@@ -346,6 +375,7 @@ function handleStatePost(req, res, options) {
             contextUsage,
             antigravityQuota,
             claudeQuota,
+            todos,
             assistantLastOutput,
             assistantLastOutputTruncated,
             toolName,

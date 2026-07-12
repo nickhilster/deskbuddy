@@ -1500,6 +1500,7 @@ const _stateCtx = {
       try { telegramCompanion.onSnapshot(snapshot); } catch {}
     }
     if (_lanWss) { try { _lanWss.onSnapshot(); } catch {} }
+    if (_vscodeBridge) { try { _vscodeBridge.onSnapshot(); } catch {} }
   },
   // Phase 3b: 读 prefs.themeOverrides 判断某个 oneshot state 是否被用户禁用。
   // state.js gate 调这个做 early-return。不做白名单校验——settings-actions
@@ -1725,6 +1726,13 @@ const _dashboard = require("./dashboard")({
 showDashboard = _dashboard.showDashboard;
 broadcastDashboardSessionSnapshot = _dashboard.broadcastSessionSnapshot;
 sendDashboardI18n = _dashboard.sendI18n;
+
+const { initVscodeBridge } = require("./network/vscode-bridge");
+const _vscodeBridge = initVscodeBridge({
+  getSessionSnapshot: () => _state.buildSessionSnapshot(),
+  get pendingPermissions() { return pendingPermissions; },
+  resolvePermissionEntry: (...args) => resolvePermissionEntry(...args),
+});
 
 // ── First-run onboarding tutorial ──
 // Buckets the installable agents for the tutorial's step 2. We call the
@@ -3830,7 +3838,7 @@ Object.defineProperties(this || {}, {}); // no-op placeholder
 
 // ── Auto-install VS Code / Cursor terminal-focus extension ──
 const EXT_ID = "deskbuddy.deskbuddy-terminal-focus";
-const EXT_VERSION = "0.1.1";
+const EXT_VERSION = "0.2.0";
 const EXT_DIR_NAME = `${EXT_ID}-${EXT_VERSION}`;
 
 function installTerminalFocusExtension() {
@@ -3851,7 +3859,7 @@ function installTerminalFocusExtension() {
     path.join(home, ".cursor", "extensions"),
   ];
 
-  const filesToCopy = ["package.json", "extension.js"];
+  const filesToCopy = ["package.json", "extension.js", "webview.html", "webview.js", "webview.css"];
   let installed = 0;
 
   for (const extRoot of targets) {
