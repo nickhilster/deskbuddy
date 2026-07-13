@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-13 -15 52 52" width="400" height="400">
+  <defs>
+    <linearGradient id="db-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899"/>
+      <stop offset="50%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#2dd4bf"/>
+    </linearGradient>
+    <style>
+      #body-js { transform-box: fill-box; transform-origin: 50% 100%; animation: db-carry-lean 1.2s ease-in-out infinite; }
+      @keyframes db-carry-lean {
+        0%, 100% { transform: rotate(-6deg) translateX(0); }
+        50%      { transform: rotate(-6deg) translateX(0.6px); }
+      }
+      .box { animation: db-box-bob 1.2s ease-in-out infinite; }
+      @keyframes db-box-bob {
+        0%, 100% { transform: translateY(0) rotate(-2deg); }
+        50%      { transform: translateY(-1.2px) rotate(2deg); }
+      }
+    </style>
+  </defs>
+  <ellipse cx="13" cy="27" rx="9" ry="1.5" fill="#000000" opacity="0.35"/>
+  <g id="body-js">
+    <circle cx="13" cy="15" r="11" fill="url(#db-gradient)"/>
+    <g fill="#1a1025">
+      <ellipse cx="9" cy="14" rx="1.8" ry="1.5"/>
+      <ellipse cx="17" cy="14" rx="1.8" ry="1.5"/>
+    </g>
+    <path d="M10.5 20 Q13 20.6 15.5 20" stroke="#1a1025" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  </g>
+  <g class="box">
+    <rect x="24" y="8" width="10" height="9" fill="#c98a4b" stroke="#8a5a2a" stroke-width="0.6"/>
+    <line x1="24" y1="12.5" x2="34" y2="12.5" stroke="#8a5a2a" stroke-width="0.6"/>
+    <line x1="29" y1="8" x2="29" y2="17" stroke="#8a5a2a" stroke-width="0.6"/>
+  </g>
+</svg>
