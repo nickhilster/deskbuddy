@@ -30,6 +30,7 @@
     "idle": ["deskbuddy-idle.svg"],
     "thinking": ["deskbuddy-thinking.svg"],
     "working": ["deskbuddy-working.svg"],
+    "juggling": ["deskbuddy-groove.svg"],
     "sleeping": ["deskbuddy-sleeping.svg"],
     "yawning": ["deskbuddy-yawning.svg"],
     "dozing": ["deskbuddy-dozing.svg"],
@@ -41,6 +42,15 @@
     "sweeping": ["deskbuddy-sweeping.svg"],
     "carrying": ["deskbuddy-carrying.svg"]
   },
+  "workingTiers": [
+    { "minSessions": 3, "file": "deskbuddy-building.svg" },
+    { "minSessions": 2, "file": "deskbuddy-groove.svg" },
+    { "minSessions": 1, "file": "deskbuddy-working.svg" }
+  ],
+  "jugglingTiers": [
+    { "minSessions": 2, "file": "deskbuddy-dizzy.svg" },
+    { "minSessions": 1, "file": "deskbuddy-groove.svg" }
+  ],
   "miniMode": { "supported": false },
   "sounds": { "complete": "complete.mp3", "confirm": "confirm.mp3" },
   "objectScale": {
